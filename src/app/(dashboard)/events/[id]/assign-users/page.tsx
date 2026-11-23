@@ -14,6 +14,7 @@ import { sessionService } from "@/services/sessionService";
 import { userService } from "@/services/userService";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
 import { eventService } from "@/services/eventService";
+import EventHeader from "@/components/events/EventHeader";
 import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
 import PageHeader from "@/components/common/PageHeader";
@@ -359,6 +360,7 @@ export default function EventAssignUsersPage() {
 
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-6 relative bg-white">
+        <EventHeader eventId={eventId} />
         {/* Sub-Navigation Tabs Bar */}
         <EventSubNav
           eventId={eventId}

@@ -1,12 +1,7 @@
-// The invitee Excel has columns that depend on the event (Additional Information, custom titles), so before choosing a file the
-// organizer is reminded to start from this event's sample. Once reminded for a given set of columns it is not asked again in the
-// same browser session; if the columns change, it asks again.
-const key = (eventId: string, columns: string[]) => `lgpsm_sample_ok:${eventId}:${columns.join("|")}`;
+// The invitee Excel has columns that depend on the event (Additional Information, custom titles), so every time the organizer is about to
+// choose a file they are asked: download this event's sample, or continue because they already have it. It is asked each time, because a
+// file with the wrong columns is refused and the sample is the quickest way to get them right.
+export const sampleReminderAcknowledged = (_eventId: string, _columns: string[]): boolean => false;
 
-export const sampleReminderAcknowledged = (eventId: string, columns: string[]): boolean => {
-  try { return sessionStorage.getItem(key(eventId, columns)) === "1"; } catch { return false; }
-};
-
-export const acknowledgeSampleReminder = (eventId: string, columns: string[]): void => {
-  try { sessionStorage.setItem(key(eventId, columns), "1"); } catch { /* the reminder simply shows again */ }
-};
+/** Kept so callers need no change; nothing is remembered, the reminder shows every time. */
+export const acknowledgeSampleReminder = (_eventId: string, _columns: string[]): void => {};

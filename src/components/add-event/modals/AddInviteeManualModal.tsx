@@ -251,9 +251,7 @@ export default function AddInviteeManualModal({
               />
             </div>
 
-            {/* Hidden for now: the card's additional-information fields are not asked for when a guest is added by hand
-                (they still come in through the Excel upload). Kept here, commented out, so they can be brought back.
-            (Professional identity: only when the event's card uses it, same condition as the Excel sample)
+            {/* The card's additional-information fields, the same ones the Excel sample has (Professional identity: only when the event's card uses it) */}
             {has("identity") && (
             identityLabel ? (
             <div>
@@ -298,7 +296,7 @@ export default function AddInviteeManualModal({
               </div>
             )}
 
-            (Company: corporate events only, or when chosen for the card; never required)
+            {/* Company: when chosen for the card; never required */}
             {has("company") && (
               <div>
                 <label htmlFor="ai-company" className={labelClass}>
@@ -315,7 +313,6 @@ export default function AddInviteeManualModal({
                 />
               </div>
             )}
-            */}
 
             {/* Error */}
             <PopupMessage message={error} />

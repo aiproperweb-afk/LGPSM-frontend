@@ -31,6 +31,7 @@ import RepeatedGuestsModal from "@/components/invitees/RepeatedGuestsModal";
 import { findRepeatedGuests, type RepeatedGuest } from "@/utils/repeatedGuests";
 import { downloadInviteeTemplate, templateColumnsFor, type TemplateColumns } from "@/utils/inviteeTemplate";
 import DateTimePickerModal from "@/components/add-event/modals/DateTimePickerModal";
+import EventHeader from "@/components/events/EventHeader";
 import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -427,6 +428,7 @@ export default function EventSessionsPage() {
 
       {/* Page Content - Directly on page background without card container */}
       <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-8 bg-white">
+          <EventHeader eventId={eventId} />
           {/* Sub-Navigation Tabs Bar */}
           <EventSubNav
             eventId={eventId}

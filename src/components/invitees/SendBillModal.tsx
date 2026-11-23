@@ -8,6 +8,8 @@ import type { BillQuote } from "@/services/billingService";
 
 interface SendBillModalProps {
   quote: BillQuote;
+  /** what is being paid for: invitations to send (default) or printable cards to download */
+  kind?: "send" | "download";
   /** the payment (Razorpay) is in progress */
   busy: boolean;
   error: string | null;
@@ -22,7 +24,7 @@ const gstLabel = (p: number) => `${Number.isInteger(p) ? p : p.toFixed(2)}%`;
  * The bill shown when invitations are sent (Figma 2001:2467 "Make Payment"): per-head price, how many invitees, the subtotal, GST and
  * the total. The figures come from the server (the admin's per-head rate and GST), so they follow whatever the admin sets.
  */
-export default function SendBillModal({ quote, busy, error, onCancel, onFinish }: SendBillModalProps) {
+export default function SendBillModal({ quote, kind = "send", busy, error, onCancel, onFinish }: SendBillModalProps) {
   const [agreed, setAgreed] = useState(false);
   const [showAgreeError, setShowAgreeError] = useState(false);
 
@@ -52,7 +54,7 @@ export default function SendBillModal({ quote, busy, error, onCancel, onFinish }
           <p className="py-4 text-base font-medium text-[#15191C] border-b border-[#EAEAEA]">Payment Info</p>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
             <div className={row}><span>Per Head Price</span><span>{rupees(quote.rate ?? 0)}</span></div>
-            <div className={row}><span>Total Invitees</span><span>{quote.invitees}</span></div>
+            <div className={row}><span>{kind === "download" ? "Total Cards" : "Total Invitees"}</span><span>{quote.invitees}</span></div>
           </div>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
             <div className={row}><span>Subtotal</span><span>{rupees(quote.subtotal)}</span></div>

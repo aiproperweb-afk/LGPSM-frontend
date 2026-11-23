@@ -31,6 +31,7 @@ import InfoTip from "@/components/common/InfoTip";
 import PageHeader from "@/components/common/PageHeader";
 import ButtonIcon from "@/components/common/ButtonIcons";
 import CustomDropdown from "@/components/common/CustomDropdown";
+import EventHeader from "@/components/events/EventHeader";
 import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 import { eventService } from "@/services/eventService";
 import { sessionService, SessionData } from "@/services/sessionService";
@@ -202,7 +203,7 @@ export default function InviteesManagementPage() {
   const [sampleReminder, setSampleReminder] = useState(false);
   const [confirmFirstSend, setConfirmFirstSend] = useState(false);
   // the bill (invitees x per-head rate + GST) shown before invitations go out, and the payment that follows
-  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[] } | null>(null);
+  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: "send" | "download" } | null>(null);
   const [billBusy, setBillBusy] = useState(false);
   const [billError, setBillError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -315,8 +316,9 @@ export default function InviteesManagementPage() {
     if (!email && !whatsapp) return { email: channel !== "WHATSAPP", whatsapp: channel !== "EMAIL" };
     return { email, whatsapp };
   };
-  // A reason and a message are for guests who were sent an invitation; for guests who were not it is a plain "are you sure"
-  const needsReason = (ids: string[]) => invitees.some((i) => ids.includes(i._id) && i.invitationStatus === "SENT");
+  // An optional reason and message are offered only for guests who accepted their invitation (the ones who would want to know);
+  // for everyone else (not invited yet, cards only, no answer yet) it is a plain "are you sure" with no reason or channels
+  const needsReason = (ids: string[]) => invitees.some((i) => ids.includes(i._id) && i.invitationStatus === "SENT" && i.rsvpStatus === "ACCEPTED");
   const resendTargets = selected.filter((i) => i.invitationStatus === "FAILED").map((i) => historyByInvitee.get(i._id)).filter((h): h is InvitationData => !!h?._id);
   const ownLists = ownListSessions(sessions);
   // the choice of session is only needed when more than one session has its own invitee list
@@ -391,14 +393,14 @@ export default function InviteesManagementPage() {
 
   // Sending is charged per invitation: show the bill first when there is something to pay (Figma 2001:2467). With no rate set, or the
   // invitations already paid for, there is nothing to charge and the send goes ahead.
-  const showBillOrSend = async (): Promise<boolean> => {
-    const ids = sendTargets.map((t) => t._id);
+  const showBillOrSend = async (kind: "send" | "download" = "send"): Promise<boolean> => {
+    const ids = kind === "download" ? selectedIds : sendTargets.map((t) => t._id);
     if (ids.length === 0) return false;
     const res = await billingService.quote(eventId, ids);
     if (!res.success || !res.data) { setFeedback({ type: "error", message: res.message || "The bill could not be worked out. Please try again." }); return true; }
     if (!res.data.payable) return false;
     setBillError(null);
-    setBill({ quote: res.data, ids });
+    setBill({ quote: res.data, ids, kind });
     return true;
   };
 
@@ -411,7 +413,7 @@ export default function InviteesManagementPage() {
       if (!start.success || !start.data) { setBillError(start.message || "The payment could not be started."); return; }
       const result = await openRazorpayCheckout({
         keyId: start.data.keyId, orderId: start.data.providerOrderId, amount: start.data.amount, currency: start.data.currency,
-        name: "EventQRapp", description: `${event?.title || "Event"}: ${start.data.invitees} invitation${start.data.invitees === 1 ? "" : "s"}`,
+        name: "EventQRapp", description: `${event?.title || "Event"}: ${start.data.invitees} ${bill.kind === "download" ? "card" : "invitation"}${start.data.invitees === 1 ? "" : "s"}`,
         prefill: { name: user?.fullName, email: user?.email },
       });
       if (result.status === "cancelled") { setBillError("Payment cancelled. Nothing was charged and no invitation was sent."); return; }
@@ -419,10 +421,18 @@ export default function InviteesManagementPage() {
       const confirmed = await billingService.confirmPayment({ providerOrderId: result.providerOrderId, providerPaymentId: result.providerPaymentId, signature: result.signature });
       if (!confirmed.success) { setBillError(confirmed.message || "We could not confirm the payment. If money was debited it is kept as credit for this event; check Billing."); return; }
       setBill(null);
-      await handleSend();
+      // paid: what the organizer asked for now goes ahead (one payment covers a guest's send or download, so the other is not charged again)
+      if (bill.kind === "download") setDownloadOpen(true);
+      else await handleSend();
     } finally {
       setBillBusy(false);
     }
+  };
+
+  // Cards are paid for like invitations: the bill (and Razorpay) first when something is due, then the download starts
+  const requestDownload = async () => {
+    if (selectedIds.length === 0) return;
+    if (!(await showBillOrSend("download"))) setDownloadOpen(true);
   };
 
   // The first send locks the event, so it goes through the Figma warning (2001:2443); later sends go straight out
@@ -669,6 +679,7 @@ export default function InviteesManagementPage() {
     <div className="w-full min-h-full bg-white">
       <PageHeader title={user?.role === "ORGANIZER" ? "Invitees Management" : sidebarFlow ? "Add Invitees" : "Event"} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} />
       <div className="px-4 sm:px-6 py-4 sm:py-6 w-full space-y-5 pb-24">
+        {!sidebarFlow && eventId && <EventHeader eventId={eventId} />}
         {!sidebarFlow && eventId && <EventSubNav eventId={eventId} activeTab="invitees" inviteesCount={loading ? undefined : invitees.length} />}
 
         <PopupMessage message={feedback ? [feedback.message, ...(feedback.details || []).map((d) => `• ${d}`)].join("\n") : null} type={feedback?.type === "success" ? "success" : feedback?.type === "info" ? "info" : "error"} onClose={() => setFeedback(null)} />
@@ -868,7 +879,7 @@ export default function InviteesManagementPage() {
                 History
               </button>
               {printableCards && (
-                <button type="button" onClick={() => setDownloadOpen(true)} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? "This event is over, so cards can no longer be produced" : selectedIds.length === 0 ? "Tick the guests to make cards for" : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={`${btn} bg-[#1F65FF] hover:bg-[#1A56DB] text-white border border-[#1F65FF] disabled:opacity-50`}>
+                <button type="button" onClick={() => void requestDownload()} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? "This event is over, so cards can no longer be produced" : selectedIds.length === 0 ? "Tick the guests to make cards for" : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={`${btn} bg-[#1F65FF] hover:bg-[#1A56DB] text-white border border-[#1F65FF] disabled:opacity-50`}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></svg>
                   Download Cards
                 </button>
@@ -1072,7 +1083,7 @@ export default function InviteesManagementPage() {
         onConfirm={() => { setRepeats(null); if (upload) void importPreviewFlight.current.run(() => prepareImport(upload.rows)); }}
       />
       {downloadOpen && selectedIds.length > 0 && <DownloadCardsModal eventId={eventId} eventTitle={event?.title || "this event"} inviteeIds={selectedIds} sessionId={filterSession?._id} onClose={() => setDownloadOpen(false)} />}
-      {bill && <SendBillModal quote={bill.quote} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend} />}
+      {bill && <SendBillModal quote={bill.quote} kind={bill.kind} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend} />}
       {passAction && (
         <PassActionModal
           key={`${passAction.action}-${passAction.invitee._id}`}
