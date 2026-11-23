@@ -69,6 +69,8 @@ export default function EventAssignUsersPage() {
   const loadedFor = useRef<string | null>(null);
   // the overlap lookup that is still running (a submit waits for it, so a warning is never skipped) and its latest result
   const overlapsPending = useRef<Promise<unknown> | null>(null);
+  // "Available" is only said once the clash lookup has answered (it takes a moment), never before
+  const [overlapsReady, setOverlapsReady] = useState(false);
   const overlapsLatest = useRef<typeof elsewhere>({});
   // an automatic refresh updates quietly: no skeleton, and a failed request keeps what is on screen without raising an error
   const quietRef = useRef(false);
@@ -92,6 +94,7 @@ export default function EventAssignUsersPage() {
         (overlapRes && overlapRes.success && Array.isArray(overlapRes.data) ? overlapRes.data : []).forEach((o) => { (overlapMap[o.userId] ||= []).push(o); });
         overlapsLatest.current = overlapMap;
         setElsewhere(overlapMap);
+        setOverlapsReady(!!(overlapRes && overlapRes.success));
       });
       const sessionList = Array.isArray(sessionsRes?.data) ? sessionsRes.data : [];
       setSessions(sessionList);
@@ -550,11 +553,28 @@ export default function EventAssignUsersPage() {
                         <span className="text-[10px] font-mono text-[#1F65FF] bg-[#1F65FF]/10 px-1.5 py-0.5 rounded">
                           SYSTEM_USER
                         </span>
-                        {otherEvents.filter((o) => o.overlaps).map((o) => (
-                          <p key={o.eventId} className="mt-1.5 text-[11px] leading-snug font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 max-w-[260px] whitespace-normal break-words">
-                            Already on &quot;{o.title}&quot; at the same time ({formatDateTime(o.start)} – {formatDateTime(o.end)})
-                          </p>
-                        ))}
+                        {/* Same three states as the mobile app: already on this event (green), clashes with it (red, with the clashing events), or available */}
+                        {(() => {
+                          const clashes = otherEvents.filter((o) => o.overlaps);
+                          const here = onThisEvent(u);
+                          return (
+                            <div className="mt-1.5 max-w-[300px] space-y-1.5 font-normal">
+                              {here ? (
+                                <p className="text-[11px] leading-snug font-semibold text-[#1A9242] bg-[#E6F6EC] rounded px-2 py-1.5 whitespace-normal">Already assigned to this event. Change their sessions from this list.</p>
+                              ) : clashes.length === 0 && overlapsReady ? (
+                                <span className="inline-block text-[11px] font-semibold text-[#1A9242] bg-[#E6F6EC] rounded-full px-2.5 py-0.5">Available</span>
+                              ) : null}
+                              {clashes.length > 0 && (
+                                <div className="text-[11px] leading-snug bg-[#FEECEB] border border-[#F5C2BE] rounded px-2 py-1.5 whitespace-normal break-words">
+                                  <p className="font-bold text-[#D92D20]">Clashes with this event</p>
+                                  {clashes.map((o) => (
+                                    <p key={o.eventId} className="text-[#15191C] mt-0.5">{o.title} · <span className="font-semibold text-[#1F65FF]">{formatDateTime(o.start)} to {formatDateTime(o.end)}</span></p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Assigned Sessions */}
@@ -625,7 +645,7 @@ export default function EventAssignUsersPage() {
                         {isExpanded && otherEvents.length > 0 && (
                           <div className="mt-3 space-y-2 max-w-sm text-left">
                             {otherEvents.map((o) => (
-                              <div key={o.eventId} className="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-1 whitespace-normal">
+                              <div key={o.eventId} className={`rounded-md p-3 space-y-1 whitespace-normal border ${o.overlaps ? "bg-[#FFF7F6] border-[#D92D20]" : "bg-gray-50 border-gray-200"}`}>
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C] break-words min-w-0">{o.title}</div>
                                   <span className="shrink-0 text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 rounded px-1.5 py-0.5">Other event</span>

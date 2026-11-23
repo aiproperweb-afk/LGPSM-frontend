@@ -30,6 +30,9 @@ export default function OrganisationDetailsForm() {
   const [showErrors, setShowErrors] = useState(false);
 
   if (user?.role !== "ORGANIZER") return null;
+  // an individual organiser has no organisation, so there are no organisation details to keep (same rule the organiser list uses)
+  const profile = (user as { profile?: { organizationType?: string; organizationName?: string } }).profile;
+  if ((profile?.organizationType ?? (profile?.organizationName ? "ORGANIZATION" : "INDIVIDUAL")) === "INDIVIDUAL") return null;
 
   const saved = fromUser(user);
   const org: Org = { ...saved, ...edits };

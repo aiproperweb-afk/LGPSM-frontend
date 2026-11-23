@@ -20,6 +20,8 @@ export default function CompleteProfileModal() {
   const [phone, setPhone] = useState<string | null>(null);
   const [type, setType] = useState<"INDIVIDUAL" | "ORGANIZATION" | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
+  // an organization's own details: phone, WhatsApp and email are required; website and address can be left for later
+  const [orgEdits, setOrgEdits] = useState<{ phone?: string; whatsapp?: string; email?: string; website?: string; address?: string }>({});
   const [saving, setSaving] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +35,13 @@ export default function CompleteProfileModal() {
     type: type ?? ((user.profile?.organizationType as "INDIVIDUAL" | "ORGANIZATION" | undefined) || null),
     orgName: orgName ?? (user.profile?.organizationName as string | undefined) ?? "",
   };
+  const savedOrg = ((user.profile?.organization ?? {}) as { phone?: string; whatsapp?: string; email?: string; website?: string; address?: string });
+  const orgDetails = { phone: orgEdits.phone ?? savedOrg.phone ?? "", whatsapp: orgEdits.whatsapp ?? savedOrg.whatsapp ?? "", email: orgEdits.email ?? savedOrg.email ?? "", website: orgEdits.website ?? savedOrg.website ?? "", address: orgEdits.address ?? savedOrg.address ?? "" };
   const live = profileCompleteness({
     fullName: current.fullName,
     email: user.email,
     phone: current.phone,
-    profile: { organizationType: current.type, organizationName: current.orgName },
+    profile: { organizationType: current.type, organizationName: current.orgName, organization: orgDetails },
   });
   const bad = (key: string) => showErrors && live.missing.some((m) => m.key === key);
 
@@ -45,11 +49,18 @@ export default function CompleteProfileModal() {
     e.preventDefault();
     setShowErrors(true);
     if (!live.complete || !current.type) return;
+    if (current.type === "ORGANIZATION" && orgDetails.website.trim() && !/^https?:\/\/\S+$/i.test(orgDetails.website.trim())) { setError("The website must start with http:// or https://"); return; }
     setSaving(true);
     const merged: Record<string, unknown> = { ...(user.profile || {}), organizationType: current.type };
     if (current.type === "ORGANIZATION") merged.organizationName = current.orgName.trim();
     else delete merged.organizationName;
-    const res = await updateProfile({ fullName: current.fullName.trim(), phone: current.phone, profile: merged });
+    const res = await updateProfile({
+      fullName: current.fullName.trim(),
+      phone: current.phone,
+      profile: merged,
+      // an individual has no organization, so only an organization sends its details
+      ...(current.type === "ORGANIZATION" ? { organization: { name: current.orgName.trim(), phone: orgDetails.phone.trim(), whatsapp: orgDetails.whatsapp.trim(), email: orgDetails.email.trim(), website: orgDetails.website.trim(), address: orgDetails.address.trim() } } : {}),
+    });
     setSaving(false);
     if (!res.success) setError(res.message || "Your details could not be saved. Please try again.");
   };
@@ -95,6 +106,31 @@ export default function CompleteProfileModal() {
             <label htmlFor="cp-org" className="block text-sm font-medium text-[#15191C] mb-1.5">Organization name<span className="text-red-500 ml-0.5">*</span></label>
             <input id="cp-org" value={current.orgName} onChange={(e) => setOrgName(e.target.value)} maxLength={150} className={`${field} ${bad("organizationName") ? "!border-rose-500" : ""}`} />
           </div>
+        )}
+
+        {current.type === "ORGANIZATION" && (
+          <>
+            <div>
+              <label htmlFor="cp-org-phone" className="block text-sm font-medium text-[#15191C] mb-1.5">Organization phone<span className="text-red-500 ml-0.5">*</span></label>
+              <PhoneInput id="cp-org-phone" value={orgDetails.phone} onValueChange={(v) => setOrgEdits((o) => ({ ...o, phone: v }))} placeholder="10-digit phone number" className={`${field} ${bad("organizationPhone") ? "!border-rose-500" : ""}`} />
+            </div>
+            <div>
+              <label htmlFor="cp-org-whatsapp" className="block text-sm font-medium text-[#15191C] mb-1.5">WhatsApp number<span className="text-red-500 ml-0.5">*</span></label>
+              <PhoneInput id="cp-org-whatsapp" value={orgDetails.whatsapp} onValueChange={(v) => setOrgEdits((o) => ({ ...o, whatsapp: v }))} placeholder="10-digit WhatsApp number" className={`${field} ${bad("organizationWhatsapp") ? "!border-rose-500" : ""}`} />
+            </div>
+            <div>
+              <label htmlFor="cp-org-email" className="block text-sm font-medium text-[#15191C] mb-1.5">Organization email<span className="text-red-500 ml-0.5">*</span></label>
+              <input id="cp-org-email" type="email" value={orgDetails.email} onChange={(e) => setOrgEdits((o) => ({ ...o, email: e.target.value }))} maxLength={150} className={`${field} ${bad("organizationEmail") ? "!border-rose-500" : ""}`} />
+            </div>
+            <div>
+              <label htmlFor="cp-org-website" className="block text-sm font-medium text-[#15191C] mb-1.5">Website <span className="text-[#6B6B6B] font-normal text-xs">(optional)</span></label>
+              <input id="cp-org-website" value={orgDetails.website} onChange={(e) => setOrgEdits((o) => ({ ...o, website: e.target.value }))} placeholder="https://" maxLength={200} className={field} />
+            </div>
+            <div>
+              <label htmlFor="cp-org-address" className="block text-sm font-medium text-[#15191C] mb-1.5">Address <span className="text-[#6B6B6B] font-normal text-xs">(optional)</span></label>
+              <input id="cp-org-address" value={orgDetails.address} onChange={(e) => setOrgEdits((o) => ({ ...o, address: e.target.value }))} maxLength={300} className={field} />
+            </div>
+          </>
         )}
 
         <div>

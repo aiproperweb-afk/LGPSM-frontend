@@ -124,11 +124,11 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
   );
 }
 
-// Figma logo slot: 202 x 34, left-aligned (same artwork as the auth pages' SVG)
-function Logo() {
+// Logo slot: 34px tall (same artwork as the auth pages' SVG); `center` puts it in the middle of the sidebar's width, over the Add Event button
+function Logo({ center = false }: { center?: boolean }) {
   return (
-    <Link href="/dashboard" className="inline-block shrink-0">
-      <Image src="/images/branding/Final-Logo.svg" alt="EventQRapp" width={194} height={34} priority className="h-[34px] w-auto max-w-full object-contain object-left" />
+    <Link href="/dashboard" className={`${center ? "flex justify-center" : "inline-block"} shrink-0`}>
+      <Image src="/images/branding/Final-Logo.svg" alt="EventQRapp" width={194} height={34} priority className={`h-[34px] w-auto max-w-full object-contain ${center ? "object-center" : "object-left"}`} />
     </Link>
   );
 }
@@ -193,7 +193,7 @@ export default function Sidebar() {
         style={SIDEBAR_BG}
       >
         <div className="flex flex-col gap-8">
-          <Logo />
+          <Logo center />
           {navigation}
         </div>
         {footer}

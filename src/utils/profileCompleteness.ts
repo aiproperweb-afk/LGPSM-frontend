@@ -5,10 +5,10 @@ export interface ProfileLike {
   fullName?: string | null;
   email?: string | null;
   phone?: string | null;
-  profile?: { organizationType?: string | null; organizationName?: string | null } | null;
+  profile?: { organizationType?: string | null; organizationName?: string | null; organization?: { phone?: string | null; whatsapp?: string | null; email?: string | null } | null } | null;
 }
 
-export type ProfileFieldKey = "fullName" | "email" | "organizationType" | "organizationName" | "phone";
+export type ProfileFieldKey = "fullName" | "email" | "organizationType" | "organizationName" | "organizationPhone" | "organizationWhatsapp" | "organizationEmail" | "phone";
 export interface ProfileCompleteness {
   percent: number;
   complete: boolean;
@@ -25,7 +25,13 @@ export function profileCompleteness(user: ProfileLike | null | undefined): Profi
     { key: "fullName", label: type === "ORGANIZATION" ? "Contact person name" : "Full name", ok: (user?.fullName || "").trim().length >= 2 },
     { key: "email", label: "Email address", ok: /^\S+@\S+\.\S+$/.test((user?.email || "").trim()) },
     { key: "organizationType", label: "Individual or organization", ok: type !== null },
-    ...(type === "ORGANIZATION" ? [{ key: "organizationName" as const, label: "Organization name", ok: (user?.profile?.organizationName || "").trim().length >= 2 }] : []),
+    // an organization also needs its own contact details (website and address stay optional); an individual has none of these
+    ...(type === "ORGANIZATION" ? [
+      { key: "organizationName" as const, label: "Organization name", ok: (user?.profile?.organizationName || "").trim().length >= 2 },
+      { key: "organizationPhone" as const, label: "Organization phone", ok: digits(user?.profile?.organization?.phone).length >= 10 },
+      { key: "organizationWhatsapp" as const, label: "WhatsApp number", ok: digits(user?.profile?.organization?.whatsapp).length >= 10 },
+      { key: "organizationEmail" as const, label: "Organization email", ok: /^\S+@\S+\.\S+$/.test((user?.profile?.organization?.email || "").trim()) },
+    ] : []),
     { key: "phone", label: "Phone number", ok: digits(user?.phone).length >= 10 },
   ];
   const filled = checks.filter((c) => c.ok).length;

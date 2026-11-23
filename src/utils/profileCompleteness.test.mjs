@@ -12,11 +12,13 @@ test("an individual with a phone number is complete", () => {
   const r = profileCompleteness({ fullName: "Sam Roy", email: "sam@gmail.com", phone: "9876543210", profile: { organizationType: "INDIVIDUAL" } });
   assert.deepEqual([r.percent, r.complete, r.total], [100, true, 4]);
 });
-test("an organization also needs its name, so it counts one more field", () => {
+test("an organization also needs its name, phone, WhatsApp number and email; website and address stay optional", () => {
   const r = profileCompleteness({ fullName: "Sam Roy", email: "sam@gmail.com", phone: "9876543210", profile: { organizationType: "ORGANIZATION" } });
-  assert.deepEqual([r.percent, r.complete, r.total], [80, false, 5]);
-  assert.deepEqual(r.missing.map((m) => m.key), ["organizationName"]);
-  assert.equal(profileCompleteness({ fullName: "Sam Roy", email: "s@x.com", phone: "+91 98765 43210", profile: { organizationType: "ORGANIZATION", organizationName: "Acme" } }).complete, true);
+  assert.deepEqual([r.complete, r.total], [false, 8]);
+  assert.deepEqual(r.missing.map((m) => m.key), ["organizationName", "organizationPhone", "organizationWhatsapp", "organizationEmail"]);
+  const org = { phone: "98765 43210", whatsapp: "+91 98765 43210", email: "hello@acme.com" };
+  assert.equal(profileCompleteness({ fullName: "Sam Roy", email: "s@x.com", phone: "+91 98765 43210", profile: { organizationType: "ORGANIZATION", organizationName: "Acme", organization: org } }).complete, true);
+  assert.equal(profileCompleteness({ fullName: "Sam Roy", email: "s@x.com", phone: "+91 98765 43210", profile: { organizationType: "INDIVIDUAL", organizationName: "" } }).complete, true);
 });
 test("short or formatted phone numbers are judged by their digits", () => {
   assert.equal(profileCompleteness({ fullName: "Al", email: "a@x.com", phone: "12345", profile: { organizationType: "INDIVIDUAL" } }).complete, false);
