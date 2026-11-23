@@ -72,7 +72,7 @@ export default function EventHeader({ eventId }: { eventId: string }) {
   const endMs = event.schedule?.end ? new Date(event.schedule.end).getTime() : NaN;
   const eventEnded = event.status === "COMPLETED" || (!Number.isNaN(endMs) && endMs <= now);
   const eventOver = event.status === "COMPLETED" || (event.status === "PUBLISHED" && !Number.isNaN(endMs) && endMs <= now);
-  const editLocked = delivery.SENT > 0 || delivery.FAILED > 0 || !!event.cardsDownloadedAt || event.status === "COMPLETED" || event.status === "CANCELLED";
+  const editLocked = delivery.SENT > 0 || delivery.FAILED > 0 || !!report?.invitationsStarted || !!event.cardsDownloadedAt || event.status === "COMPLETED" || event.status === "CANCELLED";
   const timeStatus = event.status === "CANCELLED" ? "Cancelled" : event.status === "COMPLETED" ? "Completed" : getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
   const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not sent" : timeStatus;
 

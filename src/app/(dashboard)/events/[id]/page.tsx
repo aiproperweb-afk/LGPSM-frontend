@@ -283,7 +283,7 @@ export default function EventDetailsPage() {
   const venue = typeof event.location === "string" ? event.location : event.location?.address;
   const delivery = report?.deliverySummary || { SENT: 0, PENDING: 0, FAILED: 0 };
   const cardsDownloaded = !!(event as unknown as { cardsDownloadedAt?: string }).cardsDownloadedAt;
-  const invitationLifecycleStarted = delivery.SENT > 0 || delivery.FAILED > 0 || cardsDownloaded;
+  const invitationLifecycleStarted = delivery.SENT > 0 || delivery.FAILED > 0 || cardsDownloaded || !!report?.invitationsStarted;
   // The API refuses edits once invitations went out and for closed or cancelled events
   // An event is over once its end time has passed (or it was closed earlier): nobody has to close it
   // its end time has passed (cancelled or not): a past event is deleted, not cancelled

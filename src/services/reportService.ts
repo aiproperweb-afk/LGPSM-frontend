@@ -26,6 +26,8 @@ export interface EventReportData {
   totalSystemUsers?: number;
   rsvpSummary: { ACCEPTED: number; DECLINED: number; PENDING: number };
   deliverySummary: { SENT: number; PENDING: number; FAILED: number };
+  /** the server's own view of whether editing is closed (an invitation sent or tried, or cards made) */
+  invitationsStarted?: boolean;
   checkInMethods: { QR: number; MANUAL: number };
   sessionReports: {
     sessionId: string;

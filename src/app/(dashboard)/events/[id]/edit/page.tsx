@@ -80,7 +80,7 @@ export default function EditEventPage() {
       }
       const ev = eventRes.data as unknown as { status?: string; schedule?: { end?: string }; cardsDownloadedAt?: string };
       const ended = !!ev.schedule?.end && new Date(ev.schedule.end).getTime() <= Date.now();
-      const invitationsOut = !!(reportRes.success && reportRes.data && (reportRes.data.deliverySummary.SENT > 0 || reportRes.data.deliverySummary.FAILED > 0));
+      const invitationsOut = !!(reportRes.success && reportRes.data && (reportRes.data.deliverySummary.SENT > 0 || reportRes.data.deliverySummary.FAILED > 0 || reportRes.data.invitationsStarted));
       const why =
         ev.status === "CANCELLED" ? "This event was cancelled, so it can no longer be edited." :
         ev.status === "COMPLETED" || ended ? "This event is over, so it can no longer be edited." :
