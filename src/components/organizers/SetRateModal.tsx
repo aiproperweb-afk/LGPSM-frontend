@@ -30,7 +30,7 @@ export default function SetRateModal({ organizerId, organizerName, onClose, onSa
   }, [onClose, busy]);
 
   const value = Number(text);
-  const valid = text.trim() !== "" && Number.isFinite(value) && value >= 0 && value <= 1000;
+  const valid = text.trim() !== "" && Number.isFinite(value) && value >= 0 && value <= 20;
 
   const save = async (next: number | null) => {
     setBusy(true); setError(null); setDone(null);
@@ -56,9 +56,9 @@ export default function SetRateModal({ organizerId, organizerName, onClose, onSa
           </p>
           <div>
             <label htmlFor="org-rate" className="block text-xs font-medium text-[#15191C] mb-2">Rate per invitee (₹)<span className="text-[#D92D20]">*</span></label>
-            <input id="org-rate" type="number" inputMode="decimal" min={0} max={1000} step="0.01" value={text} disabled={busy || !rate} placeholder={rate?.defaultRate !== null && rate ? String(rate.defaultRate) : "e.g. 3"} onChange={(e) => { setText(e.target.value); setDone(null); }}
+            <input id="org-rate" type="number" inputMode="decimal" min={0} max={20} step="0.01" value={text} disabled={busy || !rate} placeholder={rate?.defaultRate !== null && rate ? String(rate.defaultRate) : "e.g. 3"} onChange={(e) => { setText(e.target.value); setDone(null); }}
               className="w-full h-[47px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm font-medium text-[#15191C] focus:outline-none focus:border-[#1F65FF]" />
-            {text.trim() !== "" && !valid && <p role="alert" className="mt-1.5 text-xs text-[#D92D20]">Enter an amount from 0 to 1000.</p>}
+            {text.trim() !== "" && !valid && <p role="alert" className="mt-1.5 text-xs text-[#D92D20]">Enter an amount from 0 to 20.</p>}
           </div>
           {rate?.customRate !== null && rate && (
             <button type="button" onClick={() => save(null)} disabled={busy} className="text-xs text-[#1F65FF] underline cursor-pointer disabled:opacity-50">Remove this organizer&apos;s own rate (use the platform rate)</button>

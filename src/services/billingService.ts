@@ -17,7 +17,9 @@ export interface EventBill {
   currency: string;
 }
 export interface BillQuote { invitees: number; rate: number | null; subtotal: number; gstPercent: number; tax: number; total: number; currency: string; selected: number; alreadyPaid: number; payable: boolean }
-export interface EventBills { currency: string; totalDue: number; totalPaid: number; events: EventBill[] }
+/** A payment that went through (never one that was only started or failed) */
+export interface PaidPayment { eventId: string; eventName: string; amount: number; at: string }
+export interface EventBills { currency: string; totalDue: number; totalPaid: number; /** everything really paid, across all the organizer's events */ paidTotal?: number; payments?: PaidPayment[]; events: EventBill[] }
 export interface PaymentStart { keyId: string; providerOrderId: string; amount: number; currency: string; eventId: string; eventName: string; invitees: number; subtotal: number; tax: number; total: number; gstPercent: number }
 
 export const billingService = {

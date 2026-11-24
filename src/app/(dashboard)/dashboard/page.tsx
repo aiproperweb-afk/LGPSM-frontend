@@ -14,6 +14,7 @@ import { reportService } from "@/services/reportService";
 import { userService } from "@/services/userService";
 import { notificationService, type NotificationItem } from "@/services/notificationService";
 import { platformSettingsService, type EarningsData } from "@/services/platformSettingsService";
+import { billingService, type EventBills } from "@/services/billingService";
 import { eventDisplayStatus } from "@/utils/eventUtils";
 import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 import { Skeleton, TableSkeletonRows } from "@/components/common/Skeleton";
@@ -131,6 +132,8 @@ export default function DashboardPage() {
   const [lastCreated, setLastCreated] = useState<string | undefined>();
   const [people, setPeople] = useState<{ total: number; active: number; inactive: number; newThisMonth: number }>({ total: 0, active: 0, inactive: 0, newThisMonth: 0 });
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
+  // an organizer's Billing Overview shows what they really paid (payments that went through), not what their invitations would cost
+  const [billing, setBilling] = useState<EventBills | null>(null);
   const [notes, setNotes] = useState<NotificationItem[]>([]);
   const [report, setReport] = useState<{ title: string; invitees: number; attendees: number } | null>(null);
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
@@ -169,11 +172,12 @@ export default function DashboardPage() {
       if (!quiet) setLoading(true);
       if (!quiet) setError(null);
       // Each role sees only what it may: an organizer their own events, staff and billing; an admin everyone's events, the organizers and platform earnings
-      const [eventsRes, peopleRes, earningsRes, notesRes] = await Promise.all([
+      const [eventsRes, peopleRes, earningsRes, notesRes, billingRes] = await Promise.all([
         eventService.getEvents(),
         userService.getUsers(isAdmin ? "ORGANIZER" : "SYSTEM_USER", undefined, { includeInactive: isAdmin }),
         platformSettingsService.getEarnings(),
         notificationService.getUserNotifications(false, 1, 6),
+        isAdmin ? Promise.resolve(null) : billingService.getEventBills().catch(() => null),
       ]);
       if (cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,6 +211,7 @@ export default function DashboardPage() {
         newThisMonth: list.filter((u) => sameMonth(u.createdAt)).length,
       });
       setEarnings(earningsRes?.success && earningsRes.data ? earningsRes.data : null);
+      setBilling(billingRes && billingRes.success && billingRes.data ? billingRes.data : null);
       setNotes(notesRes?.success && Array.isArray(notesRes.data) ? notesRes.data : []);
 
       if (isAdmin) {
@@ -271,8 +276,13 @@ export default function DashboardPage() {
   // const active = rows.filter((r) => r.phase === "Upcoming" || r.phase === "Ongoing");
   // const sentCount = active.filter((r) => r.invited).length;
 
-  const thisMonth = (earnings?.events || []).filter((e) => sameMonth(e.createdAt)).reduce((n, e) => n + (e.amount || 0), 0);
-  const lastBilled = [...(earnings?.events || [])].filter((e) => e.amount).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+  const thisMonth = isAdmin
+    ? (earnings?.events || []).filter((e) => sameMonth(e.createdAt)).reduce((n, e) => n + (e.amount || 0), 0)
+    : (billing?.payments || []).filter((p) => sameMonth(p.at)).reduce((n, p) => n + p.amount, 0);
+  const lastBilled = isAdmin
+    ? [...(earnings?.events || [])].filter((e) => e.amount).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+    : (billing?.payments || [])[0] ? { eventName: (billing?.payments || [])[0].eventName } : undefined;
+  const moneyShown = isAdmin ? (earnings ? compactMoney(earnings.totalAmount) : "—") : (billing ? compactMoney(billing.paidTotal ?? billing.totalPaid) : "—");
 
   const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
@@ -318,12 +328,12 @@ export default function DashboardPage() {
                 label={isAdmin ? "Earnings Overview" : "Billing Overview"}
                 href={isAdmin ? "/earnings" : "/billing"}
                 loading={loading}
-                value={earnings ? compactMoney(earnings.totalAmount) : "—"}
+                value={moneyShown}
                 caption={isAdmin ? "Total Earnings" : "Total Payments"}
                 icon={<StatMoneyIcon className="size-6" />}
                 lines={[
                   <>This Month: <span className="font-semibold text-[#117A43]">{fullMoney(thisMonth)}</span></>,
-                  lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>No billed events yet</>,
+                  lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>{isAdmin ? "No billed events yet" : "No payments yet"}</>,
                 ]}
               />
             </div>

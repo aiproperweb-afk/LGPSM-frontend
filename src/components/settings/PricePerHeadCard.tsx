@@ -22,7 +22,7 @@ export default function PricePerHeadCard({
   const rateText = currentRate === null ? "Not set" : formatMoney(currentRate);
   const rateLine = currentRate === null ? "No rate has been set yet, so events use the default of ₹3 per head" : `Per-head billing · ${rateText} / invitee (current rate)`;
   const changed = edited !== null && edited !== currentRate;
-  const valid = sliderVal >= 1 && sliderVal <= 1000;
+  const valid = sliderVal >= 1 && sliderVal <= 20;
   // where the value bubble sits above the slider thumb (the slider runs from ₹1 to ₹20)
   const thumbPct = Math.min(100, Math.max(0, ((Math.min(Math.max(sliderVal, 1), 20) - 1) / 19) * 100));
 
@@ -93,7 +93,7 @@ export default function PricePerHeadCard({
               <input
                 type="number"
                 min={1}
-                max={1000}
+                max={20}
                 step={0.5}
                 value={Number.isFinite(sliderVal) ? sliderVal : ""}
                 aria-label="Price per invitee in rupees"
