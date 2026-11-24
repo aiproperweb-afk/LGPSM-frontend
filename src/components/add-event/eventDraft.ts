@@ -175,7 +175,10 @@ export interface EventDraft {
   description: string;
   categoryId: string;
   subcategoryId: string;
+  /** The host's contact number (guests call it with questions) */
   contactNumber: string;
+  /** The host named on the invitation (email, page and card) instead of the organizer's own name */
+  hostName: string;
   /** Event Location: mandatory, printed on the card */
   venue: string;
   /** Address: optional full address / directions */
@@ -242,6 +245,7 @@ export function createEmptyEventDraft(): EventDraft {
     categoryId: "",
     subcategoryId: "",
     contactNumber: "",
+    hostName: "",
     venue: "",
     venuePin: null,
     start,
@@ -300,6 +304,7 @@ export function hasMeaningfulContent(draft: EventDraft): boolean {
       draft.description.trim() ||
       draft.venue.trim() ||
       draft.contactNumber.trim() ||
+      (draft.hostName ?? "").trim() ||
       draft.template ||
       draft.logoKey ||
       draft.organizerIds.length > 0 ||
@@ -330,13 +335,17 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   if (options.templateRequired && !draft.template) errors.template = "Select a template to continue.";
   if (!draft.title.trim()) errors.title = "Title is required.";
   else if (draft.title.trim().length > (draft.template?.titleMaxChars ?? EVENT_TITLE_MAX_LENGTH)) errors.title = `Title cannot exceed ${draft.template?.titleMaxChars ?? EVENT_TITLE_MAX_LENGTH} characters${draft.template?.titleMaxChars ? " on this template" : ""}.`;
-  if (draft.description.length > EVENT_DESCRIPTION_MAX_LENGTH) errors.description = `Description cannot exceed ${EVENT_DESCRIPTION_MAX_LENGTH} characters.`; // optional: empty is fine
+  if (draft.description.length > EVENT_DESCRIPTION_MAX_LENGTH) errors.description = `The invitation message cannot exceed ${EVENT_DESCRIPTION_MAX_LENGTH} characters.`; // optional: empty is fine
   if (!draft.categoryId) errors.categoryId = "Choose an event category.";
   else if (options.subcategoryRequired && !draft.subcategoryId) errors.subcategoryId = "Choose a subcategory.";
+  const hostName = (draft.hostName ?? "").trim();
+  // new events name their host; an older event without one keeps using the organizer's name on its invitations
+  if (!hostName && options.isNew) errors.hostName = "Host name is required.";
+  else if (hostName.length > 100) errors.hostName = "The host name cannot exceed 100 characters.";
   const contactDigits = draft.contactNumber.replace(/\D/g, "");
-  if (!contactDigits) errors.contactNumber = "Contact number is required.";
+  if (!contactDigits) errors.contactNumber = "Host contact number is required.";
   // phone numbers are 10 digits (an older saved number with +91 or a leading 0 still counts)
-  else if ((contactDigits.length > 10 && /^(91|0)/.test(contactDigits) ? contactDigits.replace(/^(91|0)/, "") : contactDigits).length !== 10) errors.contactNumber = "Enter a 10-digit contact number.";
+  else if ((contactDigits.length > 10 && /^(91|0)/.test(contactDigits) ? contactDigits.replace(/^(91|0)/, "") : contactDigits).length !== 10) errors.contactNumber = "Enter a 10-digit host contact number.";
   if (!draft.venue.trim()) errors.venue = "Event location is required.";
   else if (draft.venue.trim().length > EVENT_LOCATION_MAX_LENGTH) errors.venue = `Event location cannot exceed ${EVENT_LOCATION_MAX_LENGTH} characters.`;
   if (!isValidIso(draft.start)) errors.start = "Choose a start date and time.";
@@ -419,6 +428,8 @@ function commonPayload(draft: EventDraft) {
     ...(draft.categoryId ? { categoryId: draft.categoryId } : {}),
     ...(draft.subcategoryId ? { subcategoryId: draft.subcategoryId } : {}),
     ...(draft.contactNumber.trim() ? { contactNumber: draft.contactNumber.trim() } : {}),
+    // always sent, so clearing the host name on an existing event clears it
+    hostName: (draft.hostName ?? "").trim(),
     ...(draft.venue.trim()
       ? { location: { address: draft.venue.trim(), ...(draft.addressDetails?.trim() ? { addressDetails: draft.addressDetails.trim() } : {}) } }
       : {}),
@@ -473,6 +484,7 @@ export interface ServerEvent {
   categoryId?: RefOrId;
   subcategoryId?: RefOrId;
   contactNumber?: string;
+  hostName?: string;
   location?: string | { address?: string; coordinates?: { coordinates?: [number, number] } };
   schedule?: { start?: string; end?: string };
   admission?: { opensAt?: string | null; closesAt?: string | null };
@@ -535,6 +547,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     categoryId: idOf(event?.categoryId),
     subcategoryId: idOf(event?.subcategoryId),
     contactNumber: event?.contactNumber || "",
+    hostName: event?.hostName || "",
     venue: typeof event?.location === "string" ? event.location : event?.location?.address || "",
     venuePin: pinOf(event?.location),
     addressDetails: typeof event?.location === "object" && event?.location ? (event.location as { addressDetails?: string }).addressDetails || "" : "",

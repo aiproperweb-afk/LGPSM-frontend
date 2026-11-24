@@ -14,6 +14,8 @@ interface MobileCardPreviewProps {
   eventEnd: string;
   venue: string;
   contactNumber?: string;
+  /** the host named for the event (printed where the design shows the host) */
+  hostName?: string;
   cardDisplay?: TemplatePreviewPayload["cardDisplay"];
   logoKey: string | null;
   categoryName: string;
@@ -37,6 +39,7 @@ export default function MobileCardPreview({
   eventEnd,
   venue,
   contactNumber,
+  hostName,
   cardDisplay,
   logoKey,
   categoryName,
@@ -60,13 +63,14 @@ export default function MobileCardPreview({
       endIso: eventEnd || undefined,
       venue: venue.trim() || undefined,
       contactNumber: contactNumber?.trim() || undefined,
+      hostName: hostName?.trim() || undefined,
       categoryName: categoryName || undefined,
       subcategoryName: subcategoryName || undefined,
       logoKey: logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined,
       ...(cardInfo ? { cardInfo } : {}),
       ...(cardDisplay ? { cardDisplay: cardDisplayForServer(cardDisplay) } : {}),
     }),
-    [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
+    [eventTitle, eventStart, eventEnd, venue, contactNumber, hostName, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
   );
   // the parent builds cardDisplay/cardInfo afresh on every render, so the payload's identity changes constantly even when nothing was
   // typed: depend on its content, or the card is re-requested (and the spinner flashes) over and over

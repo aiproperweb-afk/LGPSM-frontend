@@ -21,6 +21,8 @@ interface ImageUploadFieldProps {
   /** Extra classes for the empty drop area (e.g. a minimum height) */
   emptyClassName?: string;
   disabled?: boolean;
+  /** Said inside the dotted box in place of its usual text while the field is turned off (and no image is held) */
+  disabledMessage?: string;
   optional?: boolean;
   onUploadingChange?: (uploading: boolean) => void;
   /** Offer a 1:1 crop before the picture is uploaded */
@@ -41,6 +43,7 @@ export default function ImageUploadField({
   fill = false,
   emptyClassName = "",
   disabled = false,
+  disabledMessage,
   optional = false,
   onUploadingChange,
   squareCrop = false,
@@ -132,14 +135,20 @@ export default function ImageUploadField({
           }`}
         >
           <DashedBorder className={dragOver ? "text-[#1F65FF]" : optional ? "text-[#D3D3D3] group-focus:text-[#16A34A]" : "text-[#D3D3D3] group-hover:text-[#1F65FF]"} />
-          <span className="text-[#4B4F52]">
-            {uploading ? "Uploading..." : (
-              <>
-                Drag and drop an image here or <span className="text-[#1F65FF] font-medium underline">click to open file</span>
-              </>
-            )}
-          </span>
-          <span className="block mt-1 text-xs text-[#828282]">{hint}</span>
+          {disabled && disabledMessage ? (
+            <span role="status" className="block max-w-[340px] text-xs leading-relaxed text-[#1D3A8A]">{disabledMessage}</span>
+          ) : (
+            <>
+              <span className="text-[#4B4F52]">
+                {uploading ? "Uploading..." : (
+                  <>
+                    Drag and drop an image here or <span className="text-[#1F65FF] font-medium underline">click to open file</span>
+                  </>
+                )}
+              </span>
+              <span className="block mt-1 text-xs text-[#828282]">{hint}</span>
+            </>
+          )}
         </button>
       )}
       {cropping && <ImageCropModal file={cropping} onCancel={() => setCropping(null)} aspect={cropAspect?.ratio} aspectLabel={cropAspect?.label} onConfirm={(cropped) => { setCropping(null); void upload(cropped); }} />}

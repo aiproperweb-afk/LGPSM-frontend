@@ -16,7 +16,11 @@ import EditInviteeModal from "@/components/add-event/modals/EditInviteeModal";
 import DeleteInviteeModal, { type RemovalDetails } from "@/components/add-event/modals/DeleteInviteeModal";
 import AddInviteeChooserModal from "@/components/add-event/modals/AddInviteeChooserModal";
 import AddInviteeManualModal from "@/components/add-event/modals/AddInviteeManualModal";
-import SendWarningModal from "@/components/invitees/SendWarningModal";
+import SendWarningModal, { type ActionMode } from "@/components/invitees/SendWarningModal";
+import InviteeFilterPanel from "@/components/invitees/InviteeFilterPanel";
+import InviteeActionMenu, { type ActionItem } from "@/components/invitees/InviteeActionMenu";
+import { CHANNEL_OPTIONS, type Channel } from "@/components/invitees/channelOptions";
+import { activeFilterCount, applyInviteeFilters, type InviteeFilters } from "@/utils/inviteeFilters";
 import SendBillModal from "@/components/invitees/SendBillModal";
 import DownloadCardsModal from "@/components/invitees/DownloadCardsModal";
 import UploadTooLargeModal from "@/components/invitees/UploadTooLargeModal";
@@ -27,7 +31,6 @@ import { billingService, type BillQuote } from "@/services/billingService";
 import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import SendSuccessModal from "@/components/invitees/SendSuccessModal";
 import { asInvitationChannel } from "@/utils/invitationChannel";
-import InfoTip from "@/components/common/InfoTip";
 import PageHeader from "@/components/common/PageHeader";
 import ButtonIcon from "@/components/common/ButtonIcons";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -49,7 +52,7 @@ import { ownListSessions, sessionPickOptionsFor, listIdFor } from "@/utils/sessi
 import InviteeListsModal from "@/components/invitees/InviteeListsModal";
 import { canManageInviteeLists, previewDiscrepancy } from "@/utils/inviteeLists";
 import { excelColumnsFor, expectedColumnsFor, headerFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
-import { dietaryAnswer, dietaryQuestionTitles } from "@/utils/dietaryAnswers";
+import { dietaryAnswer, dietaryQuestionOptions, dietaryQuestionTitles } from "@/utils/dietaryAnswers";
 import { summarizeDelivery, type DeliveryOutcome } from "@/utils/deliverySummary.mjs";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import Icon from "@/components/icons/Icon";
@@ -76,7 +79,6 @@ interface Invitee {
 
 const INVITEE_PAGE_SIZE = 50;
 
-type Channel = "EMAIL" | "WHATSAPP" | "BOTH";
 type Feedback = { type: "success" | "error" | "info"; message: string; details?: string[] } | null;
 
 const pill = (cls: string, text: string) => <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${cls}`}>{text}</span>;
@@ -201,9 +203,14 @@ export default function InviteesManagementPage() {
   // Which session the guests being added belong to ("" = the whole event); only asked when sessions keep their own lists
   const [targetSessionId, setTargetSessionId] = useState("");
   const [sampleReminder, setSampleReminder] = useState(false);
-  const [confirmFirstSend, setConfirmFirstSend] = useState(false);
+  // the window before sending / downloading (Figma 198:2162), and the guests a card download is for
+  const [actionPopup, setActionPopup] = useState<ActionMode | null>(null);
+  const [downloadIds, setDownloadIds] = useState<string[]>([]);
+  // Filter & Sorting panel (Figma 195:1813): the choices beyond session and invitation
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [panelFilters, setPanelFilters] = useState<Pick<InviteeFilters, "food" | "rsvp" | "sort">>({ food: null, rsvp: "", sort: "ANY" });
   // the bill (invitees x per-head rate + GST) shown before invitations go out, and the payment that follows
-  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: "send" | "download" } | null>(null);
+  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: ActionMode } | null>(null);
   const [billBusy, setBillBusy] = useState(false);
   const [billError, setBillError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -340,19 +347,21 @@ export default function InviteesManagementPage() {
   const [repeats, setRepeats] = useState<RepeatedGuest[] | null>(null);
   const uploadCooldownUntil = useRef(0);
   const term = search.trim().toLowerCase();
-  const filteredInvitees = invitees.filter(
-    (i) =>
-      (!term || [i.name, i.email, i.mobile, i.companyName].some((v) => (v || "").toLowerCase().includes(term))) &&
-      (!filterSession || allowedIn(i, filterSession)) &&
-      (!invitationFilter || (invitationFilter === "SENT") === (i.invitationStatus === "SENT"))
+  const foodQuestions = dietaryQuestionOptions(event?.dietaryPreference);
+  const foodTitles = dietaryQuestionTitles(event?.dietaryPreference);
+  const filteredInvitees = applyInviteeFilters(
+    invitees.filter((i) => (!term || [i.name, i.email, i.mobile, i.companyName].some((v) => (v || "").toLowerCase().includes(term))) && (!filterSession || allowedIn(i, filterSession))),
+    { invitation: invitationFilter, ...panelFilters },
+    foodTitles
   );
+  const filtersInForce: InviteeFilters = { session: sessionFilter, invitation: invitationFilter, ...panelFilters };
   const inviteePageCount = Math.max(1, Math.ceil(filteredInvitees.length / INVITEE_PAGE_SIZE));
   const visible = filteredInvitees.slice((inviteePage - 1) * INVITEE_PAGE_SIZE, inviteePage * INVITEE_PAGE_SIZE);
   const allVisibleSelected = visible.length > 0 && visible.every((i) => selectedIds.includes(i._id));
 
   useEffect(() => {
     setInviteePage(1);
-  }, [term, sessionFilter, invitationFilter]);
+  }, [term, sessionFilter, invitationFilter, panelFilters]);
 
   useEffect(() => {
     if (inviteePage > inviteePageCount) setInviteePage(inviteePageCount);
@@ -363,19 +372,21 @@ export default function InviteesManagementPage() {
   // Who "Send Invitation" goes to: the ticked guests, or everyone shown by the "Not sent" filter. Guests already invited are always left out.
   const sendTargets = (selected.length ? selected : invitationFilter === "NOT_SENT" ? filteredInvitees : []).filter((i) => i.invitationStatus === "PENDING");
 
-  const handleSend = async () => {
-    if (sendInFlight.current) return;
+  const handleSend = async (): Promise<string[]> => {
+    if (sendInFlight.current) return [];
     const targets = sendTargets;
     if (targets.length === 0) {
       showAlert(selected.length ? "The selected guests were already invited. Use Resend Invitation." : "Everyone on the list has been invited.", "info");
-      return;
+      return [];
     }
     setBusy("send");
     sendInFlight.current = true;
     setFeedback(null);
+    let sentIds: string[] = [];
     try {
       const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel });
-      const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
+      const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; inviteeId?: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
+      sentIds = results.filter((r) => r.status === "SENT" && r.inviteeId).map((r) => String(r.inviteeId));
       const sendSummary = res.success || results.length ? summarize(results, "sent") : { type: "error" as const, message: res.message || "Invitations could not be sent." };
       // a send that reached guests is confirmed with the success popup instead of the banner; problems still show in the banner
       if (results.some((r) => r.status === "SENT") && sendSummary && sendSummary.type === "success") setSentPopup({ title: "Invitations sent successfully", message: sendSummary.message, details: sendSummary.details });
@@ -389,12 +400,14 @@ export default function InviteesManagementPage() {
       sendInFlight.current = false;
       setBusy(null);
     }
+    return sentIds;
   };
 
   // Sending is charged per invitation: show the bill first when there is something to pay (Figma 2001:2467). With no rate set, or the
   // invitations already paid for, there is nothing to charge and the send goes ahead.
-  const showBillOrSend = async (kind: "send" | "download" = "send"): Promise<boolean> => {
-    const ids = kind === "download" ? selectedIds : sendTargets.map((t) => t._id);
+  const showBillOrSend = async (kind: ActionMode = "send"): Promise<boolean> => {
+    // a download is billed for the guests asked for; a send (and a send that is followed by cards) for the guests being invited
+    const ids = kind === "download" ? downloadIds : sendTargets.map((t) => t._id);
     if (ids.length === 0) return false;
     const res = await billingService.quote(eventId, ids);
     if (!res.success || !res.data) { setFeedback({ type: "error", message: res.message || "The bill could not be worked out. Please try again." }); return true; }
@@ -413,7 +426,7 @@ export default function InviteesManagementPage() {
       if (!start.success || !start.data) { setBillError(start.message || "The payment could not be started."); return; }
       const result = await openRazorpayCheckout({
         keyId: start.data.keyId, orderId: start.data.providerOrderId, amount: start.data.amount, currency: start.data.currency,
-        name: "EventQRapp", description: `${event?.title || "Event"}: ${start.data.invitees} ${bill.kind === "download" ? "card" : "invitation"}${start.data.invitees === 1 ? "" : "s"}`,
+        name: "EventQRapp", description: `${event?.title || "Event"}: ${start.data.invitees} ${bill.kind === "download" ? "card" : bill.kind === "both" ? "guest" : "invitation"}${start.data.invitees === 1 ? "" : "s"}`,
         prefill: { name: user?.fullName, email: user?.email },
       });
       if (result.status === "cancelled") { setBillError("Payment cancelled. Nothing was charged and no invitation was sent."); return; }
@@ -422,33 +435,55 @@ export default function InviteesManagementPage() {
       if (!confirmed.success) { setBillError(confirmed.message || "We could not confirm the payment. If money was debited it is kept as credit for this event; check Billing."); return; }
       setBill(null);
       // paid: what the organizer asked for now goes ahead (one payment covers a guest's send or download, so the other is not charged again)
-      if (bill.kind === "download") setDownloadOpen(true);
-      else await handleSend();
+      await runPaid(bill.kind);
     } finally {
       setBillBusy(false);
     }
   };
 
-  // Cards are paid for like invitations: the bill (and Razorpay) first when something is due, then the download starts
-  const requestDownload = async () => {
-    if (selectedIds.length === 0) return;
-    if (!(await showBillOrSend("download"))) setDownloadOpen(true);
+  // What goes ahead once any bill is settled: send, download, or (Print and Digital both) send and then make the cards of the guests that were reached
+  const runPaid = async (mode: ActionMode) => {
+    if (mode === "download") { setDownloadOpen(true); return; }
+    const targets = sendTargets.map((t) => t._id);
+    const reached = await handleSend();
+    if (mode === "both") {
+      // only guests whose invitation really went out can have their cards made (the server asks for the invitation first)
+      const ids = targets.filter((id) => reached.includes(id));
+      if (ids.length > 0) { setDownloadIds(ids); setDownloadOpen(true); }
+    }
   };
 
-  // The first send locks the event, so it goes through the Figma warning (2001:2443); later sends go straight out
-  const requestSend = async () => {
-    if (!lifecycleStarted) { setConfirmFirstSend(true); return; }
-    // Sending reaches real people and cannot be taken back, so say who it goes to and how before it goes
-    const count = sendTargets.length;
-    if (count === 0) { handleSend(); return; } // nothing to send: handleSend explains why
-    const by = channel === "BOTH" ? "email and WhatsApp" : channel === "WHATSAPP" ? "WhatsApp" : "email";
-    const ok = await confirm({
-      title: "Send invitations?",
-      message: `Send the invitation for “${event?.title || "this event"}” to ${count} ${count === 1 ? "guest" : "guests"} by ${by}? They will receive it straight away.`,
-    });
-    // Confirm leads to the bill (and then Razorpay); with nothing to charge the invitations go out
-    if (ok && !(await showBillOrSend())) handleSend();
+  // An action starts with its window (Figma 198:2162): the first send or card download locks the event, so it warns first; later ones confirm
+  // who it goes to. Digital only sends, Print only downloads, and Print and Digital both sends and then downloads.
+  const eventCardsMade = !!(event as unknown as { cardsDownloadedAt?: string } | null)?.cardsDownloadedAt;
+  const firstTimeFor = (mode: ActionMode) => (mode === "download" ? !eventCardsMade && !lifecycleStarted : !lifecycleStarted && !eventCardsMade);
+  const startAction = (mode: ActionMode) => {
+    if (mode === "download") {
+      if (selectedIds.length === 0) return;
+      // Print and Digital both: a guest's invitation goes out before the card is made, so unsent guests are pointed to Send first
+      const unsent = invitees.filter((i) => selectedIds.includes(i._id) && i.invitationStatus !== "SENT");
+      if (invitationType === "BOTH" && unsent.length > 0) {
+        setNeedSendFirst(unsent.length);
+        return;
+      }
+      setDownloadIds(selectedIds);
+      // cards are already being made for this event (or invitations are out): no first-time warning, straight to the bill / download
+      if (!firstTimeFor("download")) { void (async () => { if (!(await showBillOrSend("download"))) setDownloadOpen(true); })(); return; }
+      setActionPopup("download");
+      return;
+    }
+    if (sendTargets.length === 0) { void handleSend(); return; } // nothing to send: handleSend explains why
+    setActionPopup(mode);
   };
+  const confirmAction = async () => {
+    const mode = actionPopup;
+    setActionPopup(null);
+    if (!mode) return;
+    if (mode === "download") { setDownloadIds((ids) => (ids.length ? ids : selectedIds)); }
+    if (!(await showBillOrSend(mode))) await runPaid(mode);
+  };
+  // Print and Digital both, Download Cards pressed for guests whose invitation has not gone out
+  const [needSendFirst, setNeedSendFirst] = useState(0);
 
   const handleResend = async (targets: InvitationData[] = resendTargets) => {
     if (targets.length === 0 || resendInFlight.current) return;
@@ -668,6 +703,17 @@ export default function InviteesManagementPage() {
   const btn = "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   // Figma send button: outlined orange, 16px semibold, washed out until something can be sent
   const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#1F65FF] text-[#1F65FF] bg-white hover:bg-[#EEF3FF] text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+  // Figma 195:1154 main buttons: filled blue, 16px semibold
+  const primaryFilled = "inline-flex items-center justify-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  // The Action menu: the list's working tools (only the ones that apply to this event), and how invitations are delivered
+  const actionItems: ActionItem[] = [
+    { key: "sample", label: "Download Excel Sample", onClick: () => downloadInviteeTemplate(fieldConfig) },
+    { key: "preview", label: "Preview List", onClick: () => setShowListPreview(true), disabled: invitees.length === 0 },
+    { key: "lists", label: "Uploaded Lists", onClick: () => setListsTab("lists"), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
+    { key: "resend", label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => void handleResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
+    { key: "history", label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED") },
+    ...(digitalInvites ? CHANNEL_OPTIONS.map((o, n): ActionItem => ({ key: `channel-${o.value}`, label: String(o.label), heading: n === 0 ? "Send invitations by" : undefined, selected: channel === o.value, onClick: () => setChannel(o.value as Channel) })) : []),
+  ];
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
   const sampleColumns = excelColumnsFor(fieldConfig);
@@ -786,17 +832,50 @@ export default function InviteesManagementPage() {
                   />
                 )}
                 <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
-                <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
+                <button type="button" onClick={() => setFiltersOpen(true)} aria-label={`Filter and sorting${activeFilterCount(filtersInForce) ? ` (${activeFilterCount(filtersInForce)} active)` : ""}`} className="relative inline-flex items-center justify-center gap-2 h-[46px] px-6 bg-white border border-[#1F65FF] rounded-lg text-base font-semibold text-[#1F65FF] hover:bg-[#EEF3FF] cursor-pointer">
+                  <Icon name="events/inv-filter-button" width={22} height={13} />
+                  Filter
+                  {activeFilterCount(filtersInForce) > 0 && <span className="absolute -top-2 -right-2 size-5 rounded-full bg-[#1F65FF] text-white text-[11px] flex items-center justify-center">{activeFilterCount(filtersInForce)}</span>}
+                </button>
                 {!historical && (
                 <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
                 )}
+              </div>
+            </div>
+
+            {/* The list's tools (Figma 195:1154): Select All and Delete on the left; Action menu, the main button for this event's invitation
+                type and the guest count on the right */}
+            <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label="Upload invitee Excel file" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#4B4F52]">
+              <div className="flex flex-wrap items-center gap-4">
+                {invitees.length > 0 && (
+                  <label className="inline-flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all visible invitees"
+                      checked={allVisibleSelected}
+                      onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
+                      className="size-4 cursor-pointer check-green"
+                    />
+                    Select All
+                  </label>
+                )}
+                {!historical && selectedIds.length > 0 && (
+                  <button type="button" onClick={() => setBulkOpen(true)} disabled={bulkDeleting || busy !== null} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 cursor-pointer disabled:opacity-50">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+                    {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.length})`}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <InviteeActionMenu items={actionItems} />
                 {digitalInvites && (notInvited.length > 0 || !lifecycleStarted ? (
-                  <button type="button" onClick={requestSend} disabled={!canIssue || busy !== null || sendTargets.length === 0} title={!canIssue ? "This event is over, so invitations can no longer be sent" : sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={`${primaryOutline}`}>
-                    <ButtonIcon name={busy === "send" ? "spinner" : "send"} />
-                    {busy === "send" ? "Sending..." : sendTargets.length ? `Send Invitation (${sendTargets.length})` : "Send Invitation"}
+                  <button type="button" onClick={() => startAction(printableCards ? "both" : "send")} disabled={!canIssue || busy !== null || sendTargets.length === 0} title={!canIssue ? "This event is over, so invitations can no longer be sent" : sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={primaryFilled}>
+                    {busy === "send" ? <ButtonIcon name="spinner" /> : <Icon name="events/inv-send-white" width={16} height={16} />}
+                    {busy === "send" ? "Sending..." : `Send Invitation${sendTargets.length ? ` (${sendTargets.length})` : ""}`}
                   </button>
                 ) : (
                   <button
@@ -804,115 +883,27 @@ export default function InviteesManagementPage() {
                     onClick={() => handleResend()}
                     disabled={!canIssue || busy !== null || resendTargets.length === 0}
                     title={!canIssue ? "This event is over, so invitations can no longer be sent" : resendTargets.length ? undefined : "Only guests whose invitation failed to send can be resent. Select one of them."}
-                    className={`${primaryOutline}`}
+                    className={primaryFilled}
                   >
                     <ButtonIcon name={busy === "resend" ? "spinner" : "resend"} />
                     {busy === "resend" ? "Resending..." : `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            {/* Working tools the frames do not show are kept in a secondary row */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label="Upload invitee Excel file" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
-              {digitalInvites && (
-              <div className="w-[230px]">
-                <CustomDropdown
-                  value={channel}
-                  onChange={(v) => setChannel(v as Channel)}
-                  ariaLabel="Delivery channel"
-                    options={[
-                      {
-                        value: "EMAIL", label: "Email",
-                        icon: (
-                          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" aria-hidden>
-                            <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-.01 0-.02.002-.03l6.966 5.226.001.001 4.397 3.297 4.397-3.297.001-.001L22 5.427c.001.01.002.02.002.03z" fill="#EA4335"/>
-                            <path d="M23.927 5L12 13.5.073 5C.494 4.382 1.21 4 2 4h20c.79 0 1.506.382 1.927 1z" fill="#FBBC04"/>
-                          </svg>
-                        ),
-                      },
-                      {
-                        value: "WHATSAPP", label: "WhatsApp",
-                        icon: (
-                          <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" aria-hidden fill="#25D366">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                          </svg>
-                        ),
-                      },
-                      { value: "BOTH", label: "All (Email + WhatsApp)" },
-                    ]}
-                />
-              </div>
-              )}
-              <button type="button" onClick={() => downloadInviteeTemplate(fieldConfig)} className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}>
-                <ButtonIcon name="download" />
-                Download Excel Sample
-              </button>
-              <button type="button" onClick={() => setShowListPreview(true)} disabled={invitees.length === 0} className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}>
-                <ButtonIcon name="eye" />
-                Preview List
-              </button>
-              {canManageInviteeLists(user?.role) && (
-                <span className="inline-flex items-center gap-1.5">
-                  <button type="button" onClick={() => setListsTab("lists")} className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}>
-                    <ButtonIcon name="history" />
-                    Uploaded Lists
-                  </button>
-                  <InfoTip label="About Uploaded Lists" text="Every Excel file you upload becomes a list. Open this to see each file, how many guests came from it and whether invitations were sent. You can replace a list that has not been sent yet, or bring back guests that were set aside." align="left" />
-                </span>
-              )}
-              {digitalInvites && (notInvited.length > 0 || !lifecycleStarted) && (
-                <button
-                  type="button"
-                  onClick={() => handleResend()}
-                  disabled={!canIssue || busy !== null || resendTargets.length === 0}
-                  title={!canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent"}
-                  className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}
-                >
-                  <ButtonIcon name={busy === "resend" ? "spinner" : "resend"} />
-                  {busy === "resend" ? "Resending..." : `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`}
-                </button>
-              )}
-              <button type="button" onClick={() => setShowHistory(true)} disabled={visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED")} className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}>
-                <ButtonIcon name="history" />
-                History
-              </button>
-              {printableCards && (
-                <button type="button" onClick={() => void requestDownload()} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? "This event is over, so cards can no longer be produced" : selectedIds.length === 0 ? "Tick the guests to make cards for" : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={`${btn} bg-[#1F65FF] hover:bg-[#1A56DB] text-white border border-[#1F65FF] disabled:opacity-50`}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></svg>
-                  Download Cards
-                </button>
-              )}
-            </div>
-
-            {invitees.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#4B4F52]">
-                <div className="flex flex-wrap items-center gap-4">
-                <label className="inline-flex items-center gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all visible invitees"
-                    checked={allVisibleSelected}
-                    onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
-                    className="size-4 cursor-pointer check-green"
-                  />
-                  Select All
-                </label>
-                {!historical && selectedIds.length > 0 && (
-                  <button type="button" onClick={() => setBulkOpen(true)} disabled={bulkDeleting || busy !== null} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 cursor-pointer disabled:opacity-50">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
-                    {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.length})`}
+                {printableCards && (
+                  <button type="button" onClick={() => startAction("download")} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? "This event is over, so cards can no longer be produced" : selectedIds.length === 0 ? "Tick the guests to make cards for" : invitationType === "BOTH" ? "Download the printable cards of the ticked guests (their invitations are sent first)" : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={primaryFilled}>
+                    <Icon name="events/inv-download-white" width={16} height={16} />
+                    Download Cards
                   </button>
                 )}
-                </div>
-                <span>
-              {invitees.length} invitee{invitees.length === 1 ? "" : "s"}
-              {lifecycleStarted && <> · {invitees.length - notInvited.length} invited · {notInvited.length} not yet invited</>}
-              {selectedIds.length > 0 && <> · {selectedIds.length} selected</>}
-            </span>
+                {invitees.length > 0 && (
+                  <span>
+                    {invitees.length} invitee{invitees.length === 1 ? "" : "s"}
+                    {lifecycleStarted && <> · {invitees.length - notInvited.length} invited · {notInvited.length} not yet invited</>}
+                    {selectedIds.length > 0 && <> · {selectedIds.length} selected</>}
+                  </span>
+                )}
               </div>
-            )}
+            </div>
 
             {filterSession && selectedIds.length > 0 && ownLists.some((s) => s._id === filterSession._id) && (
               <button type="button" onClick={handleGrantAccess} disabled={busy !== null} className={`${btn} bg-[#262A2D] text-white hover:bg-black`}>
@@ -1068,21 +1059,57 @@ export default function InviteesManagementPage() {
         <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
       )}
       {sentPopup && <SendSuccessModal title={sentPopup.title} message={sentPopup.message} details={sentPopup.details} onClose={() => setSentPopup(null)} />}
-      {confirmFirstSend && (
+      {actionPopup && (
         <SendWarningModal
           eventId={eventId}
           eventTitle={event?.title || "this event"}
-          onCancel={() => setConfirmFirstSend(false)}
-          onConfirm={async () => { setConfirmFirstSend(false); if (!(await showBillOrSend())) handleSend(); }}
+          mode={actionPopup}
+          firstTime={firstTimeFor(actionPopup)}
+          count={actionPopup === "download" ? downloadIds.length : sendTargets.length}
+          channel={channel}
+          onChannelChange={setChannel}
+          onCancel={() => setActionPopup(null)}
+          onConfirm={() => void confirmAction()}
         />
       )}
+      {needSendFirst > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="send-first-title">
+          <div className="w-full max-w-[460px] bg-white border border-[#E5E5E5] rounded-lg overflow-hidden">
+            <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
+              <h2 id="send-first-title" className="flex-1 text-base font-medium text-[#15191C]">Send the invitations first</h2>
+              <button type="button" onClick={() => setNeedSendFirst(0)} aria-label="Close" className="shrink-0 cursor-pointer"><Icon name="events/inv-panel-close" width={16} height={16} /></button>
+            </div>
+            <div className="flex flex-col items-center gap-4 px-6 py-8 text-center">
+              <Icon name="events/warning" width={34} height={32} />
+              <p className="text-sm text-[#15191C]/80 max-w-[360px]">
+                {needSendFirst === 1 ? "1 of the selected guests has" : `${needSendFirst} of the selected guests have`} not been sent an invitation yet. On this event the invitation goes out first, then the card is made. Send the invitations to the selected guests, then download their cards.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-[#E5E5E5]">
+              <button type="button" onClick={() => setNeedSendFirst(0)} className="px-6 py-[11px] bg-white border border-[#DDD] rounded-lg text-base font-semibold text-black cursor-pointer">Close</button>
+              <button type="button" onClick={() => { setNeedSendFirst(0); startAction("send"); }} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Send invitations</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <InviteeFilterPanel
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        eventTitle={event?.title || "This event"}
+        sessions={sessions.map((x) => ({ id: x._id!, name: x.name }))}
+        value={filtersInForce}
+        showInvitation={digitalInvites}
+        food={lifecycleStarted ? foodQuestions : []}
+        showRsvp={rsvpEnabled && digitalInvites}
+        onApply={(f) => { setSessionFilter(f.session); setInvitationFilter(f.invitation); setPanelFilters({ food: f.food, rsvp: f.rsvp, sort: f.sort }); setSelectedIds([]); }}
+      />
       <UploadTooLargeModal count={tooLarge} onClose={() => setTooLarge(null)} />
       <RepeatedGuestsModal
         repeats={repeats}
         onFix={() => { setRepeats(null); setUpload(null); }}
         onConfirm={() => { setRepeats(null); if (upload) void importPreviewFlight.current.run(() => prepareImport(upload.rows)); }}
       />
-      {downloadOpen && selectedIds.length > 0 && <DownloadCardsModal eventId={eventId} eventTitle={event?.title || "this event"} inviteeIds={selectedIds} sessionId={filterSession?._id} onClose={() => setDownloadOpen(false)} />}
+      {downloadOpen && downloadIds.length > 0 && <DownloadCardsModal eventId={eventId} eventTitle={event?.title || "this event"} inviteeIds={downloadIds} sessionId={filterSession?._id} onClose={() => setDownloadOpen(false)} />}
       {bill && <SendBillModal quote={bill.quote} kind={bill.kind} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend} />}
       {passAction && (
         <PassActionModal

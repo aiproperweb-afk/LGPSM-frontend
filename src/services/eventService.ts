@@ -98,6 +98,7 @@ interface EventRequestBase {
   categoryId?: string;
   subcategoryId?: string;
   contactNumber?: string;
+  hostName?: string;
   location?: { address?: string; coordinates?: [number, number] };
   schedule: { start: string; end: string };
   /** Check-in window; a null side follows the event's start/end */

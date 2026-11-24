@@ -63,6 +63,8 @@ export interface TemplatePreviewPayload {
   endIso?: string;
   venue?: string;
   contactNumber?: string;
+  /** the host named for the event */
+  hostName?: string;
   cardDisplay?: { title: boolean; qr: boolean; dateTime: boolean; location: boolean; inviteeName?: boolean; logo?: boolean };
   locationSub?: string;
   isVirtual?: boolean;

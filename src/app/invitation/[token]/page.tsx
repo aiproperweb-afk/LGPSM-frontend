@@ -349,7 +349,7 @@ export default function PublicInvitationPage() {
               <p className="font-semibold">This event has been cancelled and is no longer taking place.</p>
               <p><strong className="font-semibold">Your access pass is no longer valid</strong> and cannot be used for entry. You do not need to do anything.</p>
               {event.cancellation?.reason && <p className="break-words"><span className="font-semibold">Message from the organizer:</span> {event.cancellation.reason}</p>}
-              {event.contactNumber && <p>Questions? Contact the organizer on <a href={`tel:${contactWithCountryCode(event.contactNumber).replace(/[^+\d]/g, "")}`} className="underline">{contactWithCountryCode(event.contactNumber)}</a>.</p>}
+              {event.contactNumber && <p>Questions? Contact the host on <a href={`tel:${contactWithCountryCode(event.contactNumber).replace(/[^+\d]/g, "")}`} className="underline">{contactWithCountryCode(event.contactNumber)}</a>.</p>}
             </div>
           )}
 

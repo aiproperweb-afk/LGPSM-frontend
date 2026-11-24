@@ -298,9 +298,44 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <Err msg={errors.title} />
       </div>
 
+      {/* The host: who the invitation comes from (their name replaces the organizer's everywhere on it) and the number guests call */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-host" className={`block ${labelClass}`}>Host Name<Req /></label><InfoTip label="About the host name" text="The name guests see as the host of this event: on the invitation email, the invitation page and the card, in place of the organizer's own name. Use a person or organisation guests know." align="left" /></span>
+          <input
+            id="event-host"
+            type="text"
+            value={draft.hostName ?? ""}
+            maxLength={100}
+            onChange={(e) => onChange({ hostName: e.target.value })}
+            placeholder="Host or organisation name"
+            aria-invalid={!!errors.hostName}
+            className={`${inputClass} ${border(errors.hostName)} focus:border-[#1F65FF]`}
+          />
+          <Err msg={errors.hostName} />
+        </div>
+        <div>
+          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-contact" className={`block ${labelClass}`}>Host Contact Number<Req /></label><InfoTip label="About the host contact number" text="The number guests can call or message with questions about the event. It is shown on the invitation email, the invitation page and the card." align="left" /></span>
+          <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-black ${border(errors.contactNumber)}`}>
+            <span className="px-3 text-sm text-[#6B6B6B] border-r border-[#E0E0E0]">+91</span>
+            <PhoneInput
+              id="event-contact"
+              value={draft.contactNumber}
+              onValueChange={(v) => onChange({ contactNumber: v })}
+              onNote={setContactNote}
+              placeholder="Enter Number"
+              aria-invalid={!!errors.contactNumber}
+              className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
+            />
+          </div>
+          <PhoneNote message={contactNote} />
+          <Err msg={errors.contactNumber} />
+        </div>
+      </div>
+
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
-          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>Description <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About the description" text="A short note guests see on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and the event title is used." align="left" /></span>
+          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>Invitation Message <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About the invitation message" text="Your own words to the guest, shown in the blue box at the top of the invitation email and on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and a standard line is used." align="left" /></span>
           <span className="text-xs text-[#828282]">{DESCRIPTION_MAX - draft.description.length} Chars remaining</span>
         </div>
         <textarea
@@ -354,28 +389,11 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         </div>
       </div>
 
-      {/* Contact Number and the RSVP card stack in the left column; the logo box spans both rows on the right, so it starts level
-          with the Contact Number label and ends level with the RSVP card instead of floating at its own height */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-rows-[auto_1fr] gap-4">
-        <div>
-          <label htmlFor="event-contact" className={`block ${labelClass} mb-1.5`}>Contact Number<Req /></label>
-          <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-black ${border(errors.contactNumber)}`}>
-            <span className="px-3 text-sm text-[#6B6B6B] border-r border-[#E0E0E0]">+91</span>
-            <PhoneInput
-              id="event-contact"
-              value={draft.contactNumber}
-              onValueChange={(v) => onChange({ contactNumber: v })}
-              onNote={setContactNote}
-              placeholder="Enter Number"
-              aria-invalid={!!errors.contactNumber}
-              className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
-            />
-          </div>
-          <PhoneNote message={contactNote} />
-          <Err msg={errors.contactNumber} />
-        </div>
+      {/* The RSVP card and the logo box sit side by side and are the same height, so neither leaves a gap under it */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 sm:items-stretch gap-4">
+        <div className="flex flex-col">
               {printOnly ? null : rsvpAllowed ? (
-          <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-3">
+          <div className="flex-1 p-4 border border-[#E0E0E0] rounded-md bg-white space-y-3">
             <div className="flex items-center justify-between gap-2">
               <label htmlFor="event-rsvp" className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -398,9 +416,10 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             )}
           </div>
         ) : (
-          <p className="p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
+          <p className="flex-1 p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
         )}
-        <div className="sm:col-start-2 sm:row-start-1 sm:row-span-2 flex flex-col">
+        </div>
+        <div className={`flex flex-col ${printOnly ? "sm:col-span-2" : ""}`}>
           <div className="flex-1 min-h-0">
           <ImageUploadField
             label={<span className="flex items-center justify-between gap-2"><span>Event Logo/image <span className="font-normal text-[#6B6B6B]">(optional)</span></span><InfoTip label="About the event logo" text="Shown on the invitation card. Use a JPG, PNG or WEBP image up to 5 MB." /></span>}
@@ -412,14 +431,10 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             fill
             optional
             disabled={staticDesign}
+            disabledMessage="Your uploaded card is used exactly as it is, so the Event Logo/image is not added to it. Choose another template if you want the logo printed on the card."
             hint={staticDesign ? "Not used: your uploaded design is the card exactly as it is." : "Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"}
           />
           </div>
-          {staticDesign && (
-            <p role="status" className="shrink-0 mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">
-              Your uploaded card is used exactly as it is, so the Event Logo/image is not added to it. This option is turned off for this card. Choose another template if you want the logo printed on the card.
-            </p>
-          )}
         </div>
       </div>
 

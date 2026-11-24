@@ -576,6 +576,7 @@ export default function EventWizard({
               eventEnd={draft.end}
               venue={draft.venue}
               contactNumber={draft.contactNumber}
+              hostName={draft.hostName}
               logoKey={draft.logoKey}
               categoryName={categories.categoryName(draft.categoryId)}
               subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}

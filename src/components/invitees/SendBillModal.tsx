@@ -9,7 +9,7 @@ import type { BillQuote } from "@/services/billingService";
 interface SendBillModalProps {
   quote: BillQuote;
   /** what is being paid for: invitations to send (default) or printable cards to download */
-  kind?: "send" | "download";
+  kind?: "send" | "download" | "both";
   /** the payment (Razorpay) is in progress */
   busy: boolean;
   error: string | null;
@@ -54,7 +54,7 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
           <p className="py-4 text-base font-medium text-[#15191C] border-b border-[#EAEAEA]">Payment Info</p>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
             <div className={row}><span>Per Head Price</span><span>{rupees(quote.rate ?? 0)}</span></div>
-            <div className={row}><span>{kind === "download" ? "Total Cards" : "Total Invitees"}</span><span>{quote.invitees}</span></div>
+            <div className={row}><span>{kind === "download" ? "Total Cards" : kind === "both" ? "Total Guests" : "Total Invitees"}</span><span>{quote.invitees}</span></div>
           </div>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
             <div className={row}><span>Subtotal</span><span>{rupees(quote.subtotal)}</span></div>
