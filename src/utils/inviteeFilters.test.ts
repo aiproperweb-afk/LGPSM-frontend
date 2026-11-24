@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { applyInviteeFilters, activeFilterCount, NO_FILTERS } from "./inviteeFilters.ts";
 import { dietaryQuestionOptions } from "./dietaryAnswers.ts";
 
-const g = (name: string, invitationStatus: string, rsvpStatus: string, food?: string) => ({ name, invitationStatus, rsvpStatus, dietarySelections: food ? [{ title: "Lunch", value: food }] : [] });
-const guests = [g("Zed", "SENT", "ACCEPTED", "Veg"), g("amy", "PENDING", "PENDING"), g("Bob", "SENT", "DECLINED", "Non-veg")];
+const g = (name: string, invitationStatus: string, rsvpStatus: string, food?: string, cardDownloadedAt?: string) => ({ name, invitationStatus, rsvpStatus, cardDownloadedAt, dietarySelections: food ? [{ title: "Lunch", value: food }] : [] });
+const guests = [g("Zed", "SENT", "ACCEPTED", "Veg", "2026-11-24"), g("amy", "PENDING", "PENDING"), g("Bob", "SENT", "DECLINED", "Non-veg")];
 const names = (l: { name: string }[]) => l.map((x) => x.name);
 
 test("invitation, RSVP and food choices narrow the list", () => {
@@ -13,6 +13,10 @@ test("invitation, RSVP and food choices narrow the list", () => {
   assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, rsvp: "PENDING" }, ["Lunch"])), ["amy"]);
   assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, food: { title: "Lunch", value: "Veg" } }, ["Lunch"])), ["Zed"]);
 });
+test("printed cards: downloaded or not yet", () => {
+  assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, cards: "DOWNLOADED" }, [])), ["Zed"]);
+  assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, cards: "NOT_DOWNLOADED" }, [])), ["amy", "Bob"]);
+});
 test("alphabetical order ignores case and does not touch the original array", () => {
   assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, sort: "AZ" }, [])), ["amy", "Bob", "Zed"]);
   assert.deepEqual(names(applyInviteeFilters(guests, { ...NO_FILTERS, sort: "ZA" }, [])), ["Zed", "Bob", "amy"]);
@@ -20,7 +24,7 @@ test("alphabetical order ignores case and does not touch the original array", ()
 });
 test("the Filter button counts each active choice", () => {
   assert.equal(activeFilterCount(NO_FILTERS), 0);
-  assert.equal(activeFilterCount({ session: "s1", invitation: "SENT", food: null, rsvp: "ACCEPTED", sort: "AZ" }), 4);
+  assert.equal(activeFilterCount({ session: "s1", invitation: "SENT", cards: "DOWNLOADED", food: null, rsvp: "ACCEPTED", sort: "AZ" }), 5);
 });
 test("the food choices come from the event's own questions", () => {
   assert.deepEqual(dietaryQuestionOptions({ enabled: true, options: [{ title: "Lunch", options: ["Veg", "Non-veg", "Veg"] }, { title: "Drinks", options: [] }] }), [{ title: "Lunch", options: ["Veg", "Non-veg"] }]);

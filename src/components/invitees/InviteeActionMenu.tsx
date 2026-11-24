@@ -13,6 +13,8 @@ export interface ActionItem {
   hidden?: boolean;
   /** a heading line above this item */
   heading?: string;
+  /** a small icon in front of the label */
+  icon?: React.ReactNode;
   /** a choice that is currently selected (shown with a tick), used for the delivery channel */
   selected?: boolean;
 }
@@ -49,7 +51,10 @@ export default function InviteeActionMenu({ items, disabled }: { items: ActionIt
                 onClick={() => { setOpen(false); i.onClick(); }}
                 className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-[#15191C] hover:bg-gray-50 cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
               >
-                {i.label}
+                <span className="flex items-center gap-2.5 min-w-0">
+                  {i.icon && <span className="shrink-0 w-4 h-4 flex items-center justify-center text-[#4B4F52]">{i.icon}</span>}
+                  <span className="truncate">{i.label}</span>
+                </span>
                 {i.selected && <Icon name="events/inv-panel-check" width={11} height={8} />}
               </button>
             </React.Fragment>

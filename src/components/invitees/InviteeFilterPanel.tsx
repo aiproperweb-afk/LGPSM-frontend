@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/components/icons/Icon";
 import CustomDropdown from "@/components/common/CustomDropdown";
-import { NO_FILTERS, type InviteeFilters, type InvitationFilter, type RsvpFilter, type SortOrder } from "@/utils/inviteeFilters";
+import { NO_FILTERS, type InviteeFilters, type InvitationFilter, type CardsFilter, type RsvpFilter, type SortOrder } from "@/utils/inviteeFilters";
 
 interface Props {
   open: boolean;
@@ -16,6 +16,8 @@ interface Props {
   value: InviteeFilters;
   /** Invitees group: only for events whose invitations are sent digitally */
   showInvitation: boolean;
+  /** Cards group: only for events that print cards */
+  showCards: boolean;
   /** Food Preference groups: the questions the event asks and their choices (none: the section is not shown) */
   food: { title: string; options: string[] }[];
   /** RSVP group: only when the event asks guests to respond */
@@ -51,7 +53,7 @@ export default function InviteeFilterPanel(props: Props) {
   return props.open ? <PanelBody {...props} /> : null;
 }
 
-function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, food, showRsvp, onApply }: Props) {
+function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showCards, food, showRsvp, onApply }: Props) {
   const [draft, setDraft] = useState<InviteeFilters>(value);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -92,6 +94,15 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, food,
               value={draft.invitation}
               onPick={(v) => setDraft((d) => ({ ...d, invitation: v }))}
               options={[{ value: "", label: "All Invitees" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Invitation Not Sent" }]}
+            />
+          )}
+
+          {showCards && (
+            <Group<CardsFilter>
+              title="Cards"
+              value={draft.cards}
+              onPick={(v) => setDraft((d) => ({ ...d, cards: v }))}
+              options={[{ value: "", label: "All Invitees" }, { value: "DOWNLOADED", label: "Cards Downloaded" }, { value: "NOT_DOWNLOADED", label: "Cards Not Downloaded" }]}
             />
           )}
 

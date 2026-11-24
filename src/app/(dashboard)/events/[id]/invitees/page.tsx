@@ -27,6 +27,7 @@ import UploadTooLargeModal from "@/components/invitees/UploadTooLargeModal";
 import RepeatedGuestsModal from "@/components/invitees/RepeatedGuestsModal";
 import { findRepeatedGuests, type RepeatedGuest } from "@/utils/repeatedGuests";
 import { isTooLarge, secondsLeft, splitNote, UPLOAD_COOLDOWN_MS } from "@/utils/uploadLimits";
+import { formatMoney } from "@/utils/money";
 import { billingService, type BillQuote } from "@/services/billingService";
 import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import SendSuccessModal from "@/components/invitees/SendSuccessModal";
@@ -62,6 +63,8 @@ import { STATUS_PILL, hasUnknown, hasUnsent, historyReason, historyTitle, notice
 
 interface Invitee {
   _id: string;
+  /** when this guest's printed card was first made (Print only and Print and Digital both events) */
+  cardDownloadedAt?: string;
   name: string;
   email?: string;
   mobile?: string;
@@ -206,9 +209,11 @@ export default function InviteesManagementPage() {
   // the window before sending / downloading (Figma 198:2162), and the guests a card download is for
   const [actionPopup, setActionPopup] = useState<ActionMode | null>(null);
   const [downloadIds, setDownloadIds] = useState<string[]>([]);
+  // what the next step costs, shown in the window so it is clear whether a payment is coming (and why not)
+  const [billNote, setBillNote] = useState<string | null>(null);
   // Filter & Sorting panel (Figma 195:1813): the choices beyond session and invitation
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [panelFilters, setPanelFilters] = useState<Pick<InviteeFilters, "food" | "rsvp" | "sort">>({ food: null, rsvp: "", sort: "ANY" });
+  const [panelFilters, setPanelFilters] = useState<Pick<InviteeFilters, "cards" | "food" | "rsvp" | "sort">>({ cards: "", food: null, rsvp: "", sort: "ANY" });
   // the bill (invitees x per-head rate + GST) shown before invitations go out, and the payment that follows
   const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: ActionMode } | null>(null);
   const [billBusy, setBillBusy] = useState(false);
@@ -457,6 +462,19 @@ export default function InviteesManagementPage() {
   // who it goes to. Digital only sends, Print only downloads, and Print and Digital both sends and then downloads.
   const eventCardsMade = !!(event as unknown as { cardsDownloadedAt?: string } | null)?.cardsDownloadedAt;
   const firstTimeFor = (mode: ActionMode) => (mode === "download" ? !eventCardsMade && !lifecycleStarted : !lifecycleStarted && !eventCardsMade);
+  const noteFor = async (mode: ActionMode, ids: string[]) => {
+    setBillNote(null);
+    if (ids.length === 0) return;
+    const res = await billingService.quote(eventId, ids).catch(() => null);
+    const q = res?.success ? res.data : null;
+    if (!q) return;
+    const what = mode === "download" ? "cards" : mode === "both" ? "guests" : "invitations";
+    setBillNote(
+      q.rate === null ? "No price per invitation is set for this event, so there is nothing to pay."
+        : q.payable ? `Next you will pay ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${q.invitees} ${what}.`
+        : "These guests are already paid for, so there is nothing more to pay."
+    );
+  };
   const startAction = (mode: ActionMode) => {
     if (mode === "download") {
       if (selectedIds.length === 0) return;
@@ -469,10 +487,12 @@ export default function InviteesManagementPage() {
       setDownloadIds(selectedIds);
       // cards are already being made for this event (or invitations are out): no first-time warning, straight to the bill / download
       if (!firstTimeFor("download")) { void (async () => { if (!(await showBillOrSend("download"))) setDownloadOpen(true); })(); return; }
+      void noteFor("download", selectedIds);
       setActionPopup("download");
       return;
     }
     if (sendTargets.length === 0) { void handleSend(); return; } // nothing to send: handleSend explains why
+    void noteFor(mode, sendTargets.map((t) => t._id));
     setActionPopup(mode);
   };
   const confirmAction = async () => {
@@ -707,12 +727,12 @@ export default function InviteesManagementPage() {
   const primaryFilled = "inline-flex items-center justify-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   // The Action menu: the list's working tools (only the ones that apply to this event), and how invitations are delivered
   const actionItems: ActionItem[] = [
-    { key: "sample", label: "Download Excel Sample", onClick: () => downloadInviteeTemplate(fieldConfig) },
-    { key: "preview", label: "Preview List", onClick: () => setShowListPreview(true), disabled: invitees.length === 0 },
-    { key: "lists", label: "Uploaded Lists", onClick: () => setListsTab("lists"), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
-    { key: "resend", label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => void handleResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
-    { key: "history", label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED") },
-    ...(digitalInvites ? CHANNEL_OPTIONS.map((o, n): ActionItem => ({ key: `channel-${o.value}`, label: String(o.label), heading: n === 0 ? "Send invitations by" : undefined, selected: channel === o.value, onClick: () => setChannel(o.value as Channel) })) : []),
+    { key: "sample", icon: <ButtonIcon name="download" />, label: "Download Excel Sample", onClick: () => downloadInviteeTemplate(fieldConfig) },
+    { key: "preview", icon: <ButtonIcon name="eye" />, label: "Preview List", onClick: () => setShowListPreview(true), disabled: invitees.length === 0 },
+    { key: "lists", icon: <ButtonIcon name="history" />, label: "Uploaded Lists", onClick: () => setListsTab("lists"), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
+    { key: "resend", icon: <ButtonIcon name="resend" />, label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => void handleResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
+    { key: "history", icon: <ButtonIcon name="history" />, label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED") },
+    ...(digitalInvites ? CHANNEL_OPTIONS.map((o, n): ActionItem => ({ key: `channel-${o.value}`, icon: o.icon ?? <ButtonIcon name="send" />, label: String(o.label), heading: n === 0 ? "Send invitations by" : undefined, selected: channel === o.value, onClick: () => setChannel(o.value as Channel) })) : []),
   ];
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
@@ -964,7 +984,10 @@ export default function InviteesManagementPage() {
                           {showCompany && <td className="py-3 px-2.5 whitespace-nowrap">{i.companyName || i.company || "—"}</td>}
                           <td className="py-3 px-2.5">
                             <span className="flex flex-col gap-0.5 items-start">
-                              <InviteeStatusPill invitationStatus={i.invitationStatus} rsvpStatus={isAdmin ? "PENDING" : i.rsvpStatus} />
+                              {/* Print only: nothing is sent, so the status says whether the guest's card was downloaded */}
+                              {invitationType === "PRINT"
+                                ? (i.cardDownloadedAt ? pill("bg-[#C0FFD5] text-[#0F7A33]", "Downloaded") : pill("bg-[#EDEDED] text-[#6E6E6E]", "Not Downloaded"))
+                                : <InviteeStatusPill invitationStatus={i.invitationStatus} rsvpStatus={isAdmin ? "PENDING" : i.rsvpStatus} />}
                               {/* One line keeps the row height steady; the full reason is on hover */}
                               {i.invitationStatus === "FAILED" && failure && <span title={failure} className="text-xs text-rose-600 truncate max-w-[200px]">{failure}</span>}
                             </span>
@@ -1066,6 +1089,7 @@ export default function InviteesManagementPage() {
           mode={actionPopup}
           firstTime={firstTimeFor(actionPopup)}
           count={actionPopup === "download" ? downloadIds.length : sendTargets.length}
+          billNote={billNote}
           channel={channel}
           onChannelChange={setChannel}
           onCancel={() => setActionPopup(null)}
@@ -1099,9 +1123,11 @@ export default function InviteesManagementPage() {
         sessions={sessions.map((x) => ({ id: x._id!, name: x.name }))}
         value={filtersInForce}
         showInvitation={digitalInvites}
-        food={lifecycleStarted ? foodQuestions : []}
+        showCards={printableCards}
+        // food is answered by guests on their digital invitation, so it can only be filtered once invitations are out
+        food={digitalInvites && lifecycleStarted ? foodQuestions : []}
         showRsvp={rsvpEnabled && digitalInvites}
-        onApply={(f) => { setSessionFilter(f.session); setInvitationFilter(f.invitation); setPanelFilters({ food: f.food, rsvp: f.rsvp, sort: f.sort }); setSelectedIds([]); }}
+        onApply={(f) => { setSessionFilter(f.session); setInvitationFilter(f.invitation); setPanelFilters({ cards: f.cards, food: f.food, rsvp: f.rsvp, sort: f.sort }); setSelectedIds([]); }}
       />
       <UploadTooLargeModal count={tooLarge} onClose={() => setTooLarge(null)} />
       <RepeatedGuestsModal

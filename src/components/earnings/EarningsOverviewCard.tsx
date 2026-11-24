@@ -52,9 +52,13 @@ export default function EarningsOverviewCard({
               <span className="text-xs font-medium text-[#4B4F52] tracking-wide uppercase">
                 ADJUST RATE
               </span>
-              {isSavedNotice && (
+              {isSavedNotice ? (
                 <span className="text-xs font-semibold text-emerald-700 animate-fadeIn">
                   Saved. Applies to events created from now on.
+                </span>
+              ) : (
+                <span className={`text-sm font-semibold ${tempRate !== rate ? "text-[#1F65FF]" : "text-[#4B4F52]"}`} aria-live="polite">
+                  {tempRate !== rate ? `New rate: ${formatMoney(tempRate)} per head` : `Current: ${formatMoney(tempRate)} per head`}
                 </span>
               )}
             </div>

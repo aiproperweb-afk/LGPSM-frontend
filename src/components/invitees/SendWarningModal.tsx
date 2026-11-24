@@ -17,6 +17,8 @@ interface SendWarningModalProps {
   firstTime: boolean;
   /** how many guests the action covers */
   count: number;
+  /** what will be asked for next, worked out from the event's price and what is already paid (not shown while it is being worked out) */
+  billNote?: string | null;
   channel: Channel;
   onChannelChange: (c: Channel) => void;
   onCancel: () => void;
@@ -32,7 +34,7 @@ const CONFIRM_LABEL: Record<ActionMode, string> = { send: "Send Invitation", bot
  * chance to edit it or change its card design; the button names what will happen for this event's invitation type (Digital only: send,
  * Print only: download, both: send and download), and the delivery channel is chosen here whenever an invitation is sent.
  */
-export default function SendWarningModal({ eventId, eventTitle, mode, firstTime, count, channel, onChannelChange, onCancel, onConfirm }: SendWarningModalProps) {
+export default function SendWarningModal({ eventId, eventTitle, mode, firstTime, count, billNote, channel, onChannelChange, onCancel, onConfirm }: SendWarningModalProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
@@ -65,6 +67,7 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
           <div className="flex flex-col gap-2 max-w-[442px] font-medium">
             <h2 id="send-warning-title" className="text-[26px] text-[#15191C]">{firstTime ? "Warning" : "Confirm"}</h2>
             <p className="text-base text-[#15191C]/80">{text}</p>
+            {billNote && <p className="text-sm font-medium text-[#1D3A8A] bg-[#EEF4FF] border border-[#C7D7FE] rounded-md px-3 py-2">{billNote}</p>}
           </div>
           {firstTime && (
             <div className="flex flex-wrap items-center justify-center gap-3">
