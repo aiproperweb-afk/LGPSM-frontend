@@ -4,14 +4,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { CLIENT_CATEGORIES } from "@/constants/clients";
 
-// Landing page navigation (EventQRapp brand design): the sections live on the home page, so the links work from any public page.
+// Landing page navigation (EventQRapp brand design, Figma 238:29276): Features, How it works and Contact have their own pages; Clients opens a menu of
+// the seven client categories, each with its own page.
 const LINKS = [
-  { href: "/#features", label: "Features", section: "features", page: "/features" },
-  { href: "/#how-it-works", label: "How it works", section: "how-it-works", page: "" },
-  { href: "/#clients", label: "Clients", section: "clients", page: "" },
-  { href: "/#pricing", label: "Pricing", section: "pricing", page: "/pricing" },
-  { href: "/#faq", label: "FAQ", section: "faq", page: "" },
+  { href: "/features", label: "Features", section: "features", page: "/features" },
+  { href: "/how-it-works", label: "How it works", section: "how-it-works", page: "/how-it-works" },
+  { href: "/clients/business-corporate", label: "Clients", section: "clients", page: "/clients", menu: true },
+  { href: "/contact", label: "Contact", section: "contact", page: "/contact" },
 ];
 
 // The sections in the order they appear down the home page (the menu order differs)
@@ -44,11 +45,64 @@ function useCurrentSection(): string {
   return LINKS.find((l) => l.page && pathname.startsWith(l.page))?.section ?? "";
 }
 
+/** "Clients" with its dropdown arrow: opens the menu of the seven client categories (hover, click or keyboard) */
+function ClientsMenu({ className, underline, pathname }: { className: string; underline: React.ReactNode; pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const box = React.useRef<HTMLDivElement>(null);
+  // the panel hangs from the bottom edge of the bar, a few pixels below the button, so closing waits a moment: the pointer can cross that gap
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const show = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; setOpen(true); };
+  const hide = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(false), 220); };
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  return (
+    <div ref={box} onMouseEnter={show} onMouseLeave={hide}>
+      <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${className} inline-flex items-center gap-1.5 cursor-pointer`}>
+        Clients
+        <svg width="12" height="18" viewBox="0 0 12 18" fill="none" aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`}><path d="M2.5 7.5L6 11l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        {underline}
+      </button>
+      {open && (
+        <div role="menu" className="absolute left-1/2 top-full z-50 w-[728px] max-w-[calc(100vw-32px)] -translate-x-1/2 pt-px">
+          <div className="rounded-b-[20px] border border-[#E1EAF8] bg-white p-7 pb-0 shadow-[0_24px_48px_-12px_rgba(0,11,44,0.18)]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+              {CLIENT_CATEGORIES.map((c) => {
+                const here = pathname === `/clients/${c.slug}`;
+                return (
+                  <Link key={c.slug} href={`/clients/${c.slug}`} role="menuitem" onClick={() => setOpen(false)} aria-current={here ? "page" : undefined} className={`flex items-start gap-3.5 rounded-xl p-3 transition-colors hover:bg-[#F0F4FF] ${here ? "bg-[#F0F4FF]" : ""}`}>
+                    <span className={`flex size-10 shrink-0 items-center justify-center rounded-[10px] ${here ? "bg-white shadow-sm" : "bg-[#EAF1FF]"}`}><Image src={c.icon} alt="" width={24} height={24} /></span>
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[16px] font-medium leading-[1.3] text-[#000B2C]">{c.name}</span>
+                      <span className="text-[13px] leading-[1.45] text-[#4A5470]">{c.menu}</span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="mt-5 flex items-center justify-between border-t border-[#E6EBF5] px-3 py-4 text-[14px]">
+              <span className="text-[#4A5470]">Not sure which fits your event?</span>
+              <Link href="/contact" onClick={() => setOpen(false)} className="font-semibold text-[#1F65FF] hover:underline">Schedule a meeting</Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const BLUE_GRADIENT = "linear-gradient(180deg, #1F65FF 0%, #2071FF 33%, #2181FF 69%, #1F65FF 100%)";
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const current = useCurrentSection();
+  const pathname = usePathname();
 
   return (
     <header className="hero-anim hero-anim-nav w-full sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-[#E1EAF8]">
@@ -59,12 +113,16 @@ export default function Navbar() {
 
         <nav aria-label="Main" className="hidden lg:flex items-center gap-[30px]">
           {LINKS.map((l) => {
-            const on = current === l.section;
+            const inMenu = "menu" in l && l.menu;
+            const on = inMenu ? current === l.section || pathname.startsWith("/clients") : current === l.section;
+            const cls = `relative py-1 text-[15px] font-medium transition-colors ${on ? "text-[#1F65FF]" : "text-[#4A5470] hover:text-[#1F65FF]"}`;
+            // the underline marks where you are, so it is clear even when the pointer is elsewhere
+            const underline = <span aria-hidden className={`absolute inset-x-0 -bottom-[13px] h-[2px] rounded-full bg-[#1F65FF] transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`} />;
+            if (inMenu) return <ClientsMenu key={l.label} className={cls} underline={underline} pathname={pathname} />;
             return (
-              <Link key={l.label} href={l.href} aria-current={on ? "true" : undefined} className={`relative py-1 text-[15px] font-medium transition-colors ${on ? "text-[#1F65FF]" : "text-[#4A5470] hover:text-[#1F65FF]"}`}>
+              <Link key={l.label} href={l.href} aria-current={on ? "true" : undefined} className={cls}>
                 {l.label}
-                {/* the underline marks where you are, so it is clear even when the pointer is elsewhere */}
-                <span aria-hidden className={`absolute inset-x-0 -bottom-[13px] h-[2px] rounded-full bg-[#1F65FF] transition-opacity duration-200 ${on ? "opacity-100" : "opacity-0"}`} />
+                {underline}
               </Link>
             );
           })}
@@ -97,11 +155,26 @@ export default function Navbar() {
 
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-[#E1EAF8] px-4 pt-3 pb-6 space-y-1">
-          {LINKS.map((l) => (
+          {[LINKS[0], LINKS[1]].map((l) => (
             <Link key={l.label} href={l.href} onClick={() => setMobileMenuOpen(false)} aria-current={current === l.section ? "true" : undefined} className={`block py-2.5 text-[15px] font-medium ${current === l.section ? "text-[#1F65FF]" : "text-[#4A5470]"}`}>
               {l.label}
             </Link>
           ))}
+          <details className="group" open={pathname.startsWith("/clients")}>
+            <summary className={`flex cursor-pointer list-none items-center justify-between py-2.5 text-[15px] font-medium ${pathname.startsWith("/clients") ? "text-[#1F65FF]" : "text-[#4A5470]"}`}>
+              Clients
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden className="transition-transform group-open:rotate-180"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </summary>
+            <div className="flex flex-col gap-1 pb-2 pl-1">
+              {CLIENT_CATEGORIES.map((c) => (
+                <Link key={c.slug} href={`/clients/${c.slug}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 rounded-lg py-2">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF1FF]"><Image src={c.icon} alt="" width={22} height={22} /></span>
+                  <span className="text-[14px] font-medium text-[#000B2C]">{c.name}</span>
+                </Link>
+              ))}
+            </div>
+          </details>
+          <Link href="/contact" onClick={() => setMobileMenuOpen(false)} aria-current={current === "contact" ? "true" : undefined} className={`block py-2.5 text-[15px] font-medium ${current === "contact" ? "text-[#1F65FF]" : "text-[#4A5470]"}`}>Contact</Link>
           <div className="pt-3 flex flex-col gap-2 border-t border-[#E1EAF8]">
             <Link href="/signin?mode=organizer" onClick={() => setMobileMenuOpen(false)} className="w-full text-center py-2.5 text-[15px] font-semibold text-[#000B2C] border border-[#E1EAF8] rounded-xl hover:bg-[#EAF1FF] transition-colors">Organizer log in</Link>
             <Link href="/signin?mode=admin" onClick={() => setMobileMenuOpen(false)} className="w-full text-center py-2.5 text-[15px] font-semibold text-[#000B2C] border border-[#E1EAF8] rounded-xl hover:bg-[#EAF1FF] transition-colors">Super Admin log in</Link>

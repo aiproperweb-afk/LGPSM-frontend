@@ -10,9 +10,9 @@ import ReportsSection from "@/components/landing/ReportsSection";
 import UseCases from "@/components/landing/UseCases";
 import PricingLanding from "@/components/landing/PricingLanding";
 import SecuritySection from "@/components/landing/SecuritySection";
+import Testimonials from "@/components/landing/Testimonials";
 import FaqLanding from "@/components/landing/FaqLanding";
 import LandingIntro from "@/components/landing/LandingIntro";
-import { INTRO_DECIDE_SCRIPT } from "@/components/landing/introScript";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/constants/site";
@@ -44,15 +44,15 @@ const structuredData = [
 
 export default function Home() {
   return (
-    <SmoothScroll>
-      {/* decides before the first paint whether the opening animation plays (first visit of the session only) */}
-      <script dangerouslySetInnerHTML={{ __html: INTRO_DECIDE_SCRIPT }} />
+    <>
+      {/* (the script that decides whether the opening animation plays is in the root layout's head) */}
       <noscript><style>{".reveal{opacity:1!important;transform:none!important}"}</style></noscript>
-      <LandingIntro />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
+      <SmoothScroll>
+      <LandingIntro />
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1">
@@ -66,11 +66,13 @@ export default function Home() {
           <UseCases />
           <PricingLanding />
           <SecuritySection />
+          <Testimonials />
           <FaqLanding />
         </main>
         <Footer />
       </div>
-    </SmoothScroll>
+      </SmoothScroll>
+    </>
   );
 }
 

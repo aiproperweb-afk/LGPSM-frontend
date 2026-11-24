@@ -18,11 +18,12 @@ export function Headline({ children, className = "", as: Tag = "h2" }: { childre
   );
 }
 
-export function SectionHeading({ title, subtitle, dark = false, className = "" }: { title: string; subtitle?: string; dark?: boolean; className?: string }) {
+/** `wide`: the heading and its line below take the full width of the page column (one line each on a large screen), as the problem section of the design does */
+export function SectionHeading({ title, subtitle, dark = false, wide = false, className = "" }: { title: string; subtitle?: string; dark?: boolean; wide?: boolean; className?: string }) {
   return (
-    <div className={`mx-auto flex max-w-[900px] flex-col items-center gap-4 text-center ${className}`}>
-      <Headline className={dark ? "text-white" : "text-[#000B2C]"}>{title}</Headline>
-      {subtitle ? <p className={`max-w-[640px] text-[16px] leading-[1.6] sm:text-[17px] ${dark ? "text-[#C3CCE6]" : "text-[#4A5470]"}`}>{subtitle}</p> : null}
+    <div className={`mx-auto flex ${wide ? "max-w-[1104px]" : "max-w-[900px]"} flex-col items-center gap-4 text-center ${className}`}>
+      <Headline className={`${dark ? "text-white" : "text-[#000B2C]"} ${wide ? "lg:whitespace-nowrap" : ""}`}>{title}</Headline>
+      {subtitle ? <p className={`${wide ? "max-w-none" : "max-w-[640px]"} text-[16px] leading-[1.6] sm:text-[17px] ${dark ? "text-[#C3CCE6]" : "text-[#4A5470]"}`}>{subtitle}</p> : null}
     </div>
   );
 }

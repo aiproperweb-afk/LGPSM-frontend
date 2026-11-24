@@ -41,8 +41,8 @@ export default function HeroSection() {
         <div style={{ "--d": "480ms" } as React.CSSProperties} className="hero-anim hero-anim-stage relative h-[230px] w-full overflow-hidden rounded-t-[20px] bg-[#1F65FF] sm:h-[400px] lg:h-[593px]">
           <Image src="/images/landing/hero-wave-1.svg" alt="" aria-hidden width={470} height={693} unoptimized className="pointer-events-none absolute left-[-8px] top-[-190px] max-w-none opacity-80" />
           <Image src="/images/landing/hero-wave-2.svg" alt="" aria-hidden width={1240} height={650} unoptimized className="pointer-events-none absolute left-[-47px] top-[-40px] hidden max-w-none lg:block" />
-          <div className="absolute left-1/2 top-[6%] aspect-[964/602] w-[88%] max-w-[964px] -translate-x-1/2 overflow-hidden rounded-t-md">
-            <Image src="/images/landing/organiser-dashboard.jpg" alt="The EventQRapp organiser dashboard: creating an event with a live QR invitation card preview" width={1440} height={1034} priority sizes="(max-width: 1024px) 88vw, 964px" className="w-full h-auto" />
+          <div className="absolute left-1/2 top-[6%] aspect-[964/575] w-[88%] max-w-[964px] -translate-x-1/2 overflow-hidden rounded-t-md">
+            <Image src="/images/landing/dashboard-hero.jpg" alt="The EventQRapp organiser dashboard: events, system users, billing overview, recent notifications and the events overview" width={1440} height={859} priority sizes="(max-width: 1024px) 88vw, 964px" className="w-full h-auto" />
           </div>
         </div>
       </div>

@@ -6,9 +6,9 @@ import { Container, Headline } from "./ui";
 
 // Figma node 66:6047 — what the organiser sees on the day
 const POINTS = [
-  { title: "Live session health", body: "Currently logged-in guests, check-ins today and occupancy for each session, shown as simple rings.", icon: <path d="M3 12h4l3-8 4 16 3-8h4" /> },
-  { title: "Entry and exit logs", body: "Guest name, ID, entry time, exit time, gate (Main or VIP) and whether they are inside or have left.", icon: <><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /><path d="M14 4h5a2 2 0 012 2v12a2 2 0 01-2 2h-5" /></> },
-  { title: "Activity trail", body: "Every action your team takes, such as sending invites or changing access rules, is logged with who did it and when.", icon: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></> },
+  { title: "Live session health", body: "Currently logged-in guests, check-ins today and occupancy for each session, shown as simple rings.", icon: "/images/landing/day-1.svg" },
+  { title: "Entry and exit logs", body: "Guest name, ID, entry time, exit time, gate (Main or VIP) and whether they are inside or have left.", icon: "/images/landing/day-2.svg" },
+  { title: "Activity trail", body: "Every action your team takes, such as sending invites or changing access rules, is logged with who did it and when.", icon: "/images/landing/day-3.svg" },
 ];
 
 export default function EventDay() {
@@ -30,7 +30,7 @@ export default function EventDay() {
             <p className="pb-5 text-[16px] leading-[1.55] text-[#4A5470] sm:text-[17px]">The live Event Details dashboard shows who is inside, how full each session is, and which gate each guest came through. Spot a crowded session, a late arrival or a failed invite while there is still time to act.</p>
             {POINTS.map((p) => (
               <div key={p.title} className="flex gap-3 border-t border-[#E1E7F2] py-4">
-                <svg className="mt-1 size-5 shrink-0 text-[#1F65FF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>{p.icon}</svg>
+                <Image src={p.icon} alt="" width={24} height={24} className="size-6 shrink-0" />
                 <div>
                   <h3 className="text-[17px] font-semibold text-[#000B2C]">{p.title}</h3>
                   <p className="text-[16px] leading-[1.4] text-[#4A5470] sm:text-[17px]">{p.body}</p>

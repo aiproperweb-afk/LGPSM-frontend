@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AlertProvider } from "@/context/AlertContext";
 import { PageTitleProvider } from "@/context/PageTitleContext";
 import SmoothScrollProvider from "@/components/common/SmoothScrollProvider";
+import { INTRO_DECIDE_SCRIPT } from "@/components/landing/introScript";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/constants/site";
 
 const inter = Inter({
@@ -97,6 +98,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${caveat.variable} ${dmSans.variable} h-full antialiased`}
     >
+      <head>
+        {/* decides before the first paint whether the landing page's opening animation plays (it does nothing on any other page) */}
+        <script dangerouslySetInnerHTML={{ __html: INTRO_DECIDE_SCRIPT }} />
+      </head>
       {/* Browser extensions (e.g. security/ad-block tools) add attributes to <body> before hydration; ignore those on this element only */}
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-gray-900 selection:bg-[#1F65FF] selection:text-white">
         <DialogKeyboardSupport />

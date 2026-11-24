@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "./Reveal";
-import { Container, Headline, Tick } from "./ui";
+import { Container, Headline } from "./ui";
 
 // Figma node 66:6261 — reports
 const BULLETS = [
@@ -24,7 +24,7 @@ export default function ReportsSection() {
           <ul className="flex flex-col gap-3">
             {BULLETS.map((b) => (
               <li key={b} className="flex items-start gap-3 text-[16px] leading-[1.45] text-[#4A5470]">
-                <Tick className="mt-0.5" />
+                <Image src="/images/landing/report-tick.svg" alt="" width={24} height={24} className="shrink-0" />
                 <span>{b}</span>
               </li>
             ))}

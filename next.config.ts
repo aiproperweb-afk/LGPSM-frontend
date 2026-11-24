@@ -80,8 +80,9 @@ const nextConfig: NextConfig = {
         destination: "/:path*",
         permanent: true,
       },
-      // The earlier Features and Pricing pages were replaced by sections of the landing page
-      { source: "/features", destination: "/#features", permanent: false },
+      // The earlier Pricing page was replaced by a section of the landing page (Features has its own page again)
+      // there is no page for "Clients" itself; its menu leads to the category pages, so the bare address opens the first one
+      { source: "/clients", destination: "/clients/business-corporate", permanent: false },
       { source: "/pricing", destination: "/#pricing", permanent: false },
     ];
   },
