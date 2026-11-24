@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/icons/Icon";
+import CustomDropdown from "@/components/common/CustomDropdown";
 import { cardDownloadService, type CardJobStatus, type CardPlan } from "@/services/cardDownloadService";
 
 interface DownloadCardsModalProps {
   eventId: string;
-  eventTitle: string;
+  eventTitle?: string;
   /** the ticked guests: cards are made for these and nobody else */
   inviteeIds: string[];
   /** the session the list is filtered to; the file is named after it. Empty for all sessions. */
@@ -23,11 +24,13 @@ const POLL_MS = 2_000;
  * when they are ready the single zip downloads by itself. For a large list that zip holds smaller zips (up to 100 guests each), so the
  * browser never has to download many files.
  */
-export default function DownloadCardsModal({ eventId, eventTitle, inviteeIds, sessionId, onClose }: DownloadCardsModalProps) {
+export default function DownloadCardsModal({ eventId, inviteeIds, sessionId, onClose }: DownloadCardsModalProps) {
   const [plan, setPlan] = useState<CardPlan | null>(null);
   const [phase, setPhase] = useState<Phase>("planning");
   const [job, setJob] = useState<CardJobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // the kind of file the cards are made as (the choices come from the server; the first one is the default)
+  const [format, setFormat] = useState<string>("");
   const jobId = useRef<string | null>(null);
   const alive = useRef(true);
   const started = useRef(false);
@@ -43,7 +46,7 @@ export default function DownloadCardsModal({ eventId, eventTitle, inviteeIds, se
     started.current = true;
     cardDownloadService.plan(eventId, inviteeIds, sessionId).then((r) => {
       if (!alive.current) return;
-      if (r.success && r.data) { setPlan(r.data); setPhase("ready"); } else { setError(r.message || "We could not work out your download. Please try again."); setPhase("failed"); }
+      if (r.success && r.data) { setPlan(r.data); setFormat(r.data.formats?.[0]?.value ?? ""); setPhase("ready"); } else { setError(r.message || "We could not work out your download. Please try again."); setPhase("failed"); }
     });
     // the selection is fixed while this window is open
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +81,7 @@ export default function DownloadCardsModal({ eventId, eventTitle, inviteeIds, se
   const start = async () => {
     if (!plan) return;
     setError(null);
-    const r = await cardDownloadService.start(eventId, plan.planId);
+    const r = await cardDownloadService.start(eventId, plan.planId, format || plan.formats?.[0]?.value);
     if (r.success && r.data) return begin(r.data.jobId);
     // already preparing (for example this window was closed and opened again): carry on watching that one
     if (r.code === "JOB_ALREADY_RUNNING" && r.jobId) return begin(r.jobId);
@@ -98,29 +101,28 @@ export default function DownloadCardsModal({ eventId, eventTitle, inviteeIds, se
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="download-cards-title">
       <div className="w-full max-w-[480px] bg-white border border-[#E5E5E5] rounded-lg overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
-          <h2 id="download-cards-title" className="flex-1 min-w-0 text-base font-medium text-[#15191C] break-words">Download Cards for {eventTitle}</h2>
+          <h2 id="download-cards-title" className="flex-1 min-w-0 text-base font-medium text-[#15191C] break-words">Download Invitee Card</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="shrink-0 cursor-pointer"><Icon name="events/close" width={16} height={16} /></button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
           {(phase === "planning" || phase === "ready") && (
             <>
-              <p className="text-sm text-[#15191C]">
-                We&apos;ll prepare print-ready cards for the <b>{guests.toLocaleString("en-IN")}</b> guest{guests === 1 ? "" : "s"} you ticked and give you <b>one zip file</b>.
+              <p className="text-sm text-[#4B4F52] leading-relaxed">
+                We&apos;ll prepare the cards for the <b className="text-[#15191C]">{guests.toLocaleString("en-IN")}</b> guest{guests === 1 ? "" : "s"} you ticked and give you <b className="text-[#15191C]">one ZIP file</b>.{" "}
+                {!plan ? "" : plan.nested
+                  ? `A long list is grouped into ${plan.zips} smaller ZIP files inside it, each holding up to ${Math.max(...plan.sizes)} cards.`
+                  : "Inside it you'll find one file for each guest."}
               </p>
-              <div className="rounded-md bg-[#F5F8FF] border border-[#D6E4FF] px-4 py-3 text-sm text-[#15191C]" aria-live="polite">
-                {!plan ? "Getting your download ready…" : (
-                  <>
-                    <span className="block font-medium break-words">{plan.fileName}</span>
-                    <span className="block mt-1 text-[#4B4F52]">
-                      {plan.nested
-                        ? `Inside you'll find ${plan.zips} smaller zip files (up to ${Math.max(...plan.sizes)} guests each). Every guest has their own print-ready PDF.`
-                        : "Inside you'll find one print-ready PDF for each guest."}
-                    </span>
-                  </>
+              <div>
+                <span className="block text-sm font-medium text-[#15191C] mb-2">Select Card Format<span className="text-[#D92D20]">*</span></span>
+                {plan?.formats && plan.formats.length > 0 ? (
+                  <CustomDropdown portal ariaLabel="Card format" value={format} onChange={setFormat} options={plan.formats.map((f) => ({ value: f.value, label: f.label }))} />
+                ) : (
+                  <div className="h-[47px] rounded-md border border-[#E0E0E0] bg-[#FAFAFA] px-4 flex items-center text-sm text-[#6B6B6B]" aria-live="polite">{!plan ? "Getting your download ready…" : "Print PDF (High Resolution)"}</div>
                 )}
               </div>
-              {plan && <p className="text-xs text-[#6B6B6B]">For a long list this can take a few minutes. You can keep working: we&apos;ll keep going in the background.</p>}
+              {plan && <p className="text-xs text-[#6B6B6B] break-words">File: <span className="font-medium text-[#15191C]">{plan.fileName}</span>. For a long list this can take a few minutes; you can keep working, we&apos;ll carry on in the background.</p>}
             </>
           )}
 
@@ -151,7 +153,7 @@ export default function DownloadCardsModal({ eventId, eventTitle, inviteeIds, se
             <>
               <button type="button" onClick={onClose} className={`${btn} bg-white border border-[#DDD] text-black`}>{phase === "done" ? "Close" : "Cancel"}</button>
               {(phase === "planning" || phase === "ready") && (
-                <button type="button" onClick={start} disabled={!plan} style={{ backgroundImage: "linear-gradient(180deg, #1F65FF 0%, #2071FF 33%, #2181FF 69%, #1F65FF 100%)" }} className={`${btn} text-white hover:brightness-95`}>Download</button>
+                <button type="button" onClick={start} disabled={!plan} style={{ backgroundImage: "linear-gradient(180deg, #1F65FF 0%, #2071FF 33%, #2181FF 69%, #1F65FF 100%)" }} className={`${btn} text-white hover:brightness-95 inline-flex items-center gap-2`}><Icon name="events/inv-download-white" width={16} height={16} />Download Cards</button>
               )}
               {phase === "done" && <button type="button" onClick={again} className={`${btn} text-white bg-[#1F65FF] hover:bg-[#1A56DB]`}>Download again</button>}
               {phase === "failed" && plan && <button type="button" onClick={() => { setError(null); setPhase("ready"); }} className={`${btn} text-white bg-[#1F65FF] hover:bg-[#1A56DB]`}>Try again</button>}

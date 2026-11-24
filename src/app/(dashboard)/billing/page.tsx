@@ -76,6 +76,12 @@ export default function BillingPage() {
   const filterRef = useRef<HTMLDivElement>(null);
 
   const rows = useMemo(() => filterInvoices(invoices, range, search), [invoices, range, search]);
+  // events with something still to pay: they sit at the top of the list with a Pay now button (a date range filters payments, and these have none yet)
+  const dueRows = useMemo(() => {
+    if (range.from || range.to) return [];
+    const q = search.trim().toLowerCase();
+    return outstanding.filter((b) => !q || b.eventName.toLowerCase().includes(q));
+  }, [outstanding, range.from, range.to, search]);
   const allSelected = rows.length > 0 && rows.every((r) => selected.includes(r.id));
   const filtering = !!(range.from || range.to || search.trim());
 
@@ -162,27 +168,6 @@ export default function BillingPage() {
         <PopupMessage message={notice && !notice.ok ? notice.text : null} />
         {notice?.ok && <p role="status" className="rounded-md border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 text-sm text-[#15803D]">{notice.text}</p>}
 
-        {outstanding.length > 0 && (
-          <section aria-label="Amount due" className="rounded-xl border border-[#D6E4FF] bg-[#F5F8FF] p-4 sm:p-5">
-            <h2 className="text-base font-semibold text-[#15191C]">Amount due</h2>
-            <p className="mt-0.5 text-xs text-[#6B6B6B]">Invitations sent on each event at the rate fixed for that event, plus GST. If you send more later, only the new ones are added.</p>
-            <ul className="mt-3 divide-y divide-[#E1EAF8]">
-              {outstanding.map((b) => (
-                <li key={b.eventId} className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#15191C]">{b.eventName}</p>
-                    <p className="text-xs text-[#6B6B6B]">{b.dueInvitees} invitation{b.dueInvitees === 1 ? "" : "s"} × {money(b.ratePerInvitee ?? 0)} + {b.gstPercent ?? 0}% GST</p>
-                  </div>
-                  <span className="text-base font-semibold text-[#15191C]">{money(b.due)}</span>
-                  <button type="button" disabled={paying !== null} onClick={() => pay(b)} className="h-[40px] px-5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg cursor-pointer">
-                    {paying === b.eventId ? "Opening…" : "Pay now"}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
         {(range.from || range.to) && (
           <p className="text-xs text-[#4B4F52]">
             Showing payments {range.from ? `from ${formatDay(range.from)}` : ""}{range.from && range.to ? " " : ""}{range.to ? `to ${formatDay(range.to)}` : ""}
@@ -208,14 +193,14 @@ export default function BillingPage() {
                 <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
                 <th className="py-3 px-4 font-medium">Invoice ID</th>
                 <th className="py-3 px-4 font-medium">Event Name</th>
-                <th className="py-3 px-4 font-medium">Invites No.</th>
+                <th className="py-3 px-4 font-medium">No Invitees</th>
                 <th className="py-3 px-4 font-medium">Payment Date</th>
                 <th className="py-3 px-4 font-medium">Amount</th>
                 <th className="py-3 px-4 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody className="text-[#4B4F52]">
-              {rows.length === 0 ? (
+              {rows.length === 0 && dueRows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center whitespace-normal">
                     <p className="text-base font-medium text-[#15191C]">{filtering ? "No invoices match your search or dates" : loaded ? "No invoices yet" : "Loading…"}</p>
@@ -227,7 +212,24 @@ export default function BillingPage() {
                   </td>
                 </tr>
               ) : (
-                rows.map((r) => (
+                <>
+                {dueRows.map((b) => (
+                  <tr key={`due-${b.eventId}`} className="border-b border-[#E0E0E0] h-[46px] bg-[#F8FAFF]">
+                    <td className="px-4" />
+                    <td className="px-4 text-[#6B6B6B]">Not paid yet</td>
+                    <td className="px-4">{b.eventName}</td>
+                    <td className="px-4">{b.dueInvitees}</td>
+                    <td className="px-4 text-[#6B6B6B]">—</td>
+                    <td className="px-4 font-medium text-[#15191C]" title={`${b.dueInvitees} invitation${b.dueInvitees === 1 ? "" : "s"} × ${money(b.ratePerInvitee ?? 0)} + ${b.gstPercent ?? 0}% GST`}>{money(b.due)}</td>
+                    <td className="px-4 text-right">
+                      {/* unpaid: only Pay now (nothing to download until it is paid) */}
+                      <button type="button" disabled={paying !== null} onClick={() => pay(b)} className="h-[34px] px-4 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg cursor-pointer">
+                        {paying === b.eventId ? "Opening…" : "Pay now"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {rows.map((r) => (
                   <tr key={r.id} className="border-b border-[#E0E0E0] h-[46px]">
                     <td className="px-4">
                       <input
@@ -255,7 +257,8 @@ export default function BillingPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                ))}
+                </>
               )}
             </tbody>
           </table>

@@ -8,7 +8,10 @@ export interface CardPlan {
   fileName: string;
   /** true when that file holds smaller zips (more than 100 guests); false when it holds the PDFs directly */
   nested: boolean;
+  /** the kinds of file the cards can be downloaded as (the first is the default) */
+  formats?: { value: string; label: string }[];
 }
+export type CardFormat = string;
 export interface CardJobStatus { status: "RUNNING" | "DONE" | "FAILED"; total: number; zips: number; doneGuests: number; doneParts: number; fileName: string; nested: boolean; size?: number; error?: string }
 
 export const cardDownloadService = {
@@ -17,8 +20,8 @@ export const cardDownloadService = {
     apiClient<CardPlan>(`/api/v1/events/${eventId}/invitation-cards/plan`, { method: "POST", body: JSON.stringify({ inviteeIds, sessionId: sessionId || undefined }) }, true),
 
   /** Starts building the cards in the background (answers at once). A repeat while one runs returns that job (code JOB_ALREADY_RUNNING, jobId). */
-  start: (eventId: string, planId: string) =>
-    apiClient<{ jobId: string }>(`/api/v1/events/${eventId}/invitation-cards/jobs`, { method: "POST", body: JSON.stringify({ planId }) }, true) as Promise<ApiResponse<{ jobId: string }> & { jobId?: string }>,
+  start: (eventId: string, planId: string, format?: CardFormat) =>
+    apiClient<{ jobId: string }>(`/api/v1/events/${eventId}/invitation-cards/jobs`, { method: "POST", body: JSON.stringify({ planId, ...(format ? { format } : {}) }) }, true) as Promise<ApiResponse<{ jobId: string }> & { jobId?: string }>,
 
   /** Progress; not served from the short read cache, it is asked for fresh every time */
   status: (eventId: string, jobId: string) =>
