@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { flagExplicitLogout, loginRedirectPath } from "@/components/auth/authPortal";
 import { useAuth } from "@/context/AuthContext";
 import { resolveImageUrl } from "@/utils/mediaUrl";
+import { isOrganizationAccount } from "@/utils/accountType";
 
 export default function UserNavDropdown() {
   const { user, logout } = useAuth();
@@ -19,6 +20,8 @@ export default function UserNavDropdown() {
     || user?.avatarUrl
     || null;
   const avatarFallbackUrl = resolveImageUrl(user?.profile?.avatarKey, true);
+  // an individual organizer has no role badge; organisation accounts and administrators keep theirs
+  const roleBadge = user?.role === "ORGANIZER" && !isOrganizationAccount(user) ? null : user?.role;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -93,9 +96,9 @@ export default function UserNavDropdown() {
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-xs font-bold text-gray-900 truncate">{displayName}</p>
-                  {user?.role && (
+                  {roleBadge && (
                     <span className="text-[9px] font-bold text-[#1F65FF] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded uppercase shrink-0">
-                      {user.role}
+                      {roleBadge}
                     </span>
                   )}
                 </div>

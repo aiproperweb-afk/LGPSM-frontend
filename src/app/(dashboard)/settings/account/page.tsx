@@ -57,6 +57,7 @@ export default function AccountSettingsPage() {
     const savedType = isOrganizationAccount(user) ? "ORGANIZATION" : "INDIVIDUAL";
     const nextType = isOrganizer && chosenType && chosenType !== savedType ? chosenType : null;
     if (nextType === "INDIVIDUAL" && !(await confirm({ title: "Change to an individual account", message: "Your organisation name and logo will no longer appear on invitations and emails, and the organisation settings are hidden.", confirmText: "Change" }))) return;
+    if (nextType === "ORGANIZATION" && !(await confirm({ title: "Change to an organisation account", message: "Your organisation name and logo will appear on invitations and emails once you add them. You will be taken to Logo Settings to add your logo and organisation details.", confirmText: "Change" }))) return;
     // Only the name and the account type are editable here; email changes are not supported by the profile API
     const profile: Record<string, unknown> = { ...(user?.profile || {}), organizationType: nextType };
     if (nextType === "INDIVIDUAL") delete profile.organizationName;
