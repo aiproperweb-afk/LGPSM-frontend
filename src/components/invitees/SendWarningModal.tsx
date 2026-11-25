@@ -67,7 +67,6 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
           <div className="flex flex-col gap-2 max-w-[442px] font-medium">
             <h2 id="send-warning-title" className="text-[26px] text-[#15191C]">{firstTime ? "Warning" : "Confirm"}</h2>
             <p className="text-base text-[#15191C]/80">{text}</p>
-            {billNote && <p className="text-sm font-medium text-[#1D3A8A] bg-[#EEF4FF] border border-[#C7D7FE] rounded-md px-3 py-2">{billNote}</p>}
           </div>
           {firstTime && (
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -77,6 +76,8 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
               <button type="button" onClick={onCancel} className={secondary}>I’ll do later</button>
             </div>
           )}
+          {/* what comes next sits last, just above the send button */}
+          {billNote && <p className="max-w-[442px] text-sm font-medium text-[#1D3A8A] bg-[#EEF4FF] border border-[#C7D7FE] rounded-md px-3 py-2">{billNote}</p>}
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3 p-4 border-t border-[#E5E5E5]">
           {sending && (

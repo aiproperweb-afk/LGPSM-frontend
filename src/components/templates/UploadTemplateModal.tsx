@@ -13,12 +13,15 @@ interface Props {
   onClose: () => void;
   /** The new template, already saved under My templates */
   onCreated: (template: Template) => void;
+  /** Opened from the Templates page: an administrator's design is then published to every organizer. Elsewhere (Add Event) it stays a private card. */
+  publish?: boolean;
 }
 
-// "Upload your own template": the organizer's finished invitation design becomes the card. Their artwork carries the event
-// details; the guest's own QR code and name are placed on it (bottom, on a white panel), so every guest still gets a scannable pass.
-export default function UploadTemplateModal({ onClose, onCreated }: Props) {
+// "Upload your own template": a finished invitation design becomes the card, sent exactly as it is. The one exception is an administrator
+// publishing from the Templates page: that design is shared, and each event's own details are written over its wording.
+export default function UploadTemplateModal({ onClose, onCreated, publish = false }: Props) {
   const categories = useCategories();
+  const shared = publish && !categories.isOrganizer;
   const [name, setName] = useState("");
   const [cat, setCat] = useState({ categoryId: "", subcategoryId: "" });
   const [imageKey, setImageKey] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
   const errors = {
     // the name is optional; an organizer's upload has no event type (it suits every event), an admin's shared one needs it
     name: name.trim().length === 1 ? "A name needs at least 2 characters, or leave it empty." : undefined,
-    category: !categories.isOrganizer && !cat.categoryId ? "Choose the event type this design is for." : undefined,
+    category: shared && !cat.categoryId ? "Choose the event type this design is for." : undefined,
     image: !imageKey ? "Upload your design." : undefined,
   };
 
@@ -42,11 +45,11 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
     if (Object.values(errors).some(Boolean) || uploading) { setShowErrors(true); return; }
     setSaving(true);
     setError(null);
-    const res = await templateService.uploadOwnTemplate({ ...(name.trim() ? { name: name.trim() } : {}), imageKey: imageKey!, ...(!categories.isOrganizer && cat.categoryId ? { categoryId: cat.categoryId } : {}), ...(!categories.isOrganizer && cat.subcategoryId ? { subcategoryId: cat.subcategoryId } : {}) });
+    const res = await templateService.uploadOwnTemplate({ ...(name.trim() ? { name: name.trim() } : {}), imageKey: imageKey!, ...(shared ? { publish: true } : {}), ...(shared && cat.categoryId ? { categoryId: cat.categoryId } : {}), ...(shared && cat.subcategoryId ? { subcategoryId: cat.subcategoryId } : {}) });
     setSaving(false);
     if (res.success && res.data) {
       const made = res.data as Template & { detection?: { detected: boolean; reason?: string } | null };
-      // only an admin's design (whose wording the event's details replace) has areas to check; an organizer's own design is the card as it is
+      // only a shared design (whose wording the event's details replace) has areas to check; any other upload is the card as it is
       if (made.templateData?.dynamicDetails) setAreas({ template: made, intro: made.detection ?? null });
       else onCreated(res.data);
     }
@@ -66,8 +69,8 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
         </div>
         <form onSubmit={save} noValidate className="px-6 py-5 space-y-5">
           <p className="text-sm text-[#4B4F52]">
-            {categories.isOrganizer
-              ? "Upload your finished invitation design. Your artwork is the card; each guest's own QR code and name are placed at the bottom of it, so leave that area calm. Only you can use this template."
+            {!shared
+              ? `Upload your finished invitation design. It is the card, sent exactly as it is: nothing is written or added on it, and it works with Digital only. Only you can use it${categories.isOrganizer ? "." : "; to share it with all organizers, publish it from the Templates page."}`
               : "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and the guest's name and QR code are added at the bottom. After saving you check where that wording is. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
           </p>
           <div>
@@ -84,7 +87,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
             />
             {shown.name && <p className="mt-1 text-xs font-medium text-rose-600">{shown.name}</p>}
           </div>
-          {!categories.isOrganizer && (
+          {shared && (
           <CategoryFields
             api={categories}
             categoryId={cat.categoryId}
@@ -112,7 +115,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
               onUploadingChange={setUploading}
             />
             {shown.image && <p className="mt-1 text-xs font-medium text-rose-600">{shown.image}</p>}
-            {categories.isOrganizer && imageKey && (
+            {!shared && imageKey && (
               <p role="status" className="mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">
                 Your uploaded card is used exactly as it is, so the event logo is not added to it. The Event Logo option in Event Details is turned off for this card.
               </p>

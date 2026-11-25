@@ -8,6 +8,7 @@ import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
 import { formatOrganizerId } from "@/utils/formatId";
+import { additionalColumns } from "@/utils/inviteeFields";
 import { InviteeLog, AccessLog, SessionReport, ReportSessionColumn } from "@/types/reports";
 import ReportsHeaderControls from "@/components/reports/ReportsHeaderControls";
 import ReportsStatsCards from "@/components/reports/ReportsStatsCards";
@@ -270,6 +271,7 @@ export default function ReportsPage() {
           checkInStatus: records.length === 0 ? "Not Checked-in" : sessionCount > 0 && attendedSessions > 0 && attendedSessions < sessionCount ? "Partially Checked-in" : "Checked-in",
           lastCheckInTime: formatDateTime(latest, "—"),
           sessionCheckIns,
+          details: { companyName: inv.companyName || inv.company || "", professionalIdentity: inv.professionalIdentity || "", secondaryIdentity: inv.secondaryIdentity || "" },
         } as InviteeLog;
       }));
       setLoadingInviteeDetails(false);
@@ -347,9 +349,11 @@ export default function ReportsPage() {
           ].map(csvCell).join(",");
         }).join("\n");
     } else if (activeTab === "invitees") {
-      content = ["Invitee Name", "Mobile No.", "Invitation Status", "RSVP Status", "Check-in Status", "Last Check-in Time", ...sessionColumns.map((c) => c.name)].map(csvCell).join(",") + "\n" +
+      // the card's additional information, only what this event uses
+      const extra = additionalColumns((allEventsList.find((e) => (e._id || e.id) === selectedEventId) as { cardInfo?: Parameters<typeof additionalColumns>[0] } | undefined)?.cardInfo);
+      content = ["Invitee Name", "Mobile No.", ...extra.map((c) => c.header), "Invitation Status", "RSVP Status", "Check-in Status", "Last Check-in Time", ...sessionColumns.map((c) => c.name)].map(csvCell).join(",") + "\n" +
         inviteeLogs.map(i => [
-          i.name, i.mobile, i.invitationStatus, i.rsvpStatus, i.checkInStatus, i.lastCheckInTime,
+          i.name, i.mobile, ...extra.map((c) => i.details?.[c.key] || ""), i.invitationStatus, i.rsvpStatus, i.checkInStatus, i.lastCheckInTime,
           ...sessionColumns.map((c) => (i.sessionCheckIns[c.id] ? "Yes" : "No")),
         ].map(csvCell).join(",")).join("\n");
     } else if (activeTab === "access") {
@@ -413,7 +417,8 @@ export default function ReportsPage() {
           selectedEvent={selectedEventId}
           setSelectedEvent={setSelectedEventId}
           onDownloadReport={downloadReportCSV}
-          organizerOptions={isAdmin ? organizerOptions : [{ value: "", label: user?.fullName || "Organizer name here" }]}
+          showOrganizer={isAdmin}
+          organizerOptions={organizerOptions}
           eventOptions={eventOptions.length > 0 ? eventOptions : [{ value: "", label: loadingEvents ? "Loading events..." : "No events" }]}
         />
 

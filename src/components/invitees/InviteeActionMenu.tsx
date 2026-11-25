@@ -36,7 +36,7 @@ export default function InviteeActionMenu({ items, disabled }: { items: ActionIt
     <div ref={box} className="relative">
       <button type="button" aria-haspopup="menu" aria-expanded={open} disabled={disabled} onClick={() => setOpen((o) => !o)} className="inline-flex items-center justify-center gap-2 px-6 py-[11px] bg-white border border-[#E0E0E0] rounded-lg text-base font-medium text-[#1E2939] hover:bg-gray-50 cursor-pointer disabled:opacity-50">
         Action
-        <Icon name="events/inv-action-chevron" width={14} height={14} />
+        <Icon name="events/inv-action-chevron" width={8} height={5} />
       </button>
       {open && (
         <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[240px] bg-white border border-[#E0E0E0] rounded-lg shadow-lg py-1.5">

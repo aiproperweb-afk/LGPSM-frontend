@@ -98,3 +98,17 @@ export const hasNoCardSettings = (event?: { cardInfo?: { primary?: string | null
 /** The popup shown when an uploaded sheet carries more columns than the event uses */
 export const ignoredColumnsMessage = (ignored: string[], used: string[]): string =>
   `This Excel has extra columns that this event does not need: ${ignored.join(", ")}.\n\nOnly the required data (${used.join(", ")}) was taken. The other columns were ignored.`;
+
+/** The additional information an event's card uses (primary first), as export columns titled with the organizer's own labels */
+export function additionalColumns(cardInfo?: CardInfoLike | null): { header: string; key: "companyName" | "professionalIdentity" | "secondaryIdentity" }[] {
+  const config = inviteeConfigFor({ cardInfo });
+  const of = {
+    COMPANY_NAME: { used: !!config.company, field: "company", key: "companyName" },
+    PROFESSIONAL_IDENTITY: { used: !!config.identity, field: "identity", key: "professionalIdentity" },
+    SECONDARY_IDENTITY: { used: !!config.identity2, field: "identity2", key: "secondaryIdentity" },
+  } as const;
+  return [...new Set([cardInfo?.primary, cardInfo?.secondary])].flatMap((chosen) => {
+    const entry = chosen ? of[chosen as keyof typeof of] : undefined;
+    return entry?.used ? [{ header: headerFor(entry.field, config), key: entry.key }] : [];
+  });
+}

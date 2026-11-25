@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as XLSX from "xlsx";
 import { parseInviteeSheet, rowsToSheetFile } from "./inviteeSheet.ts";
-import { expectedColumnsFor } from "./inviteeFields.ts";
+import { expectedColumnsFor , additionalColumns } from "./inviteeFields.ts";
 
 const fileOf = (rows) => {
   const wb = XLSX.utils.book_new();
@@ -108,4 +108,14 @@ test("columns the event does not use are reported and nothing of theirs is taken
 test("a sheet with exactly the event's columns, and session columns, reports nothing extra", async () => {
   const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Dinner"], ["Pia Roy", "pia@x.com", "9876543210", "Y"]]), ["Dinner"], expectedColumnsFor({}));
   assert.deepEqual(parsed.ignoredColumns, []);
+});
+
+test("the report export carries only the additional information the event uses, under the organizer's own titles", () => {
+  assert.deepEqual(additionalColumns({ primary: "INVITEE_NAME", secondary: null }), []);
+  assert.deepEqual(additionalColumns(undefined), []);
+  assert.deepEqual(additionalColumns({ primary: "PROFESSIONAL_IDENTITY", secondary: "COMPANY_NAME", identityLabel: "Ashraam" }), [
+    { header: "Ashraam", key: "professionalIdentity" }, { header: "Company Name", key: "companyName" },
+  ]);
+  // a custom title that only renames the mobile column adds nothing of its own
+  assert.deepEqual(additionalColumns({ primary: "PROFESSIONAL_IDENTITY", identityLabel: "Ph No" }), []);
 });

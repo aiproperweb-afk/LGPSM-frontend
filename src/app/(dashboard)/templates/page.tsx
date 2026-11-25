@@ -110,11 +110,17 @@ function TemplatesPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, reload, user?._id, liveTick]);
 
+  /** An administrator's private card (uploaded during Add Event): publishing it shares it with the organizers and writes event details over it */
+  const isPrivateAdminCard = (t: TemplateCard) => user?.role === "ADMIN" && t.isMine && t.isUploaded && !t.isDynamic && t.isDraft;
+
   const togglePublish = async (t: TemplateCard) => {
+    const sharing = isPrivateAdminCard(t);
+    if (sharing && !(await confirm({ title: "Publish this card", message: "Every organizer will be able to use it. Each event's own name, date and venue are then written over the wording in your picture, and a QR code is added. You can check those places next.", confirmText: "Publish" }))) return;
     const res = await templateService.updateTemplate(t.id, { isPublished: t.isDraft });
     if (res.success) {
       setPreview(null);
       setReload((n) => n + 1);
+      if (sharing && (res.data as Template | undefined)?.templateData?.dynamicDetails) setAreasFor(t.id);
     } else {
       showAlert(res.message || "The template could not be updated.", "error");
     }
@@ -146,8 +152,9 @@ function TemplatesPageContent() {
       } icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>} />
       {uploadOpen && (
         <UploadTemplateModal
+          publish
           onClose={() => setUploadOpen(false)}
-          onCreated={() => { setUploadOpen(false); setView("mine"); setReload((n) => n + 1); showAlert("Your template was saved under My templates.", "success"); }}
+          onCreated={() => { setUploadOpen(false); setView("mine"); setReload((n) => n + 1); showAlert(user?.role === "ADMIN" ? "The template was published. Every organizer can now use it." : "Your template was saved under My templates.", "success"); }}
         />
       )}
       <div className="p-4 sm:p-6 w-full space-y-6 pb-24">
@@ -283,7 +290,7 @@ function TemplatesPageContent() {
                 )}
                 {preview.isDraft ? (
                   <p className="text-sm text-[#6B6B6B]">
-                    {preview.isMine ? "This template is a draft. Publish it to use it for your events." : "This template is a draft. Publish it from Template Settings before organizers can use it."}
+                    {isPrivateAdminCard(preview) ? "Your own card: you can use it in Add Event exactly as it is (Digital only). Publish it to share it with all organizers." : preview.isMine ? "This template is a draft. Publish it to use it for your events." : "This template is a draft. Publish it from Template Settings before organizers can use it."}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">

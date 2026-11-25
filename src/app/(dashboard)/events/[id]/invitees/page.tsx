@@ -98,7 +98,7 @@ function allowedIn(inv: Invitee, session: SessionData): boolean {
 function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus: Invitee["invitationStatus"]; rsvpStatus: Invitee["rsvpStatus"] }) {
   if (invitationStatus === "FAILED") return pill("bg-[#FDE2E1] text-[#B42318]", "Sending Failed");
   if (invitationStatus === "PENDING") return pill("bg-[#EDEDED] text-[#6E6E6E]", "Not Yet Sent");
-  if (rsvpStatus === "ACCEPTED") return pill("bg-[#CCD2FF] text-[#2C2EB5]", "Accepted");
+  if (rsvpStatus === "ACCEPTED") return pill("bg-[#15803D] text-white", "Accepted");
   if (rsvpStatus === "DECLINED") return pill("bg-[#FFE9C0] text-[#6F5600]", "Declined");
   return pill("bg-[#C0FFD5] text-[#0F7A33]", "Successfully Sent");
 }
@@ -997,7 +997,7 @@ export default function InviteesManagementPage() {
                           {isAdmin && (
                             <td className="py-3 px-2.5">
                               {!rsvpEnabled ? <span className="text-[#6B6B6B]" aria-label="RSVP not requested">--</span>
-                                : i.rsvpStatus === "ACCEPTED" ? pill("bg-[#CCD2FF] text-[#2C2EB5]", "Accepted")
+                                : i.rsvpStatus === "ACCEPTED" ? pill("bg-[#15803D] text-white", "Accepted")
                                 : i.rsvpStatus === "DECLINED" ? pill("bg-[#FFE9C0] text-[#6F5600]", "Declined")
                                 : pill("bg-[#FFF3C4] text-[#B38A00]", "Pending")}
                             </td>
@@ -1126,8 +1126,8 @@ export default function InviteesManagementPage() {
         value={filtersInForce}
         showInvitation={digitalInvites}
         showCards={printableCards}
-        // food is answered by guests on their digital invitation, so it can only be filtered once invitations are out
-        food={digitalInvites && lifecycleStarted ? foodQuestions : []}
+        // offered whenever the event asks about food; guests answer on their digital invitation, so print-only events have no answers
+        food={digitalInvites ? foodQuestions : []}
         showRsvp={rsvpEnabled && digitalInvites}
         onApply={(f) => { setSessionFilter(f.session); setInvitationFilter(f.invitation); setPanelFilters({ cards: f.cards, food: f.food, rsvp: f.rsvp, sort: f.sort }); setSelectedIds([]); }}
       />

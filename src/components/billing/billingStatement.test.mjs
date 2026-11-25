@@ -1,7 +1,7 @@
 // Run with: npm test
 import test from "node:test";
 import assert from "node:assert/strict";
-import { filterInvoices, validateRange, statementCsv } from "./billingStatement.ts";
+import { filterInvoices, validateRange, groupByEvent } from "./billingStatement.ts";
 
 const inv = (id, event, date, n = 5, amount = 1000) => ({ id, invoiceId: id, eventName: event, invitees: n, paymentDate: date, amount });
 const list = [inv("A1", "Gala", "2026-01-04T10:00:00Z"), inv("B2", "Summit", "2026-01-20"), inv("C3", "Gala night", "2026-02-01")];
@@ -28,10 +28,15 @@ test("a statement range needs both dates, in order", () => {
   assert.equal(validateRange({ from: "2026-01-01", to: "2026-01-01" }), null);
 });
 
-test("the statement CSV has a header, quotes commas and defuses formulas", () => {
-  const csv = statementCsv([inv("A1", 'Gala, "big"', "2026-01-04"), inv("B2", "=HYPERLINK(1)", "2026-01-05")]);
-  const lines = csv.split("\n");
-  assert.equal(lines[0], "Invoice ID,Event Name,No Invitees,Payment Date,Amount (INR)");
-  assert.equal(lines[1], 'A1,"Gala, ""big""",5,2026-01-04,1000.00');
-  assert.ok(lines[2].includes("'=HYPERLINK(1)"));
+test("a download is split into one document for each event", () => {
+  const of = (id, eventId, eventName) => ({ ...inv(id, eventName, "2026-01-04"), eventId });
+  const groups = groupByEvent([of("A1", "e1", "Gala"), of("B2", "e2", "Summit"), of("C3", "e1", "Gala")]);
+  assert.deepEqual(groups.map((g) => g.map((i) => i.id)), [["A1", "C3"], ["B2"]]);
+});
+
+test("two events with the same name stay apart, and an invoice without an event id is grouped by name", () => {
+  const of = (id, eventId) => ({ ...inv(id, "Gala", "2026-01-04"), eventId });
+  assert.equal(groupByEvent([of("A1", "e1"), of("B2", "e2")]).length, 2);
+  assert.equal(groupByEvent([inv("A1", "Gala", "2026-01-04"), inv("B2", "Gala", "2026-01-05")]).length, 1);
+  assert.deepEqual(groupByEvent([]), []);
 });

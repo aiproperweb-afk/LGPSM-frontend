@@ -38,10 +38,14 @@ function DeleteInviteeForm({
   askReason = true,
 }: DeleteInviteeModalProps) {
   const [reason, setReason] = useState("");
+  // nothing is sent unless the organizer chooses to send a reason; "No" to start with
+  const [sendReason, setSendReason] = useState(false);
   const [email, setEmail] = useState(defaultChannels.email);
   const [whatsapp, setWhatsapp] = useState(defaultChannels.whatsapp);
   const [busy, setBusy] = useState(false);
   const many = count > 1;
+  const writing = askReason && sendReason;
+  const unfinished = writing && (!reason.trim() || (!email && !whatsapp));
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -97,22 +101,31 @@ function DeleteInviteeForm({
           </p>
 
           {askReason && <div className="w-full text-left">
-            <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason <span className="font-normal text-gray-500">(optional)</span></label>
-            <textarea
-              id="remove-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              maxLength={500}
-              rows={3}
-              placeholder={many ? "Optional: why are these invitees being removed? If you write a reason it is sent to them." : "Optional: why is this invitee being removed? If you write a reason it is sent to them."}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-[#1F65FF] resize-none"
-            />
-            <p className="mt-3 mb-1 text-xs font-semibold text-gray-800">Send this message by</p>
-            <div className="flex items-center gap-5 text-xs text-gray-700">
-              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#16A34A]" />Email</label>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#16A34A]" />WhatsApp</label>
-            </div>
-            <p className="mt-1 text-[11px] text-gray-500">Nothing is sent unless you write a reason. Leave it blank to remove without sending a message.</p>
+            <fieldset>
+              <legend className="text-xs font-semibold text-gray-800 mb-1.5">Do you want to send a reason?</legend>
+              <div className="flex items-center gap-5 text-xs text-gray-700">
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={sendReason} onChange={() => setSendReason(true)} className="accent-[#16A34A]" />Yes</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={!sendReason} onChange={() => setSendReason(false)} className="accent-[#16A34A]" />No</label>
+              </div>
+            </fieldset>
+            {sendReason && <div className="mt-3">
+              <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason</label>
+              <textarea
+                id="remove-reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder={many ? "Why are these invitees being removed? This is sent to them." : "Why is this invitee being removed? This is sent to them."}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-[#1F65FF] resize-none"
+              />
+              <p className="mt-3 mb-1 text-xs font-semibold text-gray-800">Send this message by</p>
+              <div className="flex items-center gap-5 text-xs text-gray-700">
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#16A34A]" />Email</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#16A34A]" />WhatsApp</label>
+              </div>
+              {unfinished && <p className="mt-2 text-[11px] text-gray-500">Write the reason and choose at least one way to send it, or choose No.</p>}
+            </div>}
           </div>}
 
           <div className="flex flex-col items-stretch gap-3 w-full mt-5">
@@ -124,10 +137,10 @@ function DeleteInviteeForm({
               No, Cancel
             </button>
             <button
-              disabled={busy}
+              disabled={busy || unfinished}
               onClick={async () => {
                 setBusy(true);
-                try { await onConfirm(askReason && reason.trim() ? { reason: reason.trim(), email, whatsapp } : { reason: "", email: false, whatsapp: false }); } finally { setBusy(false); }
+                try { await onConfirm(writing ? { reason: reason.trim(), email, whatsapp } : { reason: "", email: false, whatsapp: false }); } finally { setBusy(false); }
                 onClose();
               }}
               className="w-full px-6 py-2.5 bg-[#D92D20] hover:bg-[#B42318] text-white font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"

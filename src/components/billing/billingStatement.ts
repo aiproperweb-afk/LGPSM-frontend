@@ -1,9 +1,9 @@
-// Billing data helpers. There is no payment provider yet, so there are no invoices; these keep the filtering and the
-// statement export correct and testable for the day invoices exist.
+// Billing data helpers: filtering the invoices, checking a statement's dates, and splitting a download into one document per event.
 
 export interface Invoice {
   id: string;
   invoiceId: string;
+  eventId?: string;
   eventName: string;
   invitees: number;
   /** ISO date or date-time of the payment */
@@ -34,14 +34,12 @@ export function validateRange(range: DateRange): string | null {
   return null;
 }
 
-const csvCell = (v: string | number) => {
-  // a cell that starts like a formula is neutralised so a spreadsheet never runs it
-  const text = String(v);
-  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
-  return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-};
-
-export function statementCsv(invoices: Invoice[]): string {
-  const rows = [["Invoice ID", "Event Name", "No Invitees", "Payment Date", "Amount (INR)"], ...invoices.map((i) => [i.invoiceId, i.eventName, i.invitees, dayOf(i.paymentDate), i.amount.toFixed(2)])];
-  return rows.map((r) => r.map(csvCell).join(",")).join("\n");
+/** Each event's invoices together, in the order the events first appear: payments of different events are never put in one document */
+export function groupByEvent(invoices: Invoice[]): Invoice[][] {
+  const groups = new Map<string, Invoice[]>();
+  for (const i of invoices) {
+    const key = i.eventId || `name:${i.eventName}`;
+    groups.set(key, [...(groups.get(key) ?? []), i]);
+  }
+  return [...groups.values()];
 }

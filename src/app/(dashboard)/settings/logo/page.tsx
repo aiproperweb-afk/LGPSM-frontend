@@ -11,6 +11,9 @@ import { resolveImageUrl } from "@/utils/mediaUrl";
 import Icon from "@/components/icons/Icon";
 import OrganisationDetailsForm from "@/components/settings/OrganisationDetailsForm";
 import LogoCropDialog from "@/components/settings/LogoCropDialog";
+import BrandLoader from "@/components/common/BrandLoader";
+import { isOrganizationAccount } from "@/utils/accountType";
+import { useRouter } from "next/navigation";
 
 // The design allows JPG and PNG only (Figma 222:34175: "Only JPG & PNG allowed")
 const ACCEPTED = "image/png,image/jpeg";
@@ -39,6 +42,13 @@ export default function LogoSettingsPage() {
       if (source) URL.revokeObjectURL(source);
     };
   }, [cropSelection?.source]);
+
+  // an individual has no organisation, so no logo to set: "Settings" opens their profile instead
+  const router = useRouter();
+  const individual = user?.role === "ORGANIZER" && !isOrganizationAccount(user);
+  useEffect(() => {
+    if (individual) router.replace("/settings/account");
+  }, [individual, router]);
 
   const shownKey = staged === undefined ? savedKey : staged;
   const shownUrl = resolveImageUrl(shownKey);
@@ -99,6 +109,8 @@ export default function LogoSettingsPage() {
       showAlert(res.message || "The logo could not be saved. Please try again.", "error");
     }
   };
+
+  if (individual) return <BrandLoader />;
 
   return (
     <div className="w-full min-h-full bg-white">

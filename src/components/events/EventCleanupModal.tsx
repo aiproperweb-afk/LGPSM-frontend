@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { eventService } from "@/services/eventService";
+import { copyText } from "@/utils/copyText";
 
 interface EventCleanupModalProps {
   isOpen: boolean;
@@ -24,9 +25,17 @@ export default function EventCleanupModal({
   const [clearing, setClearing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [typed, setTyped] = useState<string>("");
+  const [copied, setCopied] = useState(false);
   const canDelete = !!eventTitle && typed.trim() === eventTitle.trim();
 
   if (!isOpen) return null;
+
+  const copyTitle = async () => {
+    if (!eventTitle) return;
+    if (!(await copyText(eventTitle))) { setErrorMessage("The title could not be copied. Please type it."); return; }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleClearData = async () => {
     setErrorMessage(null);
@@ -95,9 +104,23 @@ export default function EventCleanupModal({
             {mode === "delete" ? "Permanently deletes this event and everything in it: its invitees, invitations (including RSVP answers), sessions, check-in records, staff assignments and uploaded image. It disappears from every list and report. The activity log of who did what is kept." : <>Permanently deletes this event&apos;s invitees, invitations (including RSVP answers), sessions, check-in records and staff assignments. The event record, its activity log and all user accounts are kept.
           </>}</p>
 
-          <label className="block text-[11px] text-gray-700 space-y-1">
-            <span>Type the event title to confirm: <strong className="text-gray-900">{eventTitle}</strong></span>
+          {/* not a wrapping label: a button inside one would take the label's click away from the box */}
+          <div className="text-[11px] text-gray-700 space-y-1">
+            <div className="flex flex-wrap items-center gap-x-1.5">
+              <span><label htmlFor="confirm-event-title">Type the event title to confirm:</label> <strong className="text-gray-900 break-words">{eventTitle}</strong></span>
+              {eventTitle ? (
+                <button type="button" onClick={copyTitle} aria-label={copied ? "Event title copied" : "Copy the event title"} title={copied ? "Copied" : "Copy to clipboard"} className="inline-flex size-6 items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
+                  {copied ? (
+                    <svg className="size-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><rect x="9" y="9" width="11" height="11" rx="2" strokeWidth={2} /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2h3" /></svg>
+                  )}
+                </button>
+              ) : null}
+              <span role="status" className="sr-only">{copied ? "Event title copied" : ""}</span>
+            </div>
             <input
+              id="confirm-event-title"
               type="text"
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
@@ -105,7 +128,7 @@ export default function EventCleanupModal({
               autoComplete="off"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs focus:outline-none focus:border-red-500"
             />
-          </label>
+          </div>
 
           {errorMessage && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-xs font-semibold flex items-center gap-2">

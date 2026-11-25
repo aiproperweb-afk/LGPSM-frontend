@@ -309,7 +309,7 @@ export default function ReportsLogsTable({
                         </span>
                       )}
                       {log.invitationStatus === "Failed" && (
-                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
+                        <span className="bg-red-100/70 text-red-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
                           Sending failed
                         </span>
                       )}
@@ -321,7 +321,7 @@ export default function ReportsLogsTable({
                     </td>
                     <td className="py-4 px-4">
                       {log.rsvpStatus === "Accepted" && (
-                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
+                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
                           Accepted
                         </span>
                       )}

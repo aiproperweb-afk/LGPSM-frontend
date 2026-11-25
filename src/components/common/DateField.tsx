@@ -63,6 +63,16 @@ export default function DateField({ value, onChange, placeholder, min, max, rang
     setPos({ left, top });
   }, [open, view, mode]);
 
+  // The calendar is drawn on the page itself, outside whatever holds the field. A press inside it is kept from reaching the page, so a
+  // filter box that closes on an outside press does not take the click for one and close before the day is picked.
+  useEffect(() => {
+    const el = panel.current;
+    if (!open || !el) return;
+    const keep = (e: MouseEvent) => e.stopPropagation();
+    el.addEventListener("mousedown", keep);
+    return () => el.removeEventListener("mousedown", keep);
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {

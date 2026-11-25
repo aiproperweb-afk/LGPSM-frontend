@@ -25,24 +25,15 @@ interface Props {
   onApply: (f: InviteeFilters) => void;
 }
 
-/**
- * One group of choices (Figma 195:1834): the chosen one on top in black with a chevron, the others below in grey. Picking another one
- * makes it the chosen one; the list is whatever the event really has.
- */
+// the dropdown shows a blank value as "nothing chosen" (grey), so "everyone" travels as a value of its own
+const EVERY = "__every__";
+
+/** One group of choices (Figma 195:1834): a dropdown showing the chosen one; the list is whatever the event really has */
 function Group<T extends string>({ title, options, value, onPick }: { title: string; options: { value: T; label: string }[]; value: T; onPick: (v: T) => void }) {
-  const chosen = options.find((o) => o.value === value) ?? options[0];
   return (
     <div className="flex flex-col gap-2 w-full">
       <p className="text-sm font-medium text-[#000B2C]">{title}</p>
-      <div className="flex flex-col gap-2.5 p-4 bg-white border border-[#A1A1A1] rounded-md" role="radiogroup" aria-label={title}>
-        <div className="flex items-center justify-between gap-2.5">
-          <span role="radio" aria-checked className="text-xs font-medium text-black">{chosen.label}</span>
-          <Icon name="events/inv-panel-chevron" width={24} height={24} />
-        </div>
-        {options.filter((o) => o.value !== chosen.value).map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={false} onClick={() => onPick(o.value)} className="text-left text-xs font-medium text-[#7F7F7F] hover:text-black cursor-pointer">{o.label}</button>
-        ))}
-      </div>
+      <CustomDropdown portal ariaLabel={title} value={value || EVERY} onChange={(v) => onPick((v === EVERY ? "" : v) as T)} options={options.map((o) => ({ value: o.value || EVERY, label: o.label }))} />
     </div>
   );
 }
@@ -56,7 +47,8 @@ export default function InviteeFilterPanel(props: Props) {
 function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showCards, food, showRsvp, onApply }: Props) {
   const [draft, setDraft] = useState<InviteeFilters>(value);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    // Escape closes an open dropdown first, and the panel only when none is open
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !document.querySelector('[role="listbox"]')) onClose(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -85,7 +77,7 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
               <Icon name="events/inv-panel-check" width={11} height={8} />
               <p className="text-sm font-medium text-black break-words min-w-0">{eventTitle}</p>
             </div>
-            <CustomDropdown portal ariaLabel="Session" value={draft.session} onChange={(v) => setDraft((d) => ({ ...d, session: v }))} options={sessionOptions} />
+            <CustomDropdown portal ariaLabel="Session" value={draft.session || EVERY} onChange={(v) => setDraft((d) => ({ ...d, session: v === EVERY ? "" : v }))} options={sessionOptions.map((o) => ({ value: o.value || EVERY, label: o.label }))} />
           </div>
 
           {showInvitation && (
@@ -102,7 +94,7 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
               title="Cards"
               value={draft.cards}
               onPick={(v) => setDraft((d) => ({ ...d, cards: v }))}
-              options={[{ value: "", label: "All Invitees" }, { value: "DOWNLOADED", label: "Cards Downloaded" }, { value: "NOT_DOWNLOADED", label: "Cards Not Downloaded" }]}
+              options={[{ value: "", label: "All Cards" }, { value: "DOWNLOADED", label: "Cards Downloaded" }, { value: "NOT_DOWNLOADED", label: "Cards Not Downloaded" }]}
             />
           )}
 

@@ -9,12 +9,12 @@ const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md 
 const bad = (v: string, on: boolean) => (on && !v.trim() ? " !border-rose-500" : "");
 const label = "block text-sm font-medium text-[#15191C] mb-2";
 
-type Org = { name: string; phone: string; whatsapp: string; email: string; website: string; address: string };
+type Org = { name: string; phone: string; whatsapp: string; email: string; website: string; address: string; gstNumber: string };
 
 const fromUser = (user: unknown): Org => {
   const profile = ((user as { profile?: { organization?: Partial<Org>; organizationName?: string } } | null)?.profile) || {};
   const o = profile.organization || {};
-  return { name: profile.organizationName || o.name || "", phone: o.phone || "", whatsapp: o.whatsapp || "", email: o.email || "", website: o.website || "", address: o.address || "" };
+  return { name: profile.organizationName || o.name || "", phone: o.phone || "", whatsapp: o.whatsapp || "", email: o.email || "", website: o.website || "", address: o.address || "", gstNumber: o.gstNumber || "" };
 };
 
 /**
@@ -42,13 +42,13 @@ export default function OrganisationDetailsForm() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowErrors(true);
-    const problem = !org.name.trim() ? "Organisation name is required." : !org.phone.trim() ? "Organisation phone is required." : !org.email.trim() ? "Organisation email is required." : !org.whatsapp.trim() ? "WhatsApp number is required." : null;
+    const problem = !org.name.trim() ? "Organisation name is required." : !org.phone.trim() ? "Organisation phone is required." : !org.email.trim() ? "Organisation email is required." : !org.whatsapp.trim() ? "WhatsApp number is required." : org.gstNumber.trim() && !/^[0-9A-Z]{15}$/.test(org.gstNumber.trim()) ? "A GST number has 15 letters and digits. Correct it, or leave it empty." : null;
     if (problem) {
       showAlert(problem, "error");
       return;
     }
     setSaving(true);
-    const res = await updateProfile({ organization: { name: org.name.trim(), phone: org.phone.trim(), whatsapp: org.whatsapp.trim(), email: org.email.trim(), address: org.address.trim(), website: org.website.trim() } });
+    const res = await updateProfile({ organization: { name: org.name.trim(), phone: org.phone.trim(), whatsapp: org.whatsapp.trim(), email: org.email.trim(), address: org.address.trim(), website: org.website.trim(), gstNumber: org.gstNumber.trim() } });
     setSaving(false);
     if (res.success) setEdits({});
     if (res.success) showAlert("Organisation details updated.", "success");
@@ -84,6 +84,17 @@ export default function OrganisationDetailsForm() {
           <div>
             <label htmlFor="org-address" className={label}>Address <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
             <input id="org-address" value={org.address} onChange={set("address")} maxLength={300} className={field} />
+          </div>
+          <div>
+            <label htmlFor="org-gst" className={label}>GST No <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
+            <div className="flex items-center gap-2">
+              <input id="org-gst" value={org.gstNumber} onChange={(e) => setEdits((o) => ({ ...o, gstNumber: e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, "") }))} maxLength={15} autoComplete="off" aria-describedby="org-gst-status" placeholder="15-character GSTIN" className={`${field} min-w-0 flex-1`} />
+              {/* nothing verifies the number yet */}
+              <span id="org-gst-status" title="This GST number has not been verified" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#FACC15] bg-[#FEF9C3] px-2.5 py-1.5 text-xs font-medium text-[#854D0E]">
+                <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" /></svg>
+                Unverified
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex gap-3">

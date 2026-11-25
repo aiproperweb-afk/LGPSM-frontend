@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -15,6 +16,7 @@ const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md 
  */
 export default function CompleteProfileModal() {
   const { user, updateProfile, logout } = useAuth();
+  const pathname = usePathname();
   const saved = useMemo(() => profileCompleteness(user), [user]);
   const [name, setName] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
@@ -27,7 +29,8 @@ export default function CompleteProfileModal() {
   const [error, setError] = useState<string | null>(null);
 
   // Only for organizers who signed up with Google (which gives just a name and an email). Everyone else already gave these details.
-  if (!user || user.role !== "ORGANIZER" || user.authProvider !== "GOOGLE" || saved.complete) return null;
+  // Logo Settings is left open: an organizer who has just switched to an organization is sent there to add exactly these details.
+  if (!user || user.role !== "ORGANIZER" || user.authProvider !== "GOOGLE" || saved.complete || pathname === "/settings/logo") return null;
 
   const current = {
     fullName: name ?? user.fullName ?? "",

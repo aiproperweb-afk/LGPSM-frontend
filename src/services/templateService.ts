@@ -191,7 +191,7 @@ export const templateService = {
   },
 
   /** "Upload your own template": an image the person uploaded as a TEMPLATE becomes a private template of theirs */
-  async uploadOwnTemplate(payload: { name?: string; imageKey: string; categoryId?: string; subcategoryId?: string }): Promise<ApiResponse<Template>> {
+  async uploadOwnTemplate(payload: { name?: string; imageKey: string; categoryId?: string; subcategoryId?: string; /** administrators only: share it with every organizer */ publish?: boolean }): Promise<ApiResponse<Template>> {
     return apiClient<Template>("/api/v1/templates/upload", { method: "POST", body: JSON.stringify(payload) }, true);
   },
 

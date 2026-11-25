@@ -5,9 +5,8 @@ import PopupMessage from "@/components/common/PopupMessage";
 import PageHeader from "@/components/common/PageHeader";
 import Icon from "@/components/icons/Icon";
 import BillingDateField, { formatDay } from "@/components/billing/BillingDateField";
-import { Invoice, filterInvoices, statementCsv, validateRange } from "@/components/billing/billingStatement";
+import { Invoice, filterInvoices, groupByEvent, validateRange } from "@/components/billing/billingStatement";
 import { formatMoney } from "@/utils/money";
-import { csvBlob } from "@/utils/csv";
 import { billingService, type EventBill } from "@/services/billingService";
 import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import { useAuth } from "@/context/AuthContext";
@@ -19,13 +18,14 @@ import { useAuth } from "@/context/AuthContext";
 
 const money = (amount: number) => formatMoney(amount, { minFractionDigits: 1, maxFractionDigits: 1 });
 
-function saveCsv(name: string, csv: string) {
-  const url = URL.createObjectURL(csvBlob(csv));
+function saveFile(name: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  // the browser reads the file after the click returns
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 export default function BillingPage() {
@@ -94,13 +94,37 @@ export default function BillingPage() {
     return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
   }, [filterOpen]);
 
+  const [downloading, setDownloading] = useState(false);
+  /** One PDF per event: several payments of one event share a statement, different events get a file each */
+  const downloadPdfs = async (list: Invoice[]) => {
+    if (downloading || list.length === 0) return;
+    setNotice(null);
+    setDownloading(true);
+    try {
+      const groups = groupByEvent(list);
+      for (let n = 0; n < groups.length; n++) {
+        const { blob, fileName } = await billingService.statementPdf(groups[n].map((i) => i.id));
+        // two events with the same title would otherwise share a file name
+        saveFile(groups.length > 1 ? fileName.replace(/\.pdf$/, `-${n + 1}.pdf`) : fileName, blob);
+        // browsers drop downloads started in the same instant (and may ask once to allow several)
+        if (n < groups.length - 1) await new Promise((r) => window.setTimeout(r, 500));
+      }
+      if (groups.length > 1) setNotice({ text: `${groups.length} PDFs downloaded, one for each event. If only one appeared, allow multiple downloads for this site.`, ok: true });
+    } catch (e) {
+      setNotice({ text: e instanceof Error ? e.message : "The PDF could not be made. Please try again.", ok: false });
+    } finally {
+      setDownloading(false);
+    }
+  };
+  const chosen = invoices.filter((i) => selected.includes(i.id));
+
   const downloadStatement = () => {
     const problem = validateRange(statement);
     if (problem) { setStatementError(problem); return; }
     const inRange = filterInvoices(invoices, statement, "");
     if (inRange.length === 0) { setStatementError("There are no invoices between these dates, so there is nothing to download."); return; }
-    saveCsv(`statement-${statement.from}-to-${statement.to}.csv`, statementCsv(inRange));
     setStatementOpen(false);
+    void downloadPdfs(inRange);
   };
 
   const openStatement = () => { setStatement({ from: "", to: "" }); setStatementError(null); setStatementOpen(true); };
@@ -126,8 +150,9 @@ export default function BillingPage() {
             </div>
           </div>
           <div className="flex items-center gap-4 shrink-0 relative" ref={filterRef}>
-            <button type="button" onClick={openStatement} className="h-[46px] px-6 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer">
-              Download Statement
+            {/* with invoices ticked, those are downloaded; with none, a period is asked for */}
+            <button type="button" disabled={downloading} onClick={() => (chosen.length ? void downloadPdfs(chosen) : openStatement())} className="h-[46px] px-6 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-60 disabled:cursor-wait text-white text-base font-semibold rounded-lg cursor-pointer">
+              {downloading ? "Preparing PDF…" : chosen.length ? `Download Statement (${chosen.length})` : "Download Statement"}
             </button>
             <button
               type="button"
@@ -248,9 +273,11 @@ export default function BillingPage() {
                     <td className="px-4 text-right">
                       <button
                         type="button"
-                        aria-label={`Download invoice ${r.invoiceId}`}
-                        onClick={() => saveCsv(`invoice-${r.invoiceId}.csv`, statementCsv([r]))}
-                        className="group inline-flex items-center justify-center size-6 cursor-pointer text-[#4B4F52]"
+                        aria-label={`Download invoice ${r.invoiceId} as PDF`}
+                        title="Download PDF"
+                        disabled={downloading}
+                        onClick={() => void downloadPdfs([r])}
+                        className="group inline-flex items-center justify-center size-6 cursor-pointer disabled:cursor-wait text-[#4B4F52]"
                       >
                         <span className="group-hover:hidden opacity-70"><Icon name="billing/download" width={15.83} height={19.22} /></span>
                         <span className="hidden group-hover:block"><Icon name="billing/download-active" width={15.83} height={19.22} /></span>
@@ -281,6 +308,7 @@ export default function BillingPage() {
                 <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-red-500">*</span></span>
                 <BillingDateField label="Statement to date" placeholder="Select Date" value={statement.to} min={statement.from || undefined} onChange={(to) => { setStatement((s) => ({ ...s, to })); setStatementError(null); }} />
               </div>
+              <p className="text-xs text-[#6B6B6B]">You get one PDF for each event paid for between these dates.</p>
               <PopupMessage message={statementError} />
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">

@@ -70,7 +70,7 @@ export default function EventHeaderBar({ eventId, title, categoryPill, status, o
         </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        {eventEnded && (
+        {(eventEnded || eventStatus === "CANCELLED") && (
           <button type="button" onClick={() => onDelete()} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">
             Delete Event
           </button>

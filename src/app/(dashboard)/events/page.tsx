@@ -142,7 +142,7 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
     if (open) { setOpen(false); return; }
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const menuItems = 2 + (row.ended || row.status !== "Cancelled" ? 1 : 0);
+    const menuItems = 3;
     const menuHeight = menuItems * 36 + 8;
     const top = rect.bottom + menuHeight + 8 > window.innerHeight ? Math.max(8, rect.top - menuHeight - 4) : rect.bottom + 4;
     setPosition({ top, left: Math.max(8, Math.min(rect.right - 150, window.innerWidth - 158)) });
@@ -159,12 +159,10 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
           <Link href={`/events/${row.id}`} className={item}>View Event</Link>
           {/* always there: once editing is closed (invitations sent, cancelled, or over) it opens the three steps as saved, with nothing to change */}
           <Link href={`/events/${row.id}/edit`} className={item}>{row.status !== "Cancelled" && !row.ended && row.canEdit ? "Edit Event" : "View Details"}</Link>
-          {/* a past event can only be deleted; one still to come can be cancelled */}
-          {(row.ended || row.status !== "Cancelled") && (
-            <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
-              {row.ended ? "Delete Event" : "Cancel Event"}
-            </button>
-          )}
+          {/* a past or cancelled event can be deleted; one still to come can be cancelled */}
+          <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
+            {row.ended || row.status === "Cancelled" ? "Delete Event" : "Cancel Event"}
+          </button>
         </div>, document.body
       )}
     </div>
@@ -228,13 +226,12 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
                 Cancel Event
               </button>
             )}
-            {row.ended && (
+            {(row.ended || row.status === "Cancelled") && (
               <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300`}>
                 <Icon name="events/trash" width={16} height={16} />
                 Delete Event
               </button>
             )}
-            {!active && !row.ended && <span className="py-1 text-sm text-[#BDBDBD]">Event cancelled</span>}
           </div>
         </div>, document.body
       )}
@@ -397,7 +394,7 @@ export default function EventListingPage() {
     setFilters(next);
   };
 
-  const deleteDialog = deleting && (deleting.ended ? (
+  const deleteDialog = deleting && (deleting.ended || deleting.status === "Cancelled" ? (
         <EventCleanupModal
           isOpen
           mode="delete"

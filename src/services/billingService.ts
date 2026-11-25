@@ -1,4 +1,5 @@
-import { apiClient } from "./apiClient";
+import { tokenStorage } from "./tokenStorage";
+import { API_BASE_URL, apiClient } from "./apiClient";
 import type { Invoice } from "@/components/billing/billingStatement";
 
 export interface EventBill {
@@ -31,4 +32,24 @@ export const billingService = {
   confirmPayment: (p: { providerOrderId: string; providerPaymentId: string; signature: string }) =>
     apiClient<unknown>("/api/v1/payments/verify", { method: "POST", body: JSON.stringify(p) }, true),
   getInvoices: () => apiClient<Invoice[]>("/api/v1/billing/invoices", { method: "GET" }, true),
+
+  /** One PDF for these invoices (all of the same event): an invoice, or a statement of several payments */
+  async statementPdf(ids: string[]): Promise<{ blob: Blob; fileName: string }> {
+    const ask = () => {
+      const token = tokenStorage.getAccessToken();
+      return fetch(`${API_BASE_URL}/api/v1/billing/statement.pdf?ids=${ids.join(",")}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    };
+    let res = await ask();
+    if (res.status === 401) {
+      // an ordinary signed-in read renews the session, then the file is asked for again
+      await apiClient("/api/v1/billing/invoices", { method: "GET", cache: "no-store" }, true);
+      res = await ask();
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.message || "The PDF could not be made. Please try again.");
+    }
+    const named = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1];
+    return { blob: await res.blob(), fileName: named || "invoice.pdf" };
+  },
 };

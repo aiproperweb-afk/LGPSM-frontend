@@ -8,7 +8,7 @@ export interface UpdateProfilePayload {
   fullName?: string;
   phone?: string;
   profile?: Record<string, unknown>;
-  organization?: { name: string; phone?: string; whatsapp?: string; email?: string; address?: string; website?: string };
+  organization?: { name: string; phone?: string; whatsapp?: string; email?: string; address?: string; website?: string; /** optional and not verified yet; omitted = leave the saved one */ gstNumber?: string };
 }
 
 export interface OrganizerRate { customRate: number | null; defaultRate: number | null; effectiveRate: number | null; currency: string }

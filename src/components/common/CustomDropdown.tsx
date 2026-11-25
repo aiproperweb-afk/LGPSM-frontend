@@ -79,7 +79,8 @@ export default function CustomDropdown({
       if (!containerRef.current?.contains(target) && !menuRef.current?.contains(target)) setIsOpen(false);
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      // this Escape is spent on the list: a dialog around it must stay open (see DialogKeyboardSupport)
+      if (e.key === "Escape") { e.preventDefault(); setIsOpen(false); }
     };
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKey);

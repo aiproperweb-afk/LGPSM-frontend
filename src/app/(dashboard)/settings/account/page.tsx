@@ -13,11 +13,17 @@ import AvatarSection from "@/components/settings/AvatarSection";
 import { userService } from "@/services/userService";
 import { useAlert } from "@/context/AlertContext";
 import { resolveImageUrl } from "@/utils/mediaUrl";
+import CustomDropdown from "@/components/common/CustomDropdown";
+import { useRouter } from "next/navigation";
+import { isOrganizationAccount } from "@/utils/accountType";
 
 
 export default function AccountSettingsPage() {
   const { user, updateProfile, updateProfilePhoto } = useAuth();
-  const { showAlert } = useAlert();
+  const { showAlert, confirm } = useAlert();
+  const router = useRouter();
+  // the type chosen in Edit Profile; "" = as saved
+  const [chosenType, setChosenType] = useState<"" | "INDIVIDUAL" | "ORGANIZATION">("");
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
   // (email is displayed read-only; the profile API does not change it)
@@ -28,6 +34,9 @@ export default function AccountSettingsPage() {
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [editing, setEditing] = useState(false);
   const isOrganizer = user?.role === "ORGANIZER";
+  // Individual or organization (accounts from before that choice count as an organization when they have its name)
+  const profileType = user?.profile as { organizationType?: string; organizationName?: string } | undefined;
+  const accountType = profileType?.organizationType === "ORGANIZATION" ? "Organization" : profileType?.organizationType === "INDIVIDUAL" ? "Individual" : profileType?.organizationName ? "Organization" : "Not set";
   const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-[13px] text-[#15191C] focus:outline-none focus:border-black";
 
   useEffect(() => {
@@ -45,12 +54,25 @@ export default function AccountSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
-    // Only the name is editable through the profile API; email changes are not supported there
+    const savedType = isOrganizationAccount(user) ? "ORGANIZATION" : "INDIVIDUAL";
+    const nextType = isOrganizer && chosenType && chosenType !== savedType ? chosenType : null;
+    if (nextType === "INDIVIDUAL" && !(await confirm({ title: "Change to an individual account", message: "Your organisation name and logo will no longer appear on invitations and emails, and the organisation settings are hidden.", confirmText: "Change" }))) return;
+    // Only the name and the account type are editable here; email changes are not supported by the profile API
+    const profile: Record<string, unknown> = { ...(user?.profile || {}), organizationType: nextType };
+    if (nextType === "INDIVIDUAL") delete profile.organizationName;
     const res = await updateProfile({
       fullName: fullName.trim(),
+      ...(nextType ? { profile } : {}),
     });
     if (!res.success) {
       setErrorMessage(res.message || "Failed to update profile.");
+      return;
+    }
+    setChosenType("");
+    // a new organisation adds its logo and details next
+    if (nextType === "ORGANIZATION") {
+      showAlert("Your account is now an organisation account. Add your logo and organisation details.", "success");
+      router.push("/settings/logo");
       return;
     }
     setSavedMessage(true);
@@ -150,6 +172,7 @@ export default function AccountSettingsPage() {
             <div className="min-w-0 space-y-1.5">
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
               <p className="text-xl text-black break-all">{email}</p>
+              {isOrganizer && <p className="text-base text-[#4B4F52]">Account type: <span className="font-medium text-black">{accountType}</span></p>}
               {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
               <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">
                 Edit Profile
@@ -180,6 +203,18 @@ export default function AccountSettingsPage() {
                     <input id="account-organizer-id" type="text" value={formatOrganizerId(user._id)} readOnly title="Your organizer ID cannot be changed" className={`${field} text-[#6B6B6B] cursor-not-allowed`} />
                   </div>
                 )}
+                {isOrganizer && (
+                  <div>
+                    <span className="block text-sm font-medium text-[#15191C] mb-2">Account Type</span>
+                    <CustomDropdown
+                      value={chosenType || (accountType === "Organization" ? "ORGANIZATION" : accountType === "Individual" ? "INDIVIDUAL" : "")}
+                      onChange={(v) => setChosenType(v as "INDIVIDUAL" | "ORGANIZATION")}
+                      options={[{ value: "INDIVIDUAL", label: "Individual" }, { value: "ORGANIZATION", label: "Organization" }]}
+                      placeholder="Choose the account type"
+                      ariaLabel="Account type"
+                    />
+                  </div>
+                )}
                 <div>
                   <label htmlFor="account-email" className="block text-sm font-medium text-[#15191C] mb-2">Email</label>
                   <input id="account-email" type="email" value={email} readOnly title="Email changes are not supported yet" className={`${field} text-[#6B6B6B] cursor-not-allowed`} />
@@ -196,7 +231,7 @@ export default function AccountSettingsPage() {
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="submit" className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Save</button>
-                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); setChosenType(""); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
               </div>
             </div>
           </form>

@@ -9,6 +9,8 @@ export interface InviteeLog {
   lastCheckInTime: string;
   // sessionId -> whether the invitee checked in to that session
   sessionCheckIns: Record<string, boolean>;
+  /** the guest's additional information, for the export */
+  details?: { companyName: string; professionalIdentity: string; secondaryIdentity: string };
 }
 
 export interface ReportSessionColumn {
