@@ -90,3 +90,11 @@ export interface ExpectedColumn { key: InviteeFieldKey; header: string }
 
 /** The columns an uploaded sheet must have for this event: the same list as the sample Excel */
 export const expectedColumnsFor = (config: InviteeFieldConfig): ExpectedColumn[] => inviteeFieldsFor(config).map((key) => ({ key, header: headerFor(key, config) }));
+
+/** An event with no card settings at all (made before they existed): uploads keep every detail, as the server does (utils/cardInfo.ts there) */
+export const hasNoCardSettings = (event?: { cardInfo?: { primary?: string | null; secondary?: string | null } | null; cardDisplay?: { inviteeName?: boolean } | null } | null): boolean =>
+  !!event && event.cardDisplay?.inviteeName === undefined && event.cardInfo?.primary === undefined && event.cardInfo?.secondary === undefined;
+
+/** The popup shown when an uploaded sheet carries more columns than the event uses */
+export const ignoredColumnsMessage = (ignored: string[], used: string[]): string =>
+  `This Excel has extra columns that this event does not need: ${ignored.join(", ")}.\n\nOnly the required data (${used.join(", ")}) was taken. The other columns were ignored.`;

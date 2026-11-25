@@ -86,3 +86,26 @@ test("sheetIssues: an invalid row does not make a later valid row a repeat", () 
   assert.deepEqual([...r.invalid.keys()], ["2"]);
   assert.equal(r.repeated.size, 0);
 });
+
+test("columns the event does not use are reported and nothing of theirs is taken", async () => {
+  const sheet = () => fileOf([["Name", "Email", "Mobile", "Employee ID", "Company Name"], ["Pia Roy", "pia@x.com", "9876543210", "E-4521", "Acme"]]);
+  const parsed = await parseInviteeSheet(sheet(), [], expectedColumnsFor({}));
+  assert.deepEqual(parsed.ignoredColumns, ["Employee ID", "Company Name"]);
+  assert.deepEqual(parsed.missingColumns, []);
+  assert.equal(parsed.rows[0].company, "");
+  assert.equal(parsed.rows[0].phone, "9876543210");
+  const withCompany = await parseInviteeSheet(sheet(), [], expectedColumnsFor({ company: true }));
+  assert.deepEqual(withCompany.ignoredColumns, ["Employee ID"]);
+  assert.equal(withCompany.rows[0].company, "Acme");
+  const keepAll = await parseInviteeSheet(sheet(), [], expectedColumnsFor({}), true);
+  assert.deepEqual(keepAll.ignoredColumns, []);
+  assert.equal(keepAll.rows[0].company, "Acme");
+  // the file rebuilt from the rows carries no column of its own that would be reported again
+  const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"), [], expectedColumnsFor({}));
+  assert.deepEqual(again.ignoredColumns, []);
+});
+
+test("a sheet with exactly the event's columns, and session columns, reports nothing extra", async () => {
+  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Dinner"], ["Pia Roy", "pia@x.com", "9876543210", "Y"]]), ["Dinner"], expectedColumnsFor({}));
+  assert.deepEqual(parsed.ignoredColumns, []);
+});

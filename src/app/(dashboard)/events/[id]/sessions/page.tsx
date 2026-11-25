@@ -23,7 +23,7 @@ const sameDay = (a?: string, b?: string) => !!a && !!b && new Date(a).toDateStri
 import { expectedColumnsFor } from "@/utils/inviteeFields";
 import SampleReminderModal from "@/components/invitees/SampleReminderModal";
 import { acknowledgeSampleReminder, sampleReminderAcknowledged } from "@/utils/sampleReminder";
-import { excelColumnsFor } from "@/utils/inviteeFields";
+import { excelColumnsFor, hasNoCardSettings, ignoredColumnsMessage } from "@/utils/inviteeFields";
 import { missingColumnsMessage, parseInviteeSheet } from "@/utils/inviteeSheet";
 import UploadTooLargeModal from "@/components/invitees/UploadTooLargeModal";
 import { isTooLarge } from "@/utils/uploadLimits";
@@ -164,6 +164,7 @@ export default function EventSessionsPage() {
   const [accessControl, setAccessControl] = useState<"NO_RESTRICTION" | "ONLY_ONCE">("ONLY_ONCE");
   const [formError, setFormError] = useState<string | null>(null);
   const [sampleColumns, setSampleColumns] = useState<TemplateColumns>({});
+  const [keepAllColumns, setKeepAllColumns] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   // "Keep same invitees as": the new session shares another session's guest list instead of getting its own
@@ -182,6 +183,7 @@ export default function EventSessionsPage() {
     eventService.getEvent(eventId).then((res) => {
       const ev = res.success ? (res.data as any) : null;
       const schedule = ev?.schedule;
+      if (ev) setKeepAllColumns(hasNoCardSettings(ev));
       if (ev) setSampleColumns(templateColumnsFor({ cardInfo: ev.cardInfo, dietaryEnabled: !!ev.dietaryPreference?.enabled, corporate: /corporate/i.test(typeof ev.categoryId === "object" ? ev.categoryId?.name || "" : "") }));
       if (schedule?.start && schedule?.end) {
         eventWindow.current = { start: schedule.start, end: schedule.end };
@@ -255,7 +257,8 @@ export default function EventSessionsPage() {
     if (!file) return;
     setFormError(null);
     try {
-      const parsed = await parseInviteeSheet(file, [], expectedColumnsFor(sampleColumns));
+      const expected = expectedColumnsFor(sampleColumns);
+      const parsed = await parseInviteeSheet(file, [], expected, keepAllColumns);
       if (parsed.missingColumns.length > 0) {
         setUploadedFileName("");
         setUploadedFile(null);
@@ -268,6 +271,7 @@ export default function EventSessionsPage() {
         setTooLarge(parsed.rows.length);
         return;
       }
+      if (parsed.ignoredColumns.length > 0) await confirm({ title: "Extra columns ignored", message: ignoredColumnsMessage(parsed.ignoredColumns, expected.map((c) => c.header)), confirmText: "Got it", cancelButton: false, icon: "info" });
       const dup = findRepeatedGuests(parsed.rows);
       if (dup.length) { setRepeatAsk({ repeats: dup, file }); return; }
     } catch {

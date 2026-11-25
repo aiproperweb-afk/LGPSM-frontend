@@ -23,6 +23,8 @@ export interface ParsedInviteeSheet {
   problems: { row: string; error: string }[];
   /** Columns this event expects (from its settings) that the sheet does not have; empty when it matches or no settings were given */
   missingColumns: string[];
+  /** Headings in the sheet that this event does not use (e.g. "Employee ID" when only name, email and mobile are asked for): nothing of theirs is taken */
+  ignoredColumns: string[];
 }
 
 export const missingColumnsMessage = (missing: string[]): string =>
@@ -30,13 +32,13 @@ export const missingColumnsMessage = (missing: string[]): string =>
 
 const clean = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
-export async function parseInviteeSheet(file: File, sessionNames: string[] = [], expected?: ExpectedColumn[]): Promise<ParsedInviteeSheet> {
+export async function parseInviteeSheet(file: File, sessionNames: string[] = [], expected?: ExpectedColumn[], keepAll = false): Promise<ParsedInviteeSheet> {
   const XLSX = await loadXlsx();
   const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const raw = sheet ? XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 }) : [];
   const nonBlank = raw.filter((r) => Array.isArray(r) && r.some((c) => clean(c) !== ""));
-  if (nonBlank.length === 0) return { rows: [], problems: [], missingColumns: [] };
+  if (nonBlank.length === 0) return { rows: [], problems: [], missingColumns: [], ignoredColumns: [] };
 
   let nameIdx = -1, emailIdx = -1, mobileIdx = -1, companyIdx = -1, identityIdx = -1, identity2Idx = -1;
   const sessionColumns = new Map<number, string>();
@@ -64,6 +66,11 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
     nameIdx = 0; emailIdx = 1; mobileIdx = 2; companyIdx = 3;
   }
 
+  // Only what the event's settings ask for is taken; without settings to go by, every known column is
+  const wants = (key: InviteeFieldKey) => keepAll || !expected || expected.some((c) => c.key === key);
+  const taken = new Set<number>([nameIdx, emailIdx, mobileIdx, wants("company") ? companyIdx : -1, wants("identity") ? identityIdx : -1, wants("identity2") ? identity2Idx : -1, ...sessionColumns.keys()]);
+  const ignoredColumns = hasHeader && expected && !keepAll ? nonBlank[0].map((c, i) => (taken.has(i) ? "" : clean(c))).filter(Boolean) : [];
+
   const cell = (row: unknown[], i: number) => (i >= 0 ? clean(row[i]) : "");
   const dataRows = hasHeader ? nonBlank.slice(1) : nonBlank;
   const rows: InviteeSheetRow[] = [];
@@ -71,7 +78,7 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
   dataRows.forEach((r, i) => {
     const rowNo = String(i + (hasHeader ? 2 : 1));
     const sessionValues = sessionColumns.size ? Object.fromEntries([...sessionColumns].map(([idx, name]) => [name, !["N", "NO", "FALSE", "0"].includes(cell(r, idx).toUpperCase())])) : undefined;
-    const row: InviteeSheetRow = { id: rowNo, name: cell(r, nameIdx), email: cell(r, emailIdx).toLowerCase(), phone: cell(r, mobileIdx), company: cell(r, companyIdx), identity: cell(r, identityIdx), identity2: cell(r, identity2Idx), sessions: sessionValues };
+    const row: InviteeSheetRow = { id: rowNo, name: cell(r, nameIdx), email: cell(r, emailIdx).toLowerCase(), phone: cell(r, mobileIdx), company: wants("company") ? cell(r, companyIdx) : "", identity: wants("identity") ? cell(r, identityIdx) : "", identity2: wants("identity2") ? cell(r, identity2Idx) : "", sessions: sessionValues };
     const problem = rowProblem(row);
     if (problem) problems.push({ row: rowNo, error: problem });
     rows.push(row);
@@ -79,7 +86,7 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
   // The sheet needs a heading for every column the event's settings ask for (the sample Excel has exactly these)
   const found: Record<InviteeFieldKey, boolean> = { name: nameIdx >= 0, email: emailIdx >= 0, mobile: mobileIdx >= 0, company: companyIdx >= 0, identity: identityIdx >= 0, identity2: identity2Idx >= 0 };
   const missingColumns = expected ? expected.filter((c) => !hasHeader || !found[c.key]).map((c) => c.header) : [];
-  return { rows, problems, missingColumns };
+  return { rows, problems, missingColumns, ignoredColumns };
 }
 
 export function rowProblem(row: Pick<InviteeSheetRow, "name" | "email" | "phone">): string | null {
@@ -130,7 +137,7 @@ export function sheetIssues(rows: Pick<InviteeSheetRow, "id" | "name" | "email" 
 export async function rowsToSheetFile(rows: InviteeSheetRow[], fileName: string, sessionNames: string[] = []): Promise<File> {
   const XLSX = await loadXlsx();
   const sheet = XLSX.utils.json_to_sheet(rows.map((r) => ({
-    Name: r.name, Email: r.email, Mobile: r.phone, "Company Name": r.company, ...(r.identity ? { "Professional Identity": r.identity } : {}), ...(r.identity2 ? { "Second Identity": r.identity2 } : {}),
+    Name: r.name, Email: r.email, Mobile: r.phone, ...(rows.some((x) => x.company) ? { "Company Name": r.company } : {}), ...(r.identity ? { "Professional Identity": r.identity } : {}), ...(r.identity2 ? { "Second Identity": r.identity2 } : {}),
     ...Object.fromEntries(sessionNames.map((name) => [name, r.sessions?.[name] === false ? "N" : "Y"])),
   })));
   const workbook = XLSX.utils.book_new();

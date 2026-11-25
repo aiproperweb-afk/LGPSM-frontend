@@ -5,7 +5,8 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import { AccessControl, DraftErrors, DraftSession, createSessionDraft } from "./eventDraft";
 import { formatDateTime } from "@/utils/dateTime";
 import { downloadInviteeTemplate, type TemplateColumns } from "@/utils/inviteeTemplate";
-import { expectedColumnsFor } from "@/utils/inviteeFields";
+import { expectedColumnsFor, ignoredColumnsMessage } from "@/utils/inviteeFields";
+import { useAlert } from "@/context/AlertContext";
 import type { InviteeSetInfo } from "@/services/inviteeService";
 import { listDisplayName } from "@/utils/inviteeLists";
 import { InviteeSheetRow, missingColumnsMessage, parseInviteeSheet } from "@/utils/inviteeSheet";
@@ -97,6 +98,7 @@ export default function Step3Sessions({
   submitLabel = "Save",
 }: Step3SessionsProps) {
   const [fileError, setFileError] = React.useState<Record<string, string | undefined>>({});
+  const { confirm } = useAlert();
 
   const updateSession = (key: string, patch: Partial<DraftSession>) => {
     onSessionsChange(sessions.map((s) => (s.key === key ? { ...s, ...patch } : s)));
@@ -122,7 +124,8 @@ export default function Step3Sessions({
   const handleFile = async (session: DraftSession, file: File) => {
     setFileError((prev) => ({ ...prev, [session.key]: undefined }));
     try {
-      const parsed = await parseInviteeSheet(file, [], expectedColumnsFor(templateColumns ?? {}));
+      const expected = expectedColumnsFor(templateColumns ?? {});
+      const parsed = await parseInviteeSheet(file, [], expected);
       if (parsed.missingColumns.length > 0) {
         setFileError((prev) => ({ ...prev, [session.key]: missingColumnsMessage(parsed.missingColumns) }));
         return;
@@ -135,6 +138,7 @@ export default function Step3Sessions({
         setTooLarge(parsed.rows.length);
         return;
       }
+      if (parsed.ignoredColumns.length > 0) await confirm({ title: "Extra columns ignored", message: ignoredColumnsMessage(parsed.ignoredColumns, expected.map((c) => c.header)), confirmText: "Got it", cancelButton: false, icon: "info" });
       const accept = () => {
         onSessionFileChange(session.key, { file, name: file.name, rows: parsed.rows, problemCount: parsed.problems.length });
         onSkipInviteesChange(false);

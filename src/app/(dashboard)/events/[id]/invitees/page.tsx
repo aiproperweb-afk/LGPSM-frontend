@@ -52,7 +52,7 @@ import ImportModeDialog from "@/components/invitees/ImportModeDialog";
 import { ownListSessions, sessionPickOptionsFor, listIdFor } from "@/utils/sessionPick";
 import InviteeListsModal from "@/components/invitees/InviteeListsModal";
 import { canManageInviteeLists, previewDiscrepancy } from "@/utils/inviteeLists";
-import { excelColumnsFor, expectedColumnsFor, headerFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
+import { excelColumnsFor, expectedColumnsFor, hasNoCardSettings, ignoredColumnsMessage, headerFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
 import { dietaryAnswer, dietaryQuestionOptions, dietaryQuestionTitles } from "@/utils/dietaryAnswers";
 import { summarizeDelivery, type DeliveryOutcome } from "@/utils/deliverySummary.mjs";
 import { TableSkeleton } from "@/components/common/Skeleton";
@@ -166,7 +166,7 @@ export default function InviteesManagementPage() {
   const isAdmin = user?.role === "ADMIN";
 
   const [eventsOptions, setEventsOptions] = useState<{ value: string; label: string }[]>([]);
-  const [event, setEvent] = useState<{ title?: string; invitationType?: "DIGITAL" | "PRINT" | "BOTH"; status?: string; schedule?: { start?: string; end?: string }; categoryId?: { name?: string } | string; dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] }; cardInfo?: { primary?: string | null; secondary?: string | null } } | null>(null);
+  const [event, setEvent] = useState<{ title?: string; invitationType?: "DIGITAL" | "PRINT" | "BOTH"; status?: string; schedule?: { start?: string; end?: string }; categoryId?: { name?: string } | string; dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] }; cardInfo?: { primary?: string | null; secondary?: string | null }; cardDisplay?: { inviteeName?: boolean } } | null>(null);
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [invitees, setInvitees] = useState<Invitee[]>([]);
   const [history, setHistory] = useState<InvitationData[]>([]);
@@ -556,7 +556,8 @@ export default function InviteesManagementPage() {
       return;
     }
     try {
-      const parsed = await parseInviteeSheet(file, ownLists.map((session) => session.name), expectedColumnsFor(fieldConfig));
+      const expected = expectedColumnsFor(fieldConfig);
+      const parsed = await parseInviteeSheet(file, ownLists.map((session) => session.name), expected, hasNoCardSettings(event));
       if (parsed.missingColumns.length > 0) {
         setFeedback({ type: "error", message: missingColumnsMessage(parsed.missingColumns) });
         return;
@@ -569,6 +570,7 @@ export default function InviteesManagementPage() {
         setTooLarge(parsed.rows.length);
         return;
       }
+      if (parsed.ignoredColumns.length > 0) await confirm({ title: "Extra columns ignored", message: ignoredColumnsMessage(parsed.ignoredColumns, expected.map((c) => c.header)), confirmText: "Got it", cancelButton: false, icon: "info" });
       setUpload({ file, rows: parsed.rows });
     } catch {
       setFeedback({ type: "error", message: "The file could not be read. Upload an .xlsx or .xls sheet." });
