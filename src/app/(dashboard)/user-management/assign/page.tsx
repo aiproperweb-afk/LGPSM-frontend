@@ -55,7 +55,7 @@ export default function AssignedSystemUsersPage() {
 
   // Form states
   const [addUserData, setAddUserData] = useState({ userName: "", contactNo: "", email: "", password: "" });
-  const [eventsList, setEventsList] = useState<{ id: string; title: string; status?: string; end?: string }[]>([]);
+  const [eventsList, setEventsList] = useState<{ id: string; title: string; status?: string; end?: string; organizerId?: string }[]>([]);
   // only events that can still take staff are offered (the server refuses cancelled and closed ones)
   const assignableEvents = eventsList.filter(isAssignableEvent);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -96,11 +96,12 @@ export default function AssignedSystemUsersPage() {
 
       // Events loaded alongside users above.
       const rawEvents = Array.isArray(eventsRes?.data) ? eventsRes.data : ((eventsRes?.data as any)?.events || []);
-      const formattedEvents: { id: string; title: string; status?: string; end?: string }[] = rawEvents.map((ev: any) => ({
+      const formattedEvents: { id: string; title: string; status?: string; end?: string; organizerId?: string }[] = rawEvents.map((ev: any) => ({
         id: String(ev._id || ev.id || ""),
         title: ev.title || ev.eventName || "Untitled Event",
         status: ev.status ? String(ev.status) : undefined,
         end: ev.schedule?.end || ev.endDate || undefined,
+        organizerId: (typeof ev.organizerId === "object" ? ev.organizerId?._id : ev.organizerId) || undefined,
       }));
       setEventsList(formattedEvents);
       // Preselect an event only when there is no doubt which one (never a closed or cancelled one); otherwise the person chooses
@@ -175,6 +176,27 @@ export default function AssignedSystemUsersPage() {
     }, 0);
     return () => window.clearTimeout(timeoutId);
   }, [loadData]);
+
+  // An administrator assigns an organizer's event only that organizer's system users: once an event is chosen, the people ticked who do
+  // not belong to its organizer are named, and left out before anything is assigned (the server refuses them as well)
+  const [eventStaff, setEventStaff] = useState<{ eventId: string; ids: Set<string> | null } | null>(null);
+  const eventOwnerId = eventsList.find((e) => e.id === selectedEventId)?.organizerId;
+  useEffect(() => {
+    if (!isAdmin || !isAssignModalOpen || !selectedEventId || !eventOwnerId) return;
+    let live = true;
+    // a list that cannot be read blocks nothing here: the server still refuses anyone who does not belong
+    const unknown = () => { if (live) setEventStaff({ eventId: selectedEventId, ids: null }); };
+    void userService.getUsers("SYSTEM_USER", eventOwnerId).then((res) => {
+      if (!res.success || !Array.isArray(res.data)) return unknown();
+      if (live) setEventStaff({ eventId: selectedEventId, ids: new Set(res.data.map((u) => String(u._id))) });
+    }).catch(unknown);
+    return () => { live = false; };
+  }, [isAdmin, isAssignModalOpen, selectedEventId, eventOwnerId]);
+  const checkingStaff = isAdmin && !!eventOwnerId && eventStaff?.eventId !== selectedEventId;
+  const theirStaff = isAdmin && eventStaff?.eventId === selectedEventId ? eventStaff.ids : null;
+  // the organizer's own system user account (same email) works their events, whoever added it
+  const ownerEmail = organizers.find((o) => o._id === eventOwnerId)?.email?.toLowerCase();
+  const outsiders = theirStaff ? users.filter((u) => selectedIds.includes(u.id) && !theirStaff.has(u.id) && !(ownerEmail && u.email.toLowerCase() === ownerEmail)) : [];
 
   // Handle adding new SYSTEM_USER account via backend API
   const handleAddUserSubmit = async (e: React.FormEvent) => {
@@ -275,6 +297,7 @@ export default function AssignedSystemUsersPage() {
       showAlert("Please select at least one system user and an event.", "warning");
       return;
     }
+    if (outsiders.length > 0) return; // the window says who, and offers to leave them out
     if (sessionScope !== null && sessionScope.length === 0) {
       showAlert("Select at least one session, or choose \"All sessions\".", "warning");
       return;
@@ -906,6 +929,16 @@ aria-label={`Select ${u.name}`}
                 />
               </div>
 
+              {outsiders.length > 0 && (
+                <div role="alert" className="rounded-md border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#854D0E] space-y-1.5">
+                  <p className="break-words"><b>{outsiders.map((u) => u.name).join(", ")}</b> {outsiders.length === 1 ? "does" : "do"} not belong to this event&apos;s organizer, so cannot be assigned to it. Choose another event, or leave {outsiders.length === 1 ? "this user" : "these users"} out.</p>
+                  <button type="button" onClick={() => setSelectedIds((ids) => ids.filter((id) => !outsiders.some((u) => u.id === id)))} className="font-semibold text-[#1F65FF] underline cursor-pointer">Leave out</button>
+                </div>
+              )}
+              {outsiders.length === 0 && selectedIds.length === 0 && (
+                <p role="status" className="text-sm text-[#6B6B6B]">No users left to assign. Close this window and tick the organizer&apos;s own system users.</p>
+              )}
+
               <SessionScopePicker
                 sessions={eventSessionsList}
                 loading={loadingSessions}
@@ -917,7 +950,7 @@ aria-label={`Select ${u.name}`}
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
                 <button
                   type="submit"
-                  disabled={submittingAssign || !selectedEventId}
+                  disabled={submittingAssign || !selectedEventId || selectedIds.length === 0 || checkingStaff || outsiders.length > 0}
                   className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : "Assign"}
