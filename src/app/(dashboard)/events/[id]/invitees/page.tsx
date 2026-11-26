@@ -215,7 +215,7 @@ export default function InviteesManagementPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [panelFilters, setPanelFilters] = useState<Pick<InviteeFilters, "cards" | "food" | "rsvp" | "sort">>({ cards: "", food: null, rsvp: "", sort: "ANY" });
   // the bill (invitees x per-head rate + GST) shown before invitations go out, and the payment that follows
-  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: ActionMode } | null>(null);
+  const [bill, setBill] = useState<{ quote: BillQuote; ids: string[]; kind: ActionMode | "resend"; targets?: InvitationData[] } | null>(null);
   const [billBusy, setBillBusy] = useState(false);
   const [billError, setBillError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -372,12 +372,12 @@ export default function InviteesManagementPage() {
     if (inviteePage > inviteePageCount) setInviteePage(inviteePageCount);
   }, [inviteePage, inviteePageCount]);
 
-  const summarize = (results: DeliveryOutcome[], verb: string): Feedback => summarizeDelivery(results, verb, channel);
+  const summarize = (results: DeliveryOutcome[], verb: string, via: Channel = channel): Feedback => summarizeDelivery(results, verb, via);
 
   // Who "Send Invitation" goes to: the ticked guests, or everyone shown by the "Not sent" filter. Guests already invited are always left out.
   const sendTargets = (selected.length ? selected : invitationFilter === "NOT_SENT" ? filteredInvitees : []).filter((i) => i.invitationStatus === "PENDING");
 
-  const handleSend = async (): Promise<string[]> => {
+  const handleSend = async (via: Channel = channel): Promise<string[]> => {
     if (sendInFlight.current) return [];
     const targets = sendTargets;
     if (targets.length === 0) {
@@ -389,10 +389,10 @@ export default function InviteesManagementPage() {
     setFeedback(null);
     let sentIds: string[] = [];
     try {
-      const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel });
+      const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel: via });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; inviteeId?: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
       sentIds = results.filter((r) => r.status === "SENT" && r.inviteeId).map((r) => String(r.inviteeId));
-      const sendSummary = res.success || results.length ? summarize(results, "sent") : { type: "error" as const, message: res.message || "Invitations could not be sent." };
+      const sendSummary = res.success || results.length ? summarize(results, "sent", via) : { type: "error" as const, message: res.message || "Invitations could not be sent." };
       // a send that reached guests is confirmed with the success popup instead of the banner; problems still show in the banner
       if (results.some((r) => r.status === "SENT") && sendSummary && sendSummary.type === "success") setSentPopup({ title: "Invitations sent successfully", message: sendSummary.message, details: sendSummary.details });
       else setFeedback(sendSummary);
@@ -408,19 +408,21 @@ export default function InviteesManagementPage() {
     return sentIds;
   };
 
-  // Sending is charged per invitation: show the bill first when there is something to pay (Figma 2001:2467). With no rate set, or the
-  // invitations already paid for, there is nothing to charge and the send goes ahead.
-  const showBillOrSend = async (kind: ActionMode = "send"): Promise<boolean> => {
-    // an administrator acting for an organizer is never charged (and the bill is the organizer's own page)
-    if (isAdmin) return false;
+  // WhatsApp invitations and printed cards are charged per guest (email is free): the bill is shown first when there is something to pay
+  // (Figma 2001:2467). An organizer pays it; an administrator sees the organizer's bill and asks them to pay.
+  const guestOf = (h: InvitationData) => (typeof h.inviteeId === "object" && h.inviteeId ? h.inviteeId._id : String(h.inviteeId));
+  const billIdsFor = (kind: ActionMode | "resend", targets?: InvitationData[], cards?: string[]) =>
+    kind === "download" ? cards ?? downloadIds : kind === "resend" ? (targets || []).map(guestOf) : sendTargets.map((t) => t._id);
+  const showBillOrSend = async (kind: ActionMode | "resend" = "send", given: { targets?: InvitationData[]; cards?: string[] } = {}): Promise<boolean> => {
     // a download is billed for the guests asked for; a send (and a send that is followed by cards) for the guests being invited
-    const ids = kind === "download" ? downloadIds : sendTargets.map((t) => t._id);
+    if (kind === "download" ? isAdmin : channel === "EMAIL") return false; // an administrator's downloads are not charged; email never is
+    const ids = billIdsFor(kind, given.targets, given.cards);
     if (ids.length === 0) return false;
-    const res = await billingService.quote(eventId, ids);
+    const res = await billingService.quote(eventId, ids, kind === "download" ? { purpose: "CARDS" } : { channel });
     if (!res.success || !res.data) { setFeedback({ type: "error", message: res.message || "The bill could not be worked out. Please try again." }); return true; }
     if (!res.data.payable) return false;
     setBillError(null);
-    setBill({ quote: res.data, ids, kind });
+    setBill({ quote: res.data, ids, kind, targets: given.targets });
     return true;
   };
 
@@ -429,7 +431,7 @@ export default function InviteesManagementPage() {
     setBillBusy(true);
     setBillError(null);
     try {
-      const start = await billingService.startPayment(eventId, bill.ids);
+      const start = await billingService.startPayment(eventId, bill.ids, bill.kind === "download" ? { purpose: "CARDS" } : { channel });
       if (!start.success || !start.data) { setBillError(start.message || "The payment could not be started."); return; }
       const result = await openRazorpayCheckout({
         keyId: start.data.keyId, orderId: start.data.providerOrderId, amount: start.data.amount, currency: start.data.currency,
@@ -441,22 +443,40 @@ export default function InviteesManagementPage() {
       const confirmed = await billingService.confirmPayment({ providerOrderId: result.providerOrderId, providerPaymentId: result.providerPaymentId, signature: result.signature });
       if (!confirmed.success) { setBillError(confirmed.message || "We could not confirm the payment. If money was debited it is kept as credit for this event; check Billing."); return; }
       setBill(null);
-      // paid: what the organizer asked for now goes ahead (one payment covers a guest's send or download, so the other is not charged again)
-      await runPaid(bill.kind);
+      // paid: what the organizer asked for now goes ahead (one payment covers a guest's WhatsApp invitation and card, so neither is charged twice)
+      await runPaid(bill.kind, bill.targets);
     } finally {
       setBillBusy(false);
     }
   };
 
-  // What goes ahead once any bill is settled: send, download, or (Print and Digital both) send and then make the cards of the guests that were reached
-  const runPaid = async (mode: ActionMode) => {
+  const requestPayment = async () => {
+    if (!bill) return;
+    setBillBusy(true);
+    setBillError(null);
+    try {
+      const res = await billingService.requestPayment(eventId, bill.ids);
+      if (!res.success || !res.data) { setBillError(res.message || "The payment request could not be sent. Please try again."); return; }
+      setBill(null);
+      showAlert(res.data.requested ? `Payment request sent to ${res.data.organizerName || "the organizer"}. Send the invitations again once they have paid.` : "There is nothing left to pay for these guests. You can send them now.", "success");
+    } finally {
+      setBillBusy(false);
+    }
+  };
+
+  // What goes ahead once any bill is settled: send, resend, download, or (Print and Digital both) send and then make the cards of the guests reached
+  const runPaid = async (mode: ActionMode | "resend", targets?: InvitationData[], via: Channel = channel) => {
     if (mode === "download") { setDownloadOpen(true); return; }
-    const targets = sendTargets.map((t) => t._id);
-    const reached = await handleSend();
+    if (mode === "resend") { await handleResend(targets || [], via); return; }
+    const asked = sendTargets.map((t) => t._id);
+    const reached = await handleSend(via);
     if (mode === "both") {
       // only guests whose invitation really went out can have their cards made (the server asks for the invitation first)
-      const ids = targets.filter((id) => reached.includes(id));
-      if (ids.length > 0) { setDownloadIds(ids); setDownloadOpen(true); }
+      const ids = asked.filter((id) => reached.includes(id));
+      if (ids.length === 0) return;
+      setDownloadIds(ids);
+      // sent by email (free), the cards still have to be paid for
+      if (!(await showBillOrSend("download", { cards: ids }))) setDownloadOpen(true);
     }
   };
 
@@ -464,17 +484,24 @@ export default function InviteesManagementPage() {
   // who it goes to. Digital only sends, Print only downloads, and Print and Digital both sends and then downloads.
   const eventCardsMade = !!(event as unknown as { cardsDownloadedAt?: string } | null)?.cardsDownloadedAt;
   const firstTimeFor = (mode: ActionMode) => (mode === "download" ? !eventCardsMade && !lifecycleStarted : !lifecycleStarted && !eventCardsMade);
-  const noteFor = async (mode: ActionMode, ids: string[]) => {
+  // what the window says about money; asked again when the channel changes, and only the latest answer is shown
+  const noteAsked = useRef(0);
+  const noteFor = async (mode: ActionMode | "resend", ids: string[], via: Channel = channel) => {
+    const asked = ++noteAsked.current;
     setBillNote(null);
-    if (ids.length === 0 || isAdmin) return;
-    const res = await billingService.quote(eventId, ids).catch(() => null);
+    if (ids.length === 0 || (mode === "download" && isAdmin)) return;
+    if (mode !== "download" && via === "EMAIL") { setBillNote("Email invitations are free."); return; }
+    const res = await billingService.quote(eventId, ids, mode === "download" ? { purpose: "CARDS" } : { channel: via }).catch(() => null);
     const q = res?.success ? res.data : null;
-    if (!q) return;
-    const what = mode === "download" ? "cards" : mode === "both" ? "guests" : "invitations";
+    if (!q || asked !== noteAsked.current) return;
+    const what = mode === "download" ? "card" : "guest";
+    const count = `${q.invitees} ${what}${q.invitees === 1 ? "" : "s"}`;
     setBillNote(
-      q.rate === null ? "No price per invitation is set for this event, so there is nothing to pay."
-        : q.payable ? `Next you will pay ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${q.invitees} ${what}.`
-        : "These guests are already paid for, so there is nothing more to pay."
+      q.whatsappUnavailable ? "WhatsApp is not set up on the server yet, so nothing is charged and no WhatsApp message will go out."
+        : q.rate === null ? "No price is set for this event, so there is nothing to pay."
+        : q.payable && isAdmin ? `WhatsApp invitations are charged to ${q.organizerName || "the organizer"}: ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}. Email is free.`
+        : q.payable ? `${mode === "download" ? "" : "WhatsApp invitations are charged; email is free. "}Next you will pay ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}.`
+        : "There is nothing to pay for these guests."
     );
   };
   const startAction = (mode: ActionMode) => {
@@ -488,7 +515,7 @@ export default function InviteesManagementPage() {
       }
       setDownloadIds(selectedIds);
       // cards are already being made for this event (or invitations are out): no first-time warning, straight to the bill / download
-      if (!firstTimeFor("download")) { void (async () => { if (!(await showBillOrSend("download"))) setDownloadOpen(true); })(); return; }
+      if (!firstTimeFor("download")) { void (async () => { if (!(await showBillOrSend("download", { cards: selectedIds }))) setDownloadOpen(true); })(); return; }
       void noteFor("download", selectedIds);
       setActionPopup("download");
       return;
@@ -509,17 +536,18 @@ export default function InviteesManagementPage() {
 
   // Resend asks first, so the channel can be chosen the same way as for a first send
   const [resendAsk, setResendAsk] = useState<InvitationData[] | null>(null);
-  const askResend = (targets: InvitationData[] = resendTargets) => { if (targets.length > 0) setResendAsk(targets); };
+  const askResend = (targets: InvitationData[] = resendTargets) => { if (targets.length === 0) return; void noteFor("resend", targets.map(guestOf)); setResendAsk(targets); };
+  const confirmResend = async (targets: InvitationData[]) => { if (!(await showBillOrSend("resend", { targets }))) await handleResend(targets); };
 
-  const handleResend = async (targets: InvitationData[]) => {
+  const handleResend = async (targets: InvitationData[], via: Channel = channel) => {
     if (targets.length === 0 || resendInFlight.current) return;
     setBusy("resend");
     resendInFlight.current = true;
     setFeedback(null);
     try {
-      const res = await invitationService.resendInvitations(eventId, { invitationIds: targets.map((h) => h._id), channel });
+      const res = await invitationService.resendInvitations(eventId, { invitationIds: targets.map((h) => h._id), channel: via });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
-      const resendSummary = res.success || results.length ? summarize(results, "resent") : { type: "error" as const, message: res.message || "Invitations could not be resent." };
+      const resendSummary = res.success || results.length ? summarize(results, "resent", via) : { type: "error" as const, message: res.message || "Invitations could not be resent." };
       if (results.some((r) => r.status === "SENT") && resendSummary && resendSummary.type === "success") setSentPopup({ title: "Invitations resent successfully", message: resendSummary.message, details: resendSummary.details });
       else setFeedback(resendSummary);
       if (res.success || results.length) setSelectedIds([]);
@@ -1102,7 +1130,7 @@ export default function InviteesManagementPage() {
           count={actionPopup === "download" ? downloadIds.length : sendTargets.length}
           billNote={billNote}
           channel={channel}
-          onChannelChange={setChannel}
+          onChannelChange={(c) => { setChannel(c); void noteFor(actionPopup, sendTargets.map((t) => t._id), c); }}
           onCancel={() => setActionPopup(null)}
           onConfirm={() => void confirmAction()}
         />
@@ -1114,10 +1142,11 @@ export default function InviteesManagementPage() {
           mode="resend"
           firstTime={false}
           count={resendAsk.length}
+          billNote={billNote}
           channel={channel}
-          onChannelChange={setChannel}
+          onChannelChange={(c) => { setChannel(c); void noteFor("resend", resendAsk.map(guestOf), c); }}
           onCancel={() => setResendAsk(null)}
-          onConfirm={() => { const targets = resendAsk; setResendAsk(null); void handleResend(targets); }}
+          onConfirm={() => { const targets = resendAsk; setResendAsk(null); void confirmResend(targets); }}
         />
       )}
       {needSendFirst > 0 && (
@@ -1161,7 +1190,12 @@ export default function InviteesManagementPage() {
         onConfirm={() => { setRepeats(null); if (upload) void importPreviewFlight.current.run(() => prepareImport(upload.rows)); }}
       />
       {downloadOpen && downloadIds.length > 0 && <DownloadCardsModal eventId={eventId} eventTitle={event?.title || "this event"} inviteeIds={downloadIds} sessionId={filterSession?._id} onClose={() => setDownloadOpen(false)} />}
-      {bill && <SendBillModal quote={bill.quote} kind={bill.kind} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend} />}
+      {bill && (
+        <SendBillModal quote={bill.quote} kind={bill.kind} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend}
+          onEmailInstead={bill.kind === "download" ? undefined : () => { const b = bill; setBill(null); void runPaid(b.kind, b.targets, "EMAIL"); }}
+          onRequestPayment={isAdmin && bill.kind !== "download" ? () => void requestPayment() : undefined}
+        />
+      )}
       {passAction && (
         <PassActionModal
           key={`${passAction.action}-${passAction.invitee._id}`}

@@ -70,8 +70,8 @@ export default function AccountSettingsPage() {
     setErrorMessage("");
     const savedType = isOrganizationAccount(user) ? "ORGANIZATION" : "INDIVIDUAL";
     const nextType = isOrganizer && chosenType && chosenType !== savedType ? chosenType : null;
-    if (nextType === "INDIVIDUAL" && !(await confirm({ title: "Change to an individual account", message: "Your organisation name and logo will no longer appear on invitations and emails, and the organisation settings are hidden.", confirmText: "Change" }))) return;
-    if (nextType === "ORGANIZATION" && !(await confirm({ title: "Change to an organisation account", message: "Your organisation name and logo will appear on invitations and emails once you add them. You will be taken to Logo Settings to add your logo and organisation details.", confirmText: "Change" }))) return;
+    if (nextType === "INDIVIDUAL" && !(await confirm({ title: "Change to an individual account", message: "Your organisation name will no longer appear on invitations and emails, and the organisation settings are hidden.", confirmText: "Change" }))) return;
+    if (nextType === "ORGANIZATION" && !(await confirm({ title: "Change to an organisation account", message: "Your organisation name will appear on invitations and emails once you add it. You will be taken to Logo Settings to add your logo and organisation details.", confirmText: "Change" }))) return;
     // The name, mobile number and account type are saved here; the email address has its own window (it needs a code)
     if (isOrganizer && phone.length !== 10) return setErrorMessage("Enter your 10-digit mobile number.");
     const profile: Record<string, unknown> = { ...(user?.profile || {}), organizationType: nextType };

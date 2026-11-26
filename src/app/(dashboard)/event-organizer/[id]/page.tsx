@@ -1,5 +1,6 @@
 "use client";
 
+import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
 import DateField from "@/components/common/DateField";
@@ -395,9 +396,9 @@ export default function OrganizerDetailsPage() {
                           <DateField className="mt-1" placeholder="Select date" value={draftFilters.to} min={draftFilters.from || undefined} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, to: v }))} />
                         </label>
                       </div>
-                      <div className="flex items-center justify-end gap-2 pt-1">
-                        <button type="button" onClick={() => { const cleared = { category: "", status: "", from: "", to: "" }; setDraftFilters(cleared); setFilters(cleared); setFilterOpen(false); }} className="px-4 py-2 text-xs font-semibold text-[#595D60] bg-[#E6EAED] hover:bg-[#DCE1E5] rounded-md cursor-pointer">Reset</button>
-                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className="px-4 py-2 text-xs font-semibold text-white bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md cursor-pointer">Apply</button>
+                      <div className="flex items-center gap-3 pt-1">
+                        <button type="button" onClick={() => { const cleared = { category: "", status: "", from: "", to: "" }; setDraftFilters(cleared); setFilters(cleared); setFilterOpen(false); }} className={filterSecondaryButtonClass}>Reset</button>
+                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className={filterPrimaryButtonClass}>Apply</button>
                       </div>
                     </div>
                   )}

@@ -260,8 +260,10 @@ export const invitationService = {
     if (options.width) { params.set("width", String(options.width)); params.set("format", "webp"); }
     const query = params.toString();
     const url = `${API_BASE_URL}/api/v1/events/${eventId}/invitations/preview${query ? `?${query}` : ""}`;
+    // the address stays the same when the event is edited, so a copy kept by the browser would show the old card
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
     });
     if (!res.ok) {
       let message = "Failed to fetch invitation card preview";

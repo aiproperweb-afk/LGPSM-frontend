@@ -190,6 +190,13 @@ export default function MobileCardPreview({
           </div>
         </div>
 
+        {/* said in words, or the unchanged picture looks like a preview that is not updating */}
+        {staticUrl && !awaitingTemplate && (
+          <p role="status" className="mt-3 max-w-[300px] rounded-md border border-[#C7D7FE] bg-white px-3 py-2 text-center text-xs text-[#1D3A8A]">
+            This is an uploaded card. It is sent exactly as it is, so changes to the event details do not appear on it.
+          </p>
+        )}
+
         {/* Figma Event_Add event-1: "Change Template" and "Additional Info" side by side ("Edit Additional Info" once set) */}
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           {onOpenTemplateModal && (

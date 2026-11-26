@@ -1,5 +1,6 @@
 "use client";
 
+import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import PageHeader from "@/components/common/PageHeader";
@@ -16,7 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 // The organiser pays for the invitations sent on each event through Razorpay (due = invitations sent x the rate locked on the event,
 // minus what was already paid). Paid payments become the invoices listed below; nothing here is invented.
 
-const money = (amount: number) => formatMoney(amount, { minFractionDigits: 1, maxFractionDigits: 1 });
+const money = (amount: number) => formatMoney(amount, { minFractionDigits: 1, maxFractionDigits: 2 });
 
 function saveFile(name: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
@@ -177,8 +178,8 @@ export default function BillingPage() {
                       <BillingDateField label="To date" placeholder="To" value={draft.to} min={draft.from || undefined} onChange={(to) => setDraft((d) => ({ ...d, to }))} />
                     </div>
                     <div className="flex items-center gap-3">
-                      <button type="button" onClick={() => setFilterOpen(false)} className="flex-1 py-1.5 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-black cursor-pointer">Cancel</button>
-                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className="flex-1 py-1.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
+                      <button type="button" onClick={() => setFilterOpen(false)} className={filterSecondaryButtonClass}>Cancel</button>
+                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className={filterPrimaryButtonClass}>Apply</button>
                     </div>
                     {(range.from || range.to) && (
                       <button type="button" onClick={() => { setRange({ from: "", to: "" }); setDraft({ from: "", to: "" }); setFilterOpen(false); }} className="w-full text-xs text-[#1F65FF] underline cursor-pointer">Clear dates</button>
@@ -242,7 +243,7 @@ export default function BillingPage() {
                   <tr key={`due-${b.eventId}`} className="border-b border-[#E0E0E0] h-[46px] bg-[#F8FAFF]">
                     <td className="px-4" />
                     <td className="px-4 text-[#6B6B6B]">Not paid yet</td>
-                    <td className="px-4">{b.eventName}</td>
+                    <td className="px-4">{b.eventName}{b.requestedInvitees ? <span className="block text-xs font-medium text-[#854D0E]">The administrator is waiting to send {b.requestedInvitees} WhatsApp invitation{b.requestedInvitees === 1 ? "" : "s"}</span> : null}</td>
                     <td className="px-4">{b.dueInvitees}</td>
                     <td className="px-4 text-[#6B6B6B]">—</td>
                     <td className="px-4 font-medium text-[#15191C]" title={`${b.dueInvitees} invitation${b.dueInvitees === 1 ? "" : "s"} × ${money(b.ratePerInvitee ?? 0)} + ${b.gstPercent ?? 0}% GST`}>{money(b.due)}</td>

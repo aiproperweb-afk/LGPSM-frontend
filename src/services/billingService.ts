@@ -12,12 +12,16 @@ export interface EventBill {
   paid: number;
   due: number;
   dueInvitees: number;
+  /** of the amount due, the guests an administrator is waiting to invite on WhatsApp */
+  requestedInvitees?: number;
   dueSubtotal?: number;
   dueTax?: number;
   gstPercent?: number;
   currency: string;
 }
-export interface BillQuote { invitees: number; rate: number | null; subtotal: number; gstPercent: number; tax: number; total: number; currency: string; selected: number; alreadyPaid: number; payable: boolean }
+export interface BillQuote { invitees: number; rate: number | null; subtotal: number; gstPercent: number; tax: number; total: number; currency: string; selected: number; alreadyPaid: number; payable: boolean; /** email costs nothing */ free?: boolean; /** the server cannot send WhatsApp, so nothing is charged */ whatsappUnavailable?: boolean; organizerName?: string }
+/** What a bill is for: invitations going by this channel (email is free), or printed cards */
+export type BillFor = { channel: "EMAIL" | "WHATSAPP" | "BOTH" } | { purpose: "CARDS" };
 /** A payment that went through (never one that was only started or failed) */
 export interface PaidPayment { eventId: string; eventName: string; amount: number; at: string }
 export interface EventBills { currency: string; totalDue: number; totalPaid: number; /** everything really paid, across all the organizer's events */ paidTotal?: number; payments?: PaidPayment[]; events: EventBill[] }
@@ -25,10 +29,12 @@ export interface PaymentStart { keyId: string; providerOrderId: string; amount: 
 
 export const billingService = {
   getEventBills: () => apiClient<EventBills>("/api/v1/billing/events", { method: "GET" }, true),
-  /** The bill for sending to these guests (invitations x rate, GST, total); creates nothing */
-  quote: (eventId: string, inviteeIds: string[]) => apiClient<BillQuote>("/api/v1/billing/quote", { method: "POST", body: JSON.stringify({ eventId, inviteeIds }) }, true),
-  /** Starts the Razorpay payment: for these guests when given, otherwise for what is due on invitations already sent */
-  startPayment: (eventId: string, inviteeIds?: string[]) => apiClient<PaymentStart>("/api/v1/billing/pay", { method: "POST", body: JSON.stringify({ eventId, inviteeIds }) }, true),
+  /** The bill for these guests (guests x rate, GST, total); creates nothing. An administrator may ask too, and sees the organizer's bill. */
+  quote: (eventId: string, inviteeIds: string[], what: BillFor) => apiClient<BillQuote>("/api/v1/billing/quote", { method: "POST", body: JSON.stringify({ eventId, inviteeIds, ...what }) }, true),
+  /** Administrator: ask the organizer to pay for these guests' WhatsApp invitations (shown as due on their Billing page) */
+  requestPayment: (eventId: string, inviteeIds: string[]) => apiClient<BillQuote & { requested: boolean }>("/api/v1/billing/request", { method: "POST", body: JSON.stringify({ eventId, inviteeIds }) }, true),
+  /** Starts the Razorpay payment: for these guests when given, otherwise for what is due on the event */
+  startPayment: (eventId: string, inviteeIds?: string[], what?: BillFor) => apiClient<PaymentStart>("/api/v1/billing/pay", { method: "POST", body: JSON.stringify({ eventId, inviteeIds, ...what }) }, true),
   confirmPayment: (p: { providerOrderId: string; providerPaymentId: string; signature: string }) =>
     apiClient<unknown>("/api/v1/payments/verify", { method: "POST", body: JSON.stringify(p) }, true),
   getInvoices: () => apiClient<Invoice[]>("/api/v1/billing/invoices", { method: "GET" }, true),

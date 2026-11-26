@@ -1,5 +1,6 @@
 "use client";
 
+import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/components/icons/Icon";
@@ -138,8 +139,8 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
         </div>
 
         <div className="flex items-center gap-3 px-6 py-4 border-t border-[#EEE]">
-          <button type="button" onClick={() => { setDraft(NO_FILTERS); onApply(NO_FILTERS); onClose(); }} className="flex-1 py-1.5 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-[#000B2C] hover:bg-gray-50 cursor-pointer">Clear</button>
-          <button type="button" onClick={() => { onApply(draft); onClose(); }} className="flex-1 py-1.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
+          <button type="button" onClick={() => { setDraft(NO_FILTERS); onApply(NO_FILTERS); onClose(); }} className={filterSecondaryButtonClass}>Clear</button>
+          <button type="button" onClick={() => { onApply(draft); onClose(); }} className={filterPrimaryButtonClass}>Apply</button>
         </div>
       </div>
     </div>,

@@ -1,5 +1,6 @@
 "use client";
 
+import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import AlertIcon from "@/components/common/AlertIcon";
 import { isEventOver } from "@/utils/eventUtils";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -461,8 +462,8 @@ export default function EventAssignUsersPage() {
                 </section>
               </div>
               <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
-                <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#1F65FF] hover:bg-[#1F65FF] text-sm font-semibold text-white cursor-pointer">Apply</button>
+                <button type="button" onClick={() => setFiltersOpen(false)} className={filterSecondaryButtonClass}>Cancel</button>
+                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className={filterPrimaryButtonClass}>Apply</button>
               </div>
             </div>
           </div>,

@@ -9,12 +9,16 @@ import type { BillQuote } from "@/services/billingService";
 interface SendBillModalProps {
   quote: BillQuote;
   /** what is being paid for: invitations to send (default) or printable cards to download */
-  kind?: "send" | "download" | "both";
+  kind?: "send" | "download" | "both" | "resend";
   /** the payment (Razorpay) is in progress */
   busy: boolean;
   error: string | null;
   onCancel: () => void;
   onFinish: () => void;
+  /** invitations only: send these by email instead, which costs nothing */
+  onEmailInstead?: () => void;
+  /** set for an administrator, who sees the organizer's bill and asks them to pay it instead of paying */
+  onRequestPayment?: () => void;
 }
 
 const rupees = (n: number) => formatMoney(n, { minFractionDigits: 0, maxFractionDigits: 2 });
@@ -24,7 +28,7 @@ const gstLabel = (p: number) => `${Number.isInteger(p) ? p : p.toFixed(2)}%`;
  * The bill shown when invitations are sent (Figma 2001:2467 "Make Payment"): per-head price, how many invitees, the subtotal, GST and
  * the total. The figures come from the server (the admin's per-head rate and GST), so they follow whatever the admin sets.
  */
-export default function SendBillModal({ quote, kind = "send", busy, error, onCancel, onFinish }: SendBillModalProps) {
+export default function SendBillModal({ quote, kind = "send", busy, error, onCancel, onFinish, onEmailInstead, onRequestPayment }: SendBillModalProps) {
   const [agreed, setAgreed] = useState(false);
   const [showAgreeError, setShowAgreeError] = useState(false);
 
@@ -34,7 +38,10 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
     return () => document.removeEventListener("keydown", onKey);
   }, [onCancel, busy]);
 
+  const messages = kind !== "download";
+  const organizer = quote.organizerName || "the organizer";
   const finish = () => {
+    if (onRequestPayment) return onRequestPayment();
     if (!agreed) { setShowAgreeError(true); return; }
     onFinish();
   };
@@ -44,13 +51,20 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="send-bill-title">
       <div className="w-full max-w-[400px] bg-white border border-[#E5E5E5] rounded-lg overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
-          <h2 id="send-bill-title" className="flex-1 text-base font-medium text-[#15191C]">Make Payment</h2>
+          <h2 id="send-bill-title" className="flex-1 text-base font-medium text-[#15191C]">{onRequestPayment ? "Organizer Payment Needed" : "Make Payment"}</h2>
           <button type="button" onClick={onCancel} disabled={busy} aria-label="Close" className="shrink-0 cursor-pointer disabled:opacity-40">
             <Icon name="events/close" width={16} height={16} />
           </button>
         </div>
 
         <div className="px-[26px] pt-1 pb-4">
+          <p role="status" className="mt-3 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-[13px] text-[#1D3A8A]">
+            {!messages
+              ? <>Printed cards are charged. A guest already paid for on WhatsApp is not charged again.</>
+              : onRequestPayment
+                ? <>WhatsApp invitations are charged to <b className="break-words">{organizer}</b>. Nothing goes out on WhatsApp until they pay from their Billing page. Email invitations are free.</>
+                : <>WhatsApp invitations are charged, including when you choose All (Email + WhatsApp). Email invitations are free.</>}
+          </p>
           <p className="py-4 text-base font-medium text-[#15191C] border-b border-[#EAEAEA]">Payment Info</p>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
             <div className={row}><span>Per Head Price</span><span>{rupees(quote.rate ?? 0)}</span></div>
@@ -65,23 +79,30 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
             <span className="font-bold text-[#1F65FF]">{rupees(quote.total)}</span>
           </div>
 
-          <div className="mt-4 flex items-start gap-1.5">
-            <input
-              id="bill-agree"
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => { setAgreed(e.target.checked); if (e.target.checked) setShowAgreeError(false); }}
-              className="mt-0.5 size-[18px] shrink-0 cursor-pointer check-green"
-            />
-            <label htmlFor="bill-agree" className="text-[13px] font-medium text-[#15191C]/50 cursor-pointer">
-              I agree to the <Link href="/contact" target="_blank" className="underline">Terms and conditions</Link> &amp; <Link href="/contact" target="_blank" className="underline">Privacy policy</Link>
-            </label>
-          </div>
-          {showAgreeError && !agreed && <p role="alert" className="mt-2 text-[13px] font-medium text-[#D92D20]">Please select the checkbox</p>}
+          {!onRequestPayment && (
+          <>
+            <div className="mt-4 flex items-start gap-1.5">
+              <input
+                id="bill-agree"
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => { setAgreed(e.target.checked); if (e.target.checked) setShowAgreeError(false); }}
+                className="mt-0.5 size-[18px] shrink-0 cursor-pointer check-green"
+              />
+              <label htmlFor="bill-agree" className="text-[13px] font-medium text-[#15191C]/50 cursor-pointer">
+                I agree to the <Link href="/contact" target="_blank" className="underline">Terms and conditions</Link> &amp; <Link href="/contact" target="_blank" className="underline">Privacy policy</Link>
+              </label>
+            </div>
+            {showAgreeError && !agreed && <p role="alert" className="mt-2 text-[13px] font-medium text-[#D92D20]">Please select the checkbox</p>}
+          </>
+          )}
           {error && <p role="alert" className="mt-3 text-[13px] font-medium text-[#D92D20]">{error}</p>}
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-[#E5E5E5]">
+        <div className="flex flex-wrap items-center justify-end gap-3 p-4 border-t border-[#E5E5E5]">
+          {onEmailInstead && (
+            <button type="button" onClick={onEmailInstead} disabled={busy} className="w-full text-center text-sm font-semibold text-[#1F65FF] underline cursor-pointer disabled:opacity-50">Send by email only (free)</button>
+          )}
           <button type="button" onClick={onCancel} disabled={busy} className="px-6 py-[11px] bg-white border border-[#DDD] rounded-lg text-base font-semibold text-black cursor-pointer disabled:opacity-50">Cancel</button>
           <button
             type="button"
@@ -90,7 +111,7 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
             style={{ backgroundImage: "linear-gradient(180deg, #1F65FF 0%, #2071FF 33%, #2181FF 69%, #1F65FF 100%)" }}
             className="px-6 py-[11px] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-60 hover:brightness-95"
           >
-            {busy ? "Processing…" : `Pay ${rupees(quote.total)}`}
+            {busy ? "Processing…" : onRequestPayment ? "Send payment request" : `Pay ${rupees(quote.total)}`}
           </button>
         </div>
       </div>
