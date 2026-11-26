@@ -419,14 +419,14 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           <p className="flex-1 p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
         )}
         </div>
-        <div className={`flex flex-col ${printOnly ? "sm:col-span-2" : ""}`}>
+        <div data-event-logo className={`flex flex-col ${printOnly ? "sm:col-span-2" : ""}`}>
           <div className="flex-1 min-h-0">
           <ImageUploadField
             label={<span className="flex items-center justify-between gap-2"><span>Event Logo/image <span className="font-normal text-[#6B6B6B]">(optional)</span></span><InfoTip label="About the event logo" text="Shown on the invitation card. Use a JPG, PNG or WEBP image up to 5 MB." /></span>}
             value={draft.logoKey}
             onChange={(logoKey) => onChange({ logoKey })}
             purpose="EVENT_LOGO"
-            squareCrop
+            freeShapeCrop
             aspectClassName="aspect-[2/1]"
             fill
             optional

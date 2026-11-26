@@ -1,18 +1,15 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ModalClose from "@/components/common/ModalClose";
-import { inviteeService, type InviteeSetInfo, type InviteeSetMember, type RemovedInviteeList, type RestoreResult, type SetAsideGuest } from "@/services/inviteeService";
+import { inviteeService, type InviteeSetInfo, type InviteeSetMember, type RemovedInviteeList } from "@/services/inviteeService";
 import { formatDateTime } from "@/utils/dateTime";
-import { DELIVERY_LABEL, listDisplayName, restoreErrorMessage, restoreOutcome, stateExplanation } from "@/utils/inviteeLists";
-
-type Tab = "lists" | "aside";
+import { DELIVERY_LABEL, listDisplayName, stateExplanation } from "@/utils/inviteeLists";
 
 interface Props {
   eventId: string;
-  initialTab?: Tab;
-  /** Called after guests were restored, so the page can reload its active list */
-  onRestored: () => void;
+  /** Called after a list was changed, so the page can reload its guest list */
+  onChanged: () => void;
   onClose: () => void;
   /** Opens the add-invitees window (only that window) on top of this one */
   onAddInvitees?: () => void;
@@ -36,8 +33,7 @@ const Lock = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" vi
 
 // The same shell as the Delivery History dialog: centred modal, title bar with close, table body.
 // A list's Open/Locked state (a property of the list, decided by the server) is kept apart from each guest's delivery state.
-export default function InviteeListsModal({ eventId, initialTab = "lists", onRestored, onClose, onAddInvitees, reloadSignal = 0 }: Props) {
-  const [tab, setTab] = useState<Tab>(initialTab);
+export default function InviteeListsModal({ eventId, onChanged, onClose, onAddInvitees, reloadSignal = 0 }: Props) {
   const [sets, setSets] = useState<InviteeSetInfo[] | null>(null);
   const [removedLists, setRemovedLists] = useState<RemovedInviteeList[]>([]);
   // an empty list the organizer is about to delete (asked first)
@@ -51,13 +47,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
   const [open, setOpen] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, { rows: InviteeSetMember[]; total: number; page: number } | "loading" | string>>({});
 
-  const [aside, setAside] = useState<{ guests: SetAsideGuest[]; total: number; restorable: boolean; notRestorableReason: string | null } | null>(null);
-  const [asideError, setAsideError] = useState<string | null>(null);
-  const [q, setQ] = useState("");
-  const [picked, setPicked] = useState<string[]>([]);
-  const [confirm, setConfirm] = useState<string[] | null>(null);
-  const [restoring, setRestoring] = useState(false);
-  const [outcome, setOutcome] = useState<{ tone: "success" | "warning" | "error"; message: string; conflicts: string[] } | null>(null);
+  const [outcome, setOutcome] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
   const loadSets = useCallback(async () => {
     setSetsError(null);
@@ -68,26 +58,12 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
     } catch { setSetsError("The invitee lists could not be loaded. Check your connection and try again."); }
   }, [eventId]);
 
-  const loadAside = useCallback(async (search: string) => {
-    setAsideError(null);
-    try {
-      const res = await inviteeService.getSetAside(eventId, { q: search });
-      if (res.success && res.data) { setAside(res.data); setPicked((p) => p.filter((id) => res.data!.guests.some((g) => g.id === id))); }
-      else setAsideError(res.message || "The set-aside guests could not be loaded.");
-    } catch { setAsideError("The set-aside guests could not be loaded. Check your connection and try again."); }
-  }, [eventId]);
-
   useEffect(() => { void Promise.resolve().then(loadSets); }, [loadSets, reloadSignal]);
   useEffect(() => {
-    if (tab !== "aside") return;
-    const t = setTimeout(() => { void loadAside(q); }, q ? 250 : 0);
-    return () => clearTimeout(t);
-  }, [tab, q, loadAside]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !confirm) onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, confirm]);
+  }, [onClose]);
 
   const toggleSet = async (id: string) => {
     if (open === id) { setOpen(null); return; }
@@ -100,38 +76,16 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
     } catch { setMembers((m) => ({ ...m, [id]: "The guests of this list could not be loaded." })); }
   };
 
-  const nameOf = useMemo(() => {
-    const map = new Map((aside?.guests || []).map((g) => [g.id, g.name]));
-    return (id: string) => map.get(id) || "This guest";
-  }, [aside]);
-
-  const doRestore = async () => {
-    if (!confirm) return;
-    setRestoring(true);
-    try {
-      const res = await inviteeService.restoreSetAside(eventId, confirm);
-      if (res.success && res.data) {
-        const r: RestoreResult = res.data;
-        setOutcome(restoreOutcome(r, nameOf));
-        if (r.restored) onRestored();
-      } else setOutcome({ tone: "error", message: restoreErrorMessage(res.message), conflicts: [] });
-    } catch { setOutcome({ tone: "error", message: "The restore request could not reach the server. Nothing was changed.", conflicts: [] }); }
-    setConfirm(null);
-    setPicked([]);
-    setRestoring(false);
-    await Promise.all([loadAside(q), loadSets()]);
-  };
-
   const doDropList = async () => {
     if (!dropList) return;
     setDropping(true);
     try {
       const res = await inviteeService.removeList(eventId, dropList.id);
       setOutcome(res.success
-        ? { tone: "success", message: `“${listDisplayName(dropList.name)}” was deleted. It stays under Deleted lists as history.`, conflicts: [] }
-        : { tone: "error", message: res.message || "The list could not be deleted.", conflicts: [] });
-      if (res.success) onRestored();
-    } catch { setOutcome({ tone: "error", message: "The request could not reach the server. Nothing was changed.", conflicts: [] }); }
+        ? { tone: "success", message: `“${listDisplayName(dropList.name)}” was deleted. It stays under Deleted lists as history.` }
+        : { tone: "error", message: res.message || "The list could not be deleted." });
+      if (res.success) onChanged();
+    } catch { setOutcome({ tone: "error", message: "The request could not reach the server. Nothing was changed." }); }
     setDropping(false);
     setDropList(null);
     await loadSets();
@@ -142,19 +96,12 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
     setRenaming(true);
     try {
       const res = await inviteeService.renameList(eventId, renameList.id, renameValue.trim());
-      setOutcome(res.success ? { tone: "success", message: "The list was renamed.", conflicts: [] } : { tone: "error", message: res.message || "The list could not be renamed.", conflicts: [] });
-    } catch { setOutcome({ tone: "error", message: "The request could not reach the server. Nothing was changed.", conflicts: [] }); }
+      setOutcome(res.success ? { tone: "success", message: "The list was renamed." } : { tone: "error", message: res.message || "The list could not be renamed." });
+    } catch { setOutcome({ tone: "error", message: "The request could not reach the server. Nothing was changed." }); }
     setRenaming(false);
     setRenameList(null);
     await loadSets();
   };
-
-  const tabBtn = (id: Tab, label: string, count?: number) => (
-    <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer ${tab === id ? "border-[#1F65FF] text-[#1F65FF]" : "border-transparent text-[#4B4F52] hover:text-gray-900"}`}>
-      {label}{count !== undefined ? ` (${count})` : ""}
-    </button>
-  );
-  const asideTotal = sets ? sets.reduce((n, s) => n + s.setAside, 0) : undefined;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="lists-title">
@@ -170,21 +117,13 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             </button>
           </div>
         </div>
-        <div role="tablist" className="px-6 border-b border-[#E5E5E5] flex gap-2">
-          {tabBtn("lists", "Uploaded lists", sets?.length)}
-          {tabBtn("aside", "Set-aside guests", asideTotal)}
-        </div>
-
         <div className="p-6 overflow-auto flex-1">
           {outcome && (
-            <div role="status" className={`mb-4 rounded-md border px-4 py-3 text-sm ${outcome.tone === "success" ? "border-green-200 bg-green-50 text-green-800" : outcome.tone === "warning" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-rose-200 bg-rose-50 text-rose-800"}`}>
+            <div role="status" className={`mb-4 rounded-md border px-4 py-3 text-sm ${outcome.tone === "success" ? "border-green-200 bg-green-50 text-green-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}>
               <p>{outcome.message}</p>
-              {outcome.conflicts.map((c) => <p key={c} className="mt-1">{c}</p>)}
             </div>
           )}
 
-          {tab === "lists" && (
-            <>
               {setsError && <p role="alert" className="text-sm text-rose-600">{setsError} <button type="button" onClick={loadSets} className="underline cursor-pointer">Try again</button></p>}
               {!sets && !setsError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
               {sets && sets.length === 0 && <p className="text-sm text-[#6B6B6B]">No lists yet. Upload an Excel file with Add Invitees.</p>}
@@ -195,7 +134,6 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                       <th className="py-2 pr-3 font-medium">List</th>
                       <th className="py-2 pr-3 font-medium">Guests</th>
                       <th className="py-2 pr-3 font-medium">Delivery of invitations</th>
-                      <th className="py-2 pr-3 font-medium">Set aside</th>
                       <th className="py-2 pr-3 font-medium">List state</th>
                       <th className="py-2 font-medium text-right">Action</th>
                     </tr>
@@ -216,7 +154,6 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                             <span className="block">Sent <b className="text-[#0F7A33]">{s.sent}</b> · Not sent <b>{s.notSent}</b></span>
                             <span className="block">Failed <b className={s.failed ? "text-rose-600" : ""}>{s.failed}</b> · Unknown <b className={s.unknown ? "text-amber-700" : ""} title="Delivery was attempted but the outcome was never settled. The guest may have received it.">{s.unknown}</b></span>
                           </td>
-                          <td className="py-3 pr-3">{s.setAside}</td>
                           <td className="py-3">
                             {s.source === "SESSION" ? pill("bg-[#EDEDED] text-[#4B4F52]", "From other lists", "This session uses guests from the lists above, so it has no list of its own to change.") : s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open", "No invitation has been sent successfully from this list.")}
                           </td>
@@ -244,7 +181,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                         </tr>
                         {open === s.id && (
                           <tr>
-                            <td colSpan={7} className="pb-4">
+                            <td colSpan={5} className="pb-4">
                               <div className="rounded-md bg-[#F8F8F8] border border-[#E5E5E5] p-4 text-sm">
                                 <p className="text-[#4B4F52]">{s.source === "SESSION" ? "These are the guests who can attend this session, taken from the lists above. To change them, change the lists they came from." : stateExplanation(s)}</p>
                                 <GuestTable state={members[s.id]} />
@@ -261,14 +198,13 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                 <div className="mt-6">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Deleted lists (history)</h3>
                   <table className="w-full text-left text-xs min-w-[760px]">
-                    <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">List</th><th className="py-1.5 pr-3 font-medium">Uploaded</th><th className="py-1.5 pr-3 font-medium">Added by upload</th><th className="py-1.5 pr-3 font-medium">Set aside</th><th className="py-1.5 font-medium">Deleted</th></tr></thead>
+                    <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">List</th><th className="py-1.5 pr-3 font-medium">Uploaded</th><th className="py-1.5 pr-3 font-medium">Added by upload</th><th className="py-1.5 font-medium">Deleted</th></tr></thead>
                     <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                       {removedLists.map((r) => (
                         <tr key={r.id} className="align-top">
                           <td className="py-2 pr-3 text-gray-900 break-words" title={r.name}>{listDisplayName(r.name)}</td>
                           <td className="py-2 pr-3">{r.createdAt ? formatDateTime(r.createdAt, "") : "—"}{r.uploadedBy ? <span className="block text-[#6B6B6B]">by {r.uploadedBy.name}</span> : null}</td>
                           <td className="py-2 pr-3">{r.importedCount ?? "—"}</td>
-                          <td className="py-2 pr-3">{r.setAside}</td>
                           <td className="py-2">{formatDateTime(r.removedAt, "")}{r.removedBy ? <span className="block text-[#6B6B6B]">by {r.removedBy.name}</span> : null}</td>
                         </tr>
                       ))}
@@ -276,48 +212,6 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                   </table>
                 </div>
               )}
-            </>
-          )}
-
-          {tab === "aside" && (
-            <>
-              <p className="text-xs text-[#6B6B6B] mb-3">Guests a Replace set aside because they had never been invited. They are kept, apart from your active list, and can be restored.</p>
-              {aside && !aside.restorable && <p role="note" className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{aside.notRestorableReason}</p>}
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search set-aside guests" aria-label="Search set-aside guests" className="w-64 max-w-full px-3 py-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-black" />
-                <button type="button" disabled={!picked.length || !aside?.restorable} onClick={() => { setOutcome(null); setConfirm(picked); }} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore selected ({picked.length})</button>
-              </div>
-              {asideError && <p role="alert" className="text-sm text-rose-600">{asideError} <button type="button" onClick={() => loadAside(q)} className="underline cursor-pointer">Try again</button></p>}
-              {!aside && !asideError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
-              {aside && aside.guests.length === 0 && <p className="text-sm text-[#6B6B6B]">{q ? "No set-aside guest matches your search." : "No guests have been set aside."}</p>}
-              {aside && aside.guests.length > 0 && (
-                <table className="w-full text-left text-sm min-w-[760px]">
-                  <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
-                    <tr>
-                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-green" /></th>
-                      <th className="py-2 pr-3 font-medium">Guest</th>
-                      <th className="py-2 pr-3 font-medium">From list</th>
-                      <th className="py-2 pr-3 font-medium">Set aside</th>
-                      <th className="py-2 pr-3 font-medium">Reason</th>
-                      <th className="py-2 font-medium text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
-                    {aside.guests.map((g) => (
-                      <tr key={g.id} className="align-top">
-                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-green" /></td>
-                        <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#6B6B6B] break-all">{g.email || g.mobile || "—"}</span></td>
-                        <td className="py-3 pr-3 max-w-[180px] break-words">{g.fromSet.name}</td>
-                        <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#6B6B6B]">by {g.setAsideBy.name}</span> : null}</td>
-                        <td className="py-3 pr-3 text-xs">{g.reasonText || "Reason not recorded"}{g.replacedBy ? <span className="block text-[#6B6B6B]">by “{listDisplayName(g.replacedBy.name)}”</span> : null}</td>
-                        <td className="py-3 text-right"><button type="button" disabled={!aside.restorable} onClick={() => { setOutcome(null); setConfirm([g.id]); }} aria-label={`Restore ${g.name}`} className="px-3 py-1.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] rounded-md text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
         </div>
       </div>
 
@@ -340,7 +234,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative">
             <ModalClose onClick={() => setDropList(null)} disabled={dropping} />
             <h3 id="drop-title" className="pr-8 text-base font-semibold text-gray-900">Delete “{listDisplayName(dropList.name)}”?</h3>
-            <p className="text-sm text-[#4B4F52]">Do you want to delete this set of list? {dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : "It has no guests left. "}The list is removed from Uploaded lists, and its history (when it was uploaded, by whom, and any set-aside guests) stays under Deleted lists.</p>
+            <p className="text-sm text-[#4B4F52]">Do you want to delete this set of list? {dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : "It has no guests left. "}The list is removed from Uploaded lists, and its history (when it was uploaded and by whom) stays under Deleted lists.</p>
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setDropList(null)} disabled={dropping} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">No, keep it</button>
               <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#D92D20] hover:bg-[#B42318] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
@@ -349,18 +243,6 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
         </div>
       )}
 
-      {confirm && (
-        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="restore-title">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative">
-            <ModalClose onClick={() => setConfirm(null)} disabled={restoring} />
-            <h3 id="restore-title" className="pr-8 text-base font-semibold text-gray-900">Restore {confirm.length === 1 ? nameOf(confirm[0]) : `${confirm.length} guests`}?</h3>
-            <p className="text-sm text-[#4B4F52]">{confirm.length === 1 ? "This guest returns" : "These guests return"} to the active list as <b>Not sent</b>, in the list {confirm.length === 1 ? "they" : "they each"} came from. No invitation will be sent and no access pass will be created. Anyone whose email or mobile number is already on the active list will not be restored.</p>
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={doRestore} disabled={restoring} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{restoring ? "Restoring…" : "Restore"}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

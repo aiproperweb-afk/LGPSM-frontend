@@ -58,7 +58,7 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
           <button type="button" disabled={busy} onClick={() => onChoose("REPLACE")} className="w-full text-left rounded-lg border border-[#E0E0E0] hover:bg-[#EEF3FF] px-4 py-3 cursor-pointer disabled:opacity-60">
             <span className="block text-sm font-semibold text-[#15191C]">Replace the not-yet-invited list</span>
             <span className="block text-xs text-[#6B6B6B] mt-0.5">
-              Invitees who have never been invited and are not in this file are set aside (kept, not deleted, and restorable from Uploaded Lists). Guests with a failed or unresolved send are always kept. {sentSets ? "Lists you have already sent from are left as they are." : "Anyone already invited is never removed."}
+              Invitees who have never been invited and are not in this file are removed from the list. Guests with a failed or unresolved send are always kept. {sentSets ? "Lists you have already sent from are left as they are." : "Anyone already invited is never removed."}
             </span>
             <Forecast preview={previews?.replace ?? null} loading={!previews && !previewError} mode="REPLACE" />
           </button>

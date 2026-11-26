@@ -31,6 +31,8 @@ interface MobileCardPreviewProps {
 }
 
 const ZOOM_SCALE: Record<string, number> = { "100%": 1, "75%": 0.75, "50%": 0.5 };
+// the phone frame at 100%, in pixels
+const PHONE = { width: 270, radius: 38, bezel: 8 };
 
 export default function MobileCardPreview({
   template,
@@ -50,12 +52,14 @@ export default function MobileCardPreview({
   awaitingTemplate = false,
 }: MobileCardPreviewProps) {
   const [zoomLevel, setZoomLevel] = useState("100%");
+  const zoom = ZOOM_SCALE[zoomLevel] ?? 1;
   // An uploaded design is the card exactly as it is: no data is drawn on it, so there is nothing to render. Its own picture is shown.
   const staticUrl = template?.staticCard ? resolveImageUrl(template.previewKey) : null;
 
   // The card is always the real one: the server renders the chosen template with what has been entered so far (title,
   // dates, address, event type, image), so the wording written for this kind of event is visible while filling in the
   // form and follows every change. Nothing static or made up is shown in its place.
+  const uploadedLogo = logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined;
   const payload = useMemo<TemplatePreviewPayload>(
     () => ({
       title: eventTitle.trim() || undefined,
@@ -66,11 +70,12 @@ export default function MobileCardPreview({
       hostName: hostName?.trim() || undefined,
       categoryName: categoryName || undefined,
       subcategoryName: subcategoryName || undefined,
-      logoKey: logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined,
+      logoKey: uploadedLogo,
       ...(cardInfo ? { cardInfo } : {}),
-      ...(cardDisplay ? { cardDisplay: cardDisplayForServer(cardDisplay) } : {}),
+      // without a logo the card has none, so the preview must not show the designers' sample one in its place
+      ...(cardDisplay ? { cardDisplay: { ...cardDisplayForServer(cardDisplay), ...(uploadedLogo ? {} : { logo: false }) } } : {}),
     }),
-    [eventTitle, eventStart, eventEnd, venue, contactNumber, hostName, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
+    [eventTitle, eventStart, eventEnd, venue, contactNumber, hostName, categoryName, subcategoryName, uploadedLogo, cardInfo, cardDisplay]
   );
   // the parent builds cardDisplay/cardInfo afresh on every render, so the payload's identity changes constantly even when nothing was
   // typed: depend on its content, or the card is re-requested (and the spinner flashes) over and over
@@ -130,7 +135,7 @@ export default function MobileCardPreview({
   const hasCard = (showLive && !!live) || !!staticUrl;
 
   return (
-    <div className="h-full bg-[#F7F3F0] p-4 sm:p-6 flex flex-col items-center">
+    <div className="h-full bg-[#EEF4FF] p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
         <h2 className="text-base font-medium text-gray-900">Card Preview</h2>
         <div className="w-28">
@@ -145,11 +150,11 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className={`relative w-[270px] max-w-full aspect-[1/2] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
-          style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
+          className="relative max-w-full aspect-[1/2] bg-[#1E2A33] shadow-xl transition-[width,border-radius,padding] duration-200"
+          style={{ width: PHONE.width * zoom, borderRadius: PHONE.radius * zoom, padding: PHONE.bezel * zoom }}
           aria-label="Invitation card preview"
         >
-          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-black flex items-center justify-center">
+          <div className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center" style={{ borderRadius: (PHONE.radius - PHONE.bezel) * zoom }}>
             {hasCard && (
               // The screen is taller than the card, so the card is shown whole (nothing trimmed) and the space above and below it is black, like the phone
               // eslint-disable-next-line @next/next/no-img-element -- blob URL rendered by the API, or the uploaded design

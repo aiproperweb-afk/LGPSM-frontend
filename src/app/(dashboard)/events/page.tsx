@@ -433,8 +433,8 @@ export default function EventListingPage() {
         <div><FilterSelect value={filters.sessions} onChange={(v) => setFilter({ sessions: v })} options={[{ value: "", label: "No. of Sessions" }, { value: "0", label: "0 sessions" }, { value: "1", label: "1 session" }, { value: "2-5", label: "2–5 sessions" }, { value: "6+", label: "6+ sessions" }]} ariaLabel="No. of Sessions" plain /></div>
       )}
       <div><FilterSelect value={filters.status} onChange={(v) => setFilter({ status: v })} options={[{ value: "", label: "Event Status" }, ...STATUS_FILTERS.map((st) => ({ value: st, label: st }))]} ariaLabel="Event Status" plain /></div>
-      <DateField className="w-[150px]" placeholder="From" title="Events starting on or after this day" value={filters.from} max={filters.to || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ from: v })} />
-      <DateField className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
+      <DateField className="w-[130px] 2xl:w-[150px]" placeholder="From" title="Events starting on or after this day" value={filters.from} max={filters.to || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ from: v })} />
+      <DateField className="w-[130px] 2xl:w-[150px]" placeholder="To" title="Events starting on or before this day" value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
       {applyingFilters && <span role="status" className="text-xs text-[#6B6B6B]">Loading session totals…</span>}
       {activeFilterCount > 0 && (
         <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#1F65FF] hover:bg-[#EAF1FF] rounded-md cursor-pointer whitespace-nowrap">Clear filters</button>
@@ -448,23 +448,23 @@ export default function EventListingPage() {
       <div className="w-full min-h-full bg-white">
         <PageHeader title="Event Management" />
         <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-9">
-          <div className="flex flex-col xl:flex-row xl:items-center gap-3 xl:gap-4">
-            <div className="flex items-center gap-2.5 min-w-0 xl:flex-1 xl:min-w-[260px]">
+          <div className="flex flex-wrap items-center gap-3 xl:gap-4">
+            <div className="flex flex-[1_1_240px] items-center gap-2.5 min-w-0">
               <label htmlFor="event-search" className="text-[17px] font-medium text-black shrink-0">Search</label>
               <div className="relative flex-1 min-w-0">
                 <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   id="event-search"
                   type="search"
-                  placeholder="Search by event names ... "
+                  placeholder="Search events"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
                 />
               </div>
             </div>
-            <div className="min-w-0 xl:shrink-0">{filterBar}</div>
-            <div className="flex items-center gap-3 shrink-0 w-fit">
+            <div className="min-w-0 max-w-full">{filterBar}</div>
+            <div className="flex items-center gap-3 shrink-0 w-fit ml-auto">
               <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
                 <Icon name="events/add-white" width={24} height={24} />
                 Add

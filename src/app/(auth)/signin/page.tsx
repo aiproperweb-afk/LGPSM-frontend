@@ -1,73 +1,45 @@
 "use client";
 
-import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
+import SocialSignIn from "@/components/auth/SocialSignIn";
 import React, { Suspense, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
 import {
-  AdminAuthLayout,
   AuthAlert,
-  AuthHeading,
+  AuthCornerLink,
+  AuthHeader,
   AuthLoadingShell,
-  AuthLogo,
-  AuthSplitLayout,
-  BackLink,
+  AuthPage,
+  OrDivider,
   PasswordInput,
   Spinner,
   authInputClass,
   authLabelClass,
+  authLinkClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
 import {
   PortalMode,
   forgotPasswordHref,
+  signinHref,
   isSafeReturnPath,
   clearExplicitLogout,
   parsePortalMode,
   portalRole,
 } from "@/components/auth/authPortal";
-import { INPUT_PLACEHOLDERS } from "@/constants/placeholders";
 import { ERROR_MESSAGES } from "@/constants/errorMessages";
 import { canAccessRoute } from "@/components/sidebar/navConfig";
 import { applyRememberChoice, forgetRememberedEmail, readRememberedEmail } from "@/utils/rememberedLogin";
 import { createPortal } from "react-dom";
 import BrandLoader from "@/components/common/BrandLoader";
+import { savePendingVerification } from "@/utils/pendingVerification";
 
 const subscribeToStorage = (onChange: () => void) => {
   window.addEventListener("storage", onChange);
   return () => window.removeEventListener("storage", onChange);
 };
-
-function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect: (m: PortalMode) => void }) {
-  const tabs: { mode: PortalMode; label: string }[] = [
-    { mode: "organizer", label: "Organizer" },
-    { mode: "admin", label: "Super Admin" },
-  ];
-
-  return (
-    <div className="mb-6 p-1 bg-gray-100/90 rounded-xl flex items-center justify-between gap-1 text-xs font-semibold">
-      {tabs.map((tab) => {
-        const isActive = currentMode === tab.mode;
-        return (
-          <button
-            key={tab.mode}
-            type="button"
-            onClick={() => onSelect(tab.mode)}
-            className={`flex-1 py-2 px-1 sm:px-2 text-center rounded-lg transition-all cursor-pointer ${
-              isActive
-                ? "bg-white text-[#1F65FF] font-bold border border-gray-200/60"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function SigninContent() {
   const router = useRouter();
@@ -89,14 +61,6 @@ function SigninContent() {
   // Set once a sign-in succeeds and never reset: the page is on its way out, so the loader covers the wait for the dashboard
   const [entering, setEntering] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleModeChange = (newMode: PortalMode) => {
-    setErrorMessage("");
-    const from = searchParams.get("from");
-    const params = new URLSearchParams({ mode: newMode });
-    if (from && isSafeReturnPath(from)) params.set("from", from);
-    router.push(`/signin?${params.toString()}`);
-  };
 
   const onSuccess = (role?: string) => {
     setEntering(true);
@@ -148,9 +112,12 @@ function SigninContent() {
         // Only a confirmed sign-in is remembered, so a mistyped address is never saved
         applyRememberChoice(localStorage, mode, email, rememberMe);
         onSuccess(res.data?.user?.role);
-      } else if (res.message === "EMAIL_NOT_VERIFIED" || res.message?.includes("EMAIL_NOT_VERIFIED")) {
-        sessionStorage.setItem("lgpsm_pending_verification_email", email.trim());
+      } else if (res.message?.includes("EMAIL_NOT_VERIFIED")) {
+        savePendingVerification(email, "email");
         router.push("/verify-email");
+      } else if (res.message?.includes("PHONE_NOT_VERIFIED")) {
+        savePendingVerification(email, "phone");
+        router.push("/verify-email?step=phone");
       } else {
         showAlert(res.message || ERROR_MESSAGES.auth.incorrectPassword, "error", "Incorrect password");
       }
@@ -161,116 +128,69 @@ function SigninContent() {
     }
   };
 
-  const sharedForm = (
-    <form onSubmit={handleSubmit}>
+  const admin = mode === "admin";
+  return (
+    <AuthPage
+      // the two portals are separate pages: each links to the other from its top right corner
+      corner={admin ? <AuthCornerLink href={signinHref("organizer")}>Organizer log in</AuthCornerLink> : <AuthCornerLink href={signinHref("admin")}>Super Admin</AuthCornerLink>}
+    >
       {/* Portalled to <body>: the auth card is animated, which would otherwise trap a fixed overlay inside it */}
       {entering && createPortal(<div className="fixed inset-0 z-[100]"><BrandLoader label="Signing in" /></div>, document.body)}
-      <div>
-        <label htmlFor="signin-email" className={authLabelClass}>
-          Email Address<span className="text-red-500">*</span>
-        </label>
-        <input
-          id="signin-email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder={INPUT_PLACEHOLDERS.auth.email}
-          value={email}
-          onChange={(e) => setTypedEmail(e.target.value)}
-          disabled={isSubmitting}
-          className={authInputClass}
-        />
-      </div>
-      <div className="mt-3">
-        <label htmlFor="signin-password" className={authLabelClass}>
-          Password<span className="text-red-500">*</span>
-        </label>
-        <PasswordInput
-          id="signin-password"
-          value={password}
-          onChange={setPassword}
-          placeholder="Type your password"
-          autoComplete="current-password"
-          disabled={isSubmitting}
-        />
-      </div>
-      <div className="mt-[14px] flex items-center justify-between gap-3 text-xs leading-4">
-        <label className="flex items-center gap-2 cursor-pointer text-[#4A5568]">
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => {
-              setRememberChoice(e.target.checked);
-              if (!e.target.checked) {
-                // Forget the saved address right away, not only at the next successful sign-in; otherwise leaving the
-                // page (or a failed attempt) keeps it saved and the box comes back ticked. Keep what is on screen.
-                setTypedEmail(email);
-                forgetRememberedEmail(localStorage, mode);
-              }
-            }}
-            className="w-4 h-4 rounded border-[#CFD9E0] cursor-pointer check-green"
-          />
-          Remember me
-        </label>
-        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#1A56DB]">
-          Forgot Password?
-        </Link>
-      </div>
-      <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-7`}>
-        {isSubmitting ? <><Spinner /> Signing in...</> : "Sign in"}
-      </button>
-    </form>
-  );
-
-  if (mode === "admin") {
-    return (
-      <AdminAuthLayout>
-        <div className="flex justify-center mb-6">
-          <AuthLogo />
-        </div>
-        <RoleTabs currentMode={mode} onSelect={handleModeChange} />
-        <div className="mb-6 text-center">
-          <h1 className="text-[22px] leading-7 font-semibold text-black">Super Admin Log In</h1>
-          <p className="mt-2 text-sm leading-5 text-[#5C5C5C]">Welcome back! Login to Dashboard</p>
-        </div>
-        {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
-        {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
-        {sharedForm}
-      </AdminAuthLayout>
-    );
-  }
-
-  return (
-    <AuthSplitLayout>
-      <div className="mb-6 lg:mb-[35px] h-[34px]">
-        <AuthLogo />
-      </div>
-      <div className="mb-6 lg:mb-[45px]">
-        <BackLink href="/" label="Back to Home" />
-      </div>
-
-      <RoleTabs currentMode={mode} onSelect={handleModeChange} />
-
-      {mode === "organizer" && (
+      <AuthHeader
+        title={admin ? "Super Admin Log in" : "Log in"}
+        prompt={admin ? "Welcome back! Log in to the admin dashboard" : <>Don&apos;t have an account? <Link href="/signup" className={authLinkClass}>Sign Up</Link></>}
+      />
+      {!admin && (
         <>
-          <AuthHeading title="Organizer Sign In" subtitle="Welcome back! Login to Organizer Portal" />
-          {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
-          {searchParams.get("notice") === "mobile-only" && (
-            <AuthAlert tone="info">On-ground staff sign in through the EventQRapp mobile app. Organizers can sign in here.</AuthAlert>
-          )}
-          {isVerifiedParam && <AuthAlert tone="success">Email verified successfully! Please sign in to access your dashboard.</AuthAlert>}
-          {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
-          {sharedForm}
-          <GoogleAuthButton mode="signin" onCredential={handleGoogle} disabled={isSubmitting} />
-          <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-[#1F65FF] font-bold underline underline-offset-2 hover:text-[#1A56DB]">
-              Sign Up Free (Organizer)
-            </Link>
-          </p>
+          <SocialSignIn mode="signin" onGoogle={handleGoogle} disabled={isSubmitting} />
+          <OrDivider />
         </>
       )}
-    </AuthSplitLayout>
+      {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
+      {!admin && searchParams.get("notice") === "mobile-only" && (
+        <AuthAlert tone="info">On-ground staff sign in through the EventQRapp mobile app. Organizers can sign in here.</AuthAlert>
+      )}
+      {isVerifiedParam && <AuthAlert tone="success">Your account is verified. Please log in to access your dashboard.</AuthAlert>}
+      {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
+          <div>
+            <label htmlFor="signin-email" className={authLabelClass}>Email address</label>
+            <input id="signin-email" type="email" required autoComplete="email" placeholder="you@company.com" value={email} onChange={(e) => setTypedEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
+          </div>
+          <div>
+            <label htmlFor="signin-password" className={authLabelClass}>Password</label>
+            <PasswordInput id="signin-password" value={password} onChange={setPassword} placeholder="Enter your password" autoComplete="current-password" disabled={isSubmitting} hiddenIcon="eye" />
+            <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+              <Link href={forgotPasswordHref(mode)} className={authLinkClass}>Forgot password?</Link>
+              <label className="flex cursor-pointer items-center gap-2 font-medium text-[#666D80]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => {
+                    setRememberChoice(e.target.checked);
+                    if (!e.target.checked) {
+                      // Forget the saved address right away, not only at the next successful sign-in; otherwise leaving the
+                      // page (or a failed attempt) keeps it saved and the box comes back ticked. Keep what is on screen.
+                      setTypedEmail(email);
+                      forgetRememberedEmail(localStorage, mode);
+                    }
+                  }}
+                  className="size-4 cursor-pointer accent-[#1F65FF]"
+                />
+                Remember me
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-4">
+          <button type="submit" disabled={isSubmitting} className={authPrimaryButtonClass}>
+            {isSubmitting ? <><Spinner /> Logging in...</> : "Log in"}
+          </button>
+          {!admin && <Link href="/account-recovery" className="text-sm font-semibold text-[#000B2C] hover:text-[#1A56DB] hover:underline">Can&apos;t Access Your Account?</Link>}
+        </div>
+      </form>
+    </AuthPage>
   );
 }
 

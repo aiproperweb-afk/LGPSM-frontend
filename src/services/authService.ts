@@ -11,6 +11,9 @@ export interface RegisterPayload {
   // Individual, or an organization (then its name is required)
   organizationType?: "INDIVIDUAL" | "ORGANIZATION";
   organizationName?: string;
+  /** "web": this form requires the mobile number, which is then verified when the server can send text messages */
+  channel?: "web";
+  marketingConsent?: boolean;
 }
 
 export interface LoginPayload {
@@ -25,6 +28,8 @@ export interface AuthResponseData {
   refreshToken?: string;
   pendingVerification?: boolean;
   email?: string;
+  /** the mobile number has to be verified with a text-message code too */
+  phoneVerificationRequired?: boolean;
 }
 
 export const authService = {
@@ -45,8 +50,8 @@ export const authService = {
     return response;
   },
 
-  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ verified: boolean }>> {
-    return apiClient<{ verified: boolean }>("/api/auth/verify-email", {
+  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ verified: boolean; phoneVerificationRequired?: boolean }>> {
+    return apiClient<{ verified: boolean; phoneVerificationRequired?: boolean }>("/api/auth/verify-email", {
       method: "POST",
       body: JSON.stringify({ email, code }),
     });
@@ -65,6 +70,28 @@ export const authService = {
       method: "POST",
       body: JSON.stringify({ email }),
     });
+  },
+
+  // the sign-up's mobile step
+  async resendSignupPhoneCode(email: string): Promise<ApiResponse<{ sent: boolean }>> {
+    return apiClient<{ sent: boolean }>("/api/auth/phone/resend", { method: "POST", body: JSON.stringify({ email }) });
+  },
+  async verifySignupPhone(email: string, code: string): Promise<ApiResponse<{ verified: boolean }>> {
+    return apiClient<{ verified: boolean }>("/api/auth/phone/verify", { method: "POST", body: JSON.stringify({ email, code }) });
+  },
+  async changePendingPhone(email: string, password: string, phone: string): Promise<ApiResponse<{ phone: string }>> {
+    return apiClient<{ phone: string }>("/api/auth/change-pending-phone", { method: "POST", body: JSON.stringify({ email, password, phone }) });
+  },
+
+  // "Can't access your account?"
+  async sendFindAccountCode(phone: string): Promise<ApiResponse<{ sent: boolean }>> {
+    return apiClient<{ sent: boolean }>("/api/auth/recovery/find-account", { method: "POST", body: JSON.stringify({ phone }) });
+  },
+  async findAccounts(phone: string, code: string): Promise<ApiResponse<{ accounts: { email: string; complete: boolean }[] }>> {
+    return apiClient<{ accounts: { email: string; complete: boolean }[] }>("/api/auth/recovery/find-account/verify", { method: "POST", body: JSON.stringify({ phone, code }) });
+  },
+  async requestEmailRecovery(email: string, recoveryEmail: string): Promise<ApiResponse<{ received: boolean }>> {
+    return apiClient<{ received: boolean }>("/api/auth/recovery/lost-email", { method: "POST", body: JSON.stringify({ email, recoveryEmail }) });
   },
 
   async login(payload: LoginPayload): Promise<ApiResponse<AuthResponseData>> {

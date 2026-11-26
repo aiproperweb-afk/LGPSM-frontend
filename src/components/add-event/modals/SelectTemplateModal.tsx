@@ -258,7 +258,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                       >
                         <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="" />
                       </button>
-                      {staticBlocked(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Digital only</span> : !usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
+                      {staticBlocked(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Digital only</span> : !usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : isStaticTemplate(t.templateData) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-[#1F65FF] px-1.5 py-0.5 text-[10px] text-white">Static card</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
                       {canDelete(t) && (
                         <>
                           <button type="button" onClick={() => void removeOwn(t)} aria-label={`Delete ${t.name}`} title="Delete this template" className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow hover:bg-rose-50 cursor-pointer">
@@ -274,19 +274,18 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-wrap justify-between items-center gap-3">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#4B4F52]">
+        <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 min-w-0 text-xs text-[#4B4F52]">
             <button type="button" onClick={() => setUploadOpen(true)} disabled={!digitalOnly} title={digitalOnly ? undefined : "Your own card can be uploaded only when Invitation Type is Digital only"} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer disabled:text-[#9CA3AF] disabled:no-underline disabled:cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
               Upload your own template
             </button>
-            {!digitalOnly && <span className="text-[#6B6B6B]">Available with Digital only.</span>}
             <span>
               Need a custom design?{" "}
               <Link href="/contact" className="text-[#15803D] font-medium underline">Contact us</Link>
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-3 shrink-0">
             {pendingId && !required && (
               <button type="button" onClick={() => setPendingId(null)} className="text-sm text-gray-700 hover:underline cursor-pointer">
                 Clear selection
@@ -306,6 +305,8 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
             setUploadOpen(false);
             setFilterCategory("");
             setFilterSub("");
+            // show it where it is listed, so its preview is on screen with the card selected
+            setScope(t.ownerId && !t.isSystemTemplate ? "mine" : "all");
             setPendingId(t._id);
             setReloadKey((n) => n + 1);
           }}

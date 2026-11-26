@@ -18,7 +18,9 @@ interface Props {
   showInvitation: boolean;
   /** Cards group: only for events that print cards */
   showCards: boolean;
-  /** Food Preference groups: the questions the event asks and their choices (none: the section is not shown) */
+  /** Food Preference: only for events whose invitations are sent digitally, where guests answer */
+  showFood: boolean;
+  /** the food questions the event asks and their choices (none: the section says so) */
   food: { title: string; options: string[] }[];
   /** RSVP group: only when the event asks guests to respond */
   showRsvp: boolean;
@@ -44,7 +46,7 @@ export default function InviteeFilterPanel(props: Props) {
   return props.open ? <PanelBody {...props} /> : null;
 }
 
-function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showCards, food, showRsvp, onApply }: Props) {
+function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showCards, showFood, food, showRsvp, onApply }: Props) {
   const [draft, setDraft] = useState<InviteeFilters>(value);
   useEffect(() => {
     // Escape closes an open dropdown first, and the panel only when none is open
@@ -98,7 +100,14 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
             />
           )}
 
-          {food.map((q) => (
+          {showFood && food.length === 0 && (
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-medium text-[#000B2C]">Food Preference</p>
+              <p className="rounded-md border border-[#E0E0E0] bg-[#F8F9FA] px-3 py-2.5 text-xs text-[#6B6B6B]">This event does not ask guests about food.</p>
+            </div>
+          )}
+
+          {showFood && food.map((q) => (
             <Group<string>
               key={q.title}
               title={food.length === 1 ? "Food Preference" : q.title}

@@ -19,7 +19,7 @@ import AddInviteeManualModal from "@/components/add-event/modals/AddInviteeManua
 import SendWarningModal, { type ActionMode } from "@/components/invitees/SendWarningModal";
 import InviteeFilterPanel from "@/components/invitees/InviteeFilterPanel";
 import InviteeActionMenu, { type ActionItem } from "@/components/invitees/InviteeActionMenu";
-import { CHANNEL_OPTIONS, type Channel } from "@/components/invitees/channelOptions";
+import { type Channel } from "@/components/invitees/channelOptions";
 import { activeFilterCount, applyInviteeFilters, type InviteeFilters } from "@/utils/inviteeFilters";
 import SendBillModal from "@/components/invitees/SendBillModal";
 import DownloadCardsModal from "@/components/invitees/DownloadCardsModal";
@@ -190,7 +190,7 @@ export default function InviteesManagementPage() {
   const [showHistory, setShowHistory] = useState(false);
   // bumped when guests are added from inside the list windows, so those lists refresh
   const [listsReload, setListsReload] = useState(0);
-  const [listsTab, setListsTab] = useState<"lists" | "aside" | null>(null);
+  const [listsOpen, setListsOpen] = useState(false);
   const [passAction, setPassAction] = useState<{ action: "REVOKE" | "REPLACE"; invitee: Invitee; needsReview?: boolean } | null>(null);
   const [passHistory, setPassHistory] = useState<CredentialHistoryRow[] | null>(null);
   const [passHistoryError, setPassHistoryError] = useState<string | null>(null);
@@ -411,6 +411,8 @@ export default function InviteesManagementPage() {
   // Sending is charged per invitation: show the bill first when there is something to pay (Figma 2001:2467). With no rate set, or the
   // invitations already paid for, there is nothing to charge and the send goes ahead.
   const showBillOrSend = async (kind: ActionMode = "send"): Promise<boolean> => {
+    // an administrator acting for an organizer is never charged (and the bill is the organizer's own page)
+    if (isAdmin) return false;
     // a download is billed for the guests asked for; a send (and a send that is followed by cards) for the guests being invited
     const ids = kind === "download" ? downloadIds : sendTargets.map((t) => t._id);
     if (ids.length === 0) return false;
@@ -464,7 +466,7 @@ export default function InviteesManagementPage() {
   const firstTimeFor = (mode: ActionMode) => (mode === "download" ? !eventCardsMade && !lifecycleStarted : !lifecycleStarted && !eventCardsMade);
   const noteFor = async (mode: ActionMode, ids: string[]) => {
     setBillNote(null);
-    if (ids.length === 0) return;
+    if (ids.length === 0 || isAdmin) return;
     const res = await billingService.quote(eventId, ids).catch(() => null);
     const q = res?.success ? res.data : null;
     if (!q) return;
@@ -505,7 +507,11 @@ export default function InviteesManagementPage() {
   // Print and Digital both, Download Cards pressed for guests whose invitation has not gone out
   const [needSendFirst, setNeedSendFirst] = useState(0);
 
-  const handleResend = async (targets: InvitationData[] = resendTargets) => {
+  // Resend asks first, so the channel can be chosen the same way as for a first send
+  const [resendAsk, setResendAsk] = useState<InvitationData[] | null>(null);
+  const askResend = (targets: InvitationData[] = resendTargets) => { if (targets.length > 0) setResendAsk(targets); };
+
+  const handleResend = async (targets: InvitationData[]) => {
     if (targets.length === 0 || resendInFlight.current) return;
     setBusy("resend");
     resendInFlight.current = true;
@@ -643,7 +649,7 @@ export default function InviteesManagementPage() {
     const parts = [`${d.imported} added`];
     if (d.updated) parts.push(`${d.updated} already on the list`);
     if (d.alreadyInvited) parts.push(`${d.alreadyInvited} already invited (not imported again)`);
-    if (d.archived) parts.push(`${d.archived} never-invited guest(s) of the earlier list set aside (see Uploaded Lists > Set-aside guests)`);
+    if (d.archived) parts.push(`${d.archived} never-invited guest(s) of the earlier list removed`);
     if (d.preservedSets) parts.push(`${d.preservedSets} previously sent list(s) preserved`);
     if (d.failedKept) parts.push(`${d.failedKept} guest(s) with failed sends kept (they can be retried)`);
     if (d.unknownKept) parts.push(`${d.unknownKept} guest(s) with an unresolved delivery kept`);
@@ -705,7 +711,7 @@ export default function InviteesManagementPage() {
     notifyDbUpdate();
   };
 
-  // Delete selected: every ticked guest at once. A guest already invited is set aside with their history (the server decides), not erased.
+  // Delete selected: every ticked guest at once. For a guest already invited the server keeps their history and stops their pass.
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const deleteSelected = async (removal: RemovalDetails) => {
@@ -727,14 +733,13 @@ export default function InviteesManagementPage() {
   const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#1F65FF] text-[#1F65FF] bg-white hover:bg-[#EEF3FF] text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
   // Figma 195:1154 main buttons: filled blue, 16px semibold
   const primaryFilled = "inline-flex items-center justify-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
-  // The Action menu: the list's working tools (only the ones that apply to this event), and how invitations are delivered
+  // The Action menu: the list's working tools (only the ones that apply to this event). How invitations are delivered is chosen in the send window.
   const actionItems: ActionItem[] = [
     { key: "sample", icon: <ButtonIcon name="download" />, label: "Download Excel Sample", onClick: () => downloadInviteeTemplate(fieldConfig) },
     { key: "preview", icon: <ButtonIcon name="eye" />, label: "Preview List", onClick: () => setShowListPreview(true), disabled: invitees.length === 0 },
-    { key: "lists", icon: <ButtonIcon name="history" />, label: "Uploaded Lists", onClick: () => setListsTab("lists"), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
-    { key: "resend", icon: <ButtonIcon name="resend" />, label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => void handleResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
+    { key: "lists", icon: <ButtonIcon name="history" />, label: "Uploaded Lists", onClick: () => setListsOpen(true), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
+    { key: "resend", icon: <ButtonIcon name="resend" />, label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => askResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
     { key: "history", icon: <ButtonIcon name="history" />, label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED") },
-    ...(digitalInvites ? CHANNEL_OPTIONS.map((o, n): ActionItem => ({ key: `channel-${o.value}`, icon: o.icon ?? <ButtonIcon name="send" />, label: String(o.label), heading: n === 0 ? "Send invitations by" : undefined, selected: channel === o.value, onClick: () => setChannel(o.value as Channel) })) : []),
   ];
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
@@ -755,15 +760,15 @@ export default function InviteesManagementPage() {
         {!eventId ? (
           // Figma 431:550 (Add Invitation step 1): the toolbar with nothing chosen yet, then the "No invitees yet" state
           <>
-            <div className="flex flex-col xl:flex-row xl:items-center gap-3">
-              <div className="flex flex-1 items-center gap-2.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-[1_1_300px] items-center gap-2.5 min-w-0">
                 <label htmlFor="invitee-search-empty" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
                   <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                   <input id="invitee-search-empty" type="search" value="" readOnly disabled placeholder="Search invitees" className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium placeholder:text-[#6B6B6B] cursor-not-allowed" />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center justify-end gap-2 min-w-0 max-w-full ml-auto">
                 <PlainSelect
                   ariaLabel="Select event"
                   value=""
@@ -771,7 +776,7 @@ export default function InviteesManagementPage() {
                   onChange={(v) => router.replace(`/events/select/invitees?from=sidebar${v ? `&event=${v}` : ""}`)}
                   options={eventsOptions}
                 />
-                <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
+                <PlainSelect className="!w-[170px] 2xl:!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
                 <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
@@ -818,8 +823,8 @@ export default function InviteesManagementPage() {
             <ClosedEventNotice status={event?.status} endsAt={event?.schedule?.end} />
             {/* Controls (Figma 217:21076 / 217:20587): Invitees + search, event, session, Add Invitees, then Send — or Resend
                 once everyone has been invited */}
-            <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-3">
-              <div className="flex flex-1 items-center gap-2.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-[1_1_300px] items-center gap-2.5 min-w-0">
                 <label htmlFor="invitee-search" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
                   <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
@@ -833,11 +838,11 @@ export default function InviteesManagementPage() {
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full 2xl:shrink-0">
+              <div className="flex flex-wrap items-center justify-end gap-2 min-w-0 max-w-full ml-auto">
                 {/* The Super Admin frame (2114:6535) has no event picker on an event's own tab */}
                 {sidebarFlow && eventsOptions.length > 0 && (
                   <PlainSelect
-                    className="!w-[200px] !max-w-full"
+                    className="!w-[170px] 2xl:!w-[200px] !max-w-full"
                     ariaLabel="Event"
                     value={eventId}
                     onChange={(v) => router.replace(`/events/select/invitees?from=sidebar${v ? `&event=${v}` : ""}`)}
@@ -846,21 +851,21 @@ export default function InviteesManagementPage() {
                 )}
                 {!sidebarFlow && !isAdmin && eventsOptions.length > 0 && (
                   <PlainSelect
-                    className="!w-[200px] !max-w-full"
+                    className="!w-[170px] 2xl:!w-[200px] !max-w-full"
                     ariaLabel="Event"
                     value={eventId}
                     onChange={(v) => router.push(`/events/${v}/invitees`)}
                     options={eventsOptions.some((o) => o.value === eventId) ? eventsOptions : [{ value: eventId, label: event?.title || "This event" }, ...eventsOptions]}
                   />
                 )}
-                <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
-                <button type="button" onClick={() => setFiltersOpen(true)} aria-label={`Filter and sorting${activeFilterCount(filtersInForce) ? ` (${activeFilterCount(filtersInForce)} active)` : ""}`} className="relative inline-flex items-center justify-center gap-2 h-[46px] px-6 bg-white border border-[#1F65FF] rounded-lg text-base font-semibold text-[#1F65FF] hover:bg-[#EEF3FF] cursor-pointer">
+                <PlainSelect className="!w-[170px] 2xl:!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
+                <button type="button" onClick={() => setFiltersOpen(true)} aria-label={`Filter and sorting${activeFilterCount(filtersInForce) ? ` (${activeFilterCount(filtersInForce)} active)` : ""}`} className="relative inline-flex items-center justify-center gap-2 h-[46px] px-4 2xl:px-6 bg-white border border-[#1F65FF] rounded-lg text-base font-semibold text-[#1F65FF] hover:bg-[#EEF3FF] cursor-pointer">
                   <Icon name="events/inv-filter-button" width={22} height={13} />
                   Filter
                   {activeFilterCount(filtersInForce) > 0 && <span className="absolute -top-2 -right-2 size-5 rounded-full bg-[#1F65FF] text-white text-[11px] flex items-center justify-center">{activeFilterCount(filtersInForce)}</span>}
                 </button>
                 {!historical && (
-                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
+                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-4 2xl:px-6 py-[11px] whitespace-nowrap bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -902,7 +907,7 @@ export default function InviteesManagementPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleResend()}
+                    onClick={() => askResend()}
                     disabled={!canIssue || busy !== null || resendTargets.length === 0}
                     title={!canIssue ? "This event is over, so invitations can no longer be sent" : resendTargets.length ? undefined : "Only guests whose invitation failed to send can be resent. Select one of them."}
                     className={primaryFilled}
@@ -1026,7 +1031,7 @@ export default function InviteesManagementPage() {
                             <InviteeRowMenu
                               name={i.name}
                               onEdit={historical || (i.invitationStatus !== "PENDING" && i.invitationStatus !== "FAILED") ? undefined : () => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "" })}
-                              onResend={digitalInvites && canIssue && sentRecord?._id && i.invitationStatus === "FAILED" ? () => handleResend([sentRecord]) : undefined}
+                              onResend={digitalInvites && canIssue && sentRecord?._id && i.invitationStatus === "FAILED" ? () => askResend([sentRecord]) : undefined}
                               onRemove={historical ? undefined : () => setDeletingId(i._id)}
                             />
                           </td>
@@ -1055,6 +1060,13 @@ export default function InviteesManagementPage() {
         )}
       </div>
 
+      {/* The two list windows come first: whatever they open (add invitees, the file preview, the import choice) must appear above them */}
+      {showListPreview && (
+        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
+      )}
+      {listsOpen && (
+        <InviteeListsModal eventId={eventId} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onClose={() => setListsOpen(false)} onChanged={async () => { await load(); notifyDbUpdate(); }} />
+      )}
       {importChoice && (
         <ImportModeDialog
           fileName={importChoice.fileName}
@@ -1080,9 +1092,6 @@ export default function InviteesManagementPage() {
           onSave={handleImport}
         />
       )}
-      {showListPreview && (
-        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
-      )}
       {sentPopup && <SendSuccessModal title={sentPopup.title} message={sentPopup.message} details={sentPopup.details} onClose={() => setSentPopup(null)} />}
       {actionPopup && (
         <SendWarningModal
@@ -1096,6 +1105,19 @@ export default function InviteesManagementPage() {
           onChannelChange={setChannel}
           onCancel={() => setActionPopup(null)}
           onConfirm={() => void confirmAction()}
+        />
+      )}
+      {resendAsk && (
+        <SendWarningModal
+          eventId={eventId}
+          eventTitle={event?.title || "this event"}
+          mode="resend"
+          firstTime={false}
+          count={resendAsk.length}
+          channel={channel}
+          onChannelChange={setChannel}
+          onCancel={() => setResendAsk(null)}
+          onConfirm={() => { const targets = resendAsk; setResendAsk(null); void handleResend(targets); }}
         />
       )}
       {needSendFirst > 0 && (
@@ -1126,8 +1148,9 @@ export default function InviteesManagementPage() {
         value={filtersInForce}
         showInvitation={digitalInvites}
         showCards={printableCards}
-        // offered whenever the event asks about food; guests answer on their digital invitation, so print-only events have no answers
-        food={digitalInvites ? foodQuestions : []}
+        // guests answer on their digital invitation, so print-only events have no answers
+        showFood={digitalInvites}
+        food={foodQuestions}
         showRsvp={rsvpEnabled && digitalInvites}
         onApply={(f) => { setSessionFilter(f.session); setInvitationFilter(f.invitation); setPanelFilters({ cards: f.cards, food: f.food, rsvp: f.rsvp, sort: f.sort }); setSelectedIds([]); }}
       />
@@ -1183,9 +1206,6 @@ export default function InviteesManagementPage() {
         onSaved={async () => { await load(); notifyDbUpdate(); setListsReload((n) => n + 1); }}
       />
 
-      {listsTab && (
-        <InviteeListsModal eventId={eventId} initialTab={listsTab} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onClose={() => setListsTab(null)} onRestored={async () => { await load(); notifyDbUpdate(); }} />
-      )}
       {showHistory && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="history-title">
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">

@@ -57,7 +57,6 @@ export interface RemovedInviteeList {
   removedAt: string;
   uploadedBy?: { name: string } | null;
   removedBy?: { name: string } | null;
-  setAside: number;
 }
 
 export interface InviteeSetInfo {
@@ -86,7 +85,6 @@ export interface InviteeSetInfo {
   unknown: number;
   rsvp: number;
   checkedIn: number;
-  setAside: number;
   /** Decided by the server */
   locked: boolean;
   lockReasons: { sentGuests: number; answeredRsvp: number; checkedIn: number } | null;
@@ -110,33 +108,6 @@ export interface InviteeSetMember {
   /** the sessions the guest can enter, and how many sessions the event has */
   sessions?: string[];
   sessionCount?: number;
-}
-
-export interface SetAsideGuest {
-  id: string;
-  name: string;
-  email: string | null;
-  mobile: string | null;
-  fromSet: { id: string; name: string };
-  setAsideAt: string;
-  reason: string | null;
-  reasonText: string | null;
-  replacedBy: { id: string; name: string } | null;
-  setAsideBy: { id: string; name: string; role: string } | null;
-}
-
-export interface RestoreGuestResult {
-  id: string;
-  status: "RESTORED" | "ALREADY_ACTIVE" | "DUPLICATE_ACTIVE" | "NOT_FOUND";
-  conflictsWith?: { id: string; name: string; matchedOn: "email" | "mobile" };
-}
-
-export interface RestoreResult {
-  restored: number;
-  alreadyActive: number;
-  refused: number;
-  notFound: number;
-  results: RestoreGuestResult[];
 }
 
 /** What an import would do, worked out by the server from the same checks as the real import; nothing is written */
@@ -168,7 +139,7 @@ export interface ImportExcelResult {
   updated?: number;
   // Not-yet-invited invitees of an earlier list that this upload replaced (archived, never deleted)
   removed?: number;
-  /** Guests whose delivery failed or never settled: kept, never set aside */
+  /** Guests whose delivery failed or never settled: always kept */
   failedKept?: number;
   unknownKept?: number;
   archived?: number;
@@ -272,16 +243,6 @@ export const inviteeService = {
   /** One page (50) of the guests in a list; setId "all" covers every list. `q` searches name, email, mobile and company on the server. */
   async getSetMembers(eventId: string, setId: string, page = 1, q = "", limit?: number): Promise<ApiResponse<{ members: InviteeSetMember[]; total: number; page: number; limit: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}/members?page=${page}${limit ? `&limit=${limit}` : ""}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`, { method: "GET" }, true);
-  },
-
-  async getSetAside(eventId: string, opts: { q?: string; page?: number } = {}): Promise<ApiResponse<{ guests: SetAsideGuest[]; total: number; page: number; limit: number; restorable: boolean; notRestorableReason: string | null }>> {
-    const params = new URLSearchParams({ page: String(opts.page ?? 1) });
-    if (opts.q?.trim()) params.set("q", opts.q.trim());
-    return apiClient(`/api/v1/events/${eventId}/invitees/set-aside?${params}`, { method: "GET" }, true);
-  },
-
-  async restoreSetAside(eventId: string, inviteeIds: string[]): Promise<ApiResponse<RestoreResult>> {
-    return apiClient(`/api/v1/events/${eventId}/invitees/set-aside/restore`, { method: "POST", body: JSON.stringify({ inviteeIds }) }, true);
   },
 
   async importExcel(eventId: string, file: File, sessionId?: string, mode: ImportMode = "REPLACE", options: { dryRun?: boolean } = {}): Promise<ApiResponse<ImportExcelResult>> {

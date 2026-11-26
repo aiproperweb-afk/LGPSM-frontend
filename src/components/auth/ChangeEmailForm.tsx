@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { authService } from "@/services/authService";
 import { useAlert } from "@/context/AlertContext";
-import { AuthAlert, PasswordInput, Spinner, authInputClass, authLabelClass } from "@/components/auth/AuthLayouts";
+import { AuthAlert, PasswordInput, Spinner, authInputClass, authLabelClass, authLinkClass, authPrimaryButtonClass } from "@/components/auth/AuthLayouts";
 
 /**
  * "Change email address" on the 6-digit code page: the person typed their address wrongly, so the code never arrived.
@@ -43,8 +43,8 @@ export default function ChangeEmailForm({ currentEmail, knownPassword, onChanged
   };
 
   return (
-    <form onSubmit={submit} className="mt-4 space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-left">
-      <p className="text-sm font-medium text-[#2D3748]">Where should we send the code?</p>
+    <form onSubmit={submit} className="flex flex-col gap-4 rounded-lg border border-[#E0E0E0] bg-[#F7F9FF] p-4 text-left">
+      <p className="text-sm font-semibold">Where should we send the code?</p>
       {error && <AuthAlert tone="error">{error}</AuthAlert>}
       <div>
         <label htmlFor="change-email-new" className={authLabelClass}>Correct email address</label>
@@ -56,12 +56,10 @@ export default function ChangeEmailForm({ currentEmail, knownPassword, onChanged
           <PasswordInput id="change-email-password" value={password} onChange={setPassword} placeholder="The password you chose when signing up" autoComplete="current-password" disabled={busy} />
         </div>
       )}
-      <div className="flex items-center gap-3 pt-1">
-        <button type="submit" disabled={busy || !newEmail.trim() || (!knownPassword && !password)} className="inline-flex items-center gap-2 rounded-full bg-[#1F65FF] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#1F65FF] disabled:cursor-not-allowed disabled:opacity-50">
-          {busy ? <><Spinner /> Sending...</> : "Send code to this address"}
-        </button>
-        <button type="button" onClick={onCancel} disabled={busy} className="text-sm font-medium text-gray-600 underline hover:text-gray-900">Cancel</button>
-      </div>
+      <button type="submit" disabled={busy || !newEmail.trim() || (!knownPassword && !password)} className={authPrimaryButtonClass}>
+        {busy ? <><Spinner /> Sending…</> : "Send code to this address"}
+      </button>
+      <button type="button" onClick={onCancel} disabled={busy} className={`self-center text-sm ${authLinkClass}`}>Cancel</button>
     </form>
   );
 }

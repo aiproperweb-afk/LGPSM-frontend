@@ -8,6 +8,10 @@ export interface UserData {
   authProvider?: string;
   isActive?: boolean;
   phone?: string;
+  /** the mobile number was proved with a text-message code */
+  isPhoneVerified?: boolean;
+  /** the server can send those codes (given with the profile) */
+  phoneVerificationAvailable?: boolean;
   avatarUrl?: string | null;
   profile?: { organizationName?: string; avatarKey?: string; avatarUrl?: string | null; [key: string]: unknown };
 }

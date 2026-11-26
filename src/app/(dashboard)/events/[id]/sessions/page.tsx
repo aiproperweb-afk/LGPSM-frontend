@@ -16,6 +16,7 @@ import { sessionService } from "@/services/sessionService";
 import { createSingleFlight } from "@/utils/singleFlight";
 import { eventService } from "@/services/eventService";
 import { assignmentService } from "@/services/assignmentService";
+import { countSessionStaff } from "@/utils/sessionStaff";
 import PageHeader from "@/components/common/PageHeader";
 import { addHours, formatCompactDateTime, formatDateTime, formatTime, isAfter, nextWholeHourIso } from "@/utils/dateTime";
 
@@ -96,11 +97,7 @@ export default function EventSessionsPage() {
       // "System Users" column (Figma 217:22014): staff assigned to each session
       const assignments = assignRes.success && Array.isArray(assignRes.data) ? assignRes.data : [];
       setAssignedUsers(assignments.length);
-      const staffBySession = new Map<string, number>();
-      assignments.forEach((a) => a.sessionIds.forEach((sid) => {
-        const key = String(typeof sid === "object" ? sid._id : sid);
-        staffBySession.set(key, (staffBySession.get(key) ?? 0) + 1);
-      }));
+      const { everySession, bySession: staffBySession } = countSessionStaff(assignments);
       // Invited counts per session come from the event report (sessionAccess-aware). That report is the slowest call here, so the
       // table shows at once with a placeholder in that column and the counts fill in when the report arrives.
       void reportService.getEventReport(eventId).then((reportRes) => {
@@ -129,7 +126,7 @@ export default function EventSessionsPage() {
             rawAccess: (s.accessControl === "ONLY_ONCE" ? "ONLY_ONCE" : "NO_RESTRICTION") as "NO_RESTRICTION" | "ONLY_ONCE",
             inviteeSource: s.inviteeSource as string | undefined,
             sourceSessionId: (typeof s.sourceSessionId === "object" && s.sourceSessionId ? s.sourceSessionId._id : s.sourceSessionId) as string | null | undefined,
-            systemUsers: assignRes.success ? staffBySession.get(String(id)) ?? 0 : null,
+            systemUsers: assignRes.success ? everySession + (staffBySession.get(String(id)) ?? 0) : null,
             invitesCount: null as number | null,
             validateAgainstOtherSessions: s.validateAgainstOtherSessions || false,
           };

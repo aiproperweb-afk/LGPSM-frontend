@@ -11,12 +11,8 @@ export interface ActionItem {
   title?: string;
   /** the item is not offered at all (for example Resend on an event that is not sent digitally) */
   hidden?: boolean;
-  /** a heading line above this item */
-  heading?: string;
   /** a small icon in front of the label */
   icon?: React.ReactNode;
-  /** a choice that is currently selected (shown with a tick), used for the delivery channel */
-  selected?: boolean;
 }
 
 /** The "Action" dropdown of the invitee list (Figma 195:1145): the working tools that sit beside the main button, only the ones that apply */
@@ -41,9 +37,8 @@ export default function InviteeActionMenu({ items, disabled }: { items: ActionIt
       {open && (
         <div role="menu" className="absolute right-0 top-[calc(100%+6px)] z-30 min-w-[240px] bg-white border border-[#E0E0E0] rounded-lg shadow-lg py-1.5">
           {shown.map((i) => (
-            <React.Fragment key={i.key}>
-              {i.heading && <p className="px-4 pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[#6B6B6B]">{i.heading}</p>}
               <button
+                key={i.key}
                 type="button"
                 role="menuitem"
                 disabled={i.disabled}
@@ -55,9 +50,7 @@ export default function InviteeActionMenu({ items, disabled }: { items: ActionIt
                   {i.icon && <span className="shrink-0 w-4 h-4 flex items-center justify-center text-[#4B4F52]">{i.icon}</span>}
                   <span className="truncate">{i.label}</span>
                 </span>
-                {i.selected && <Icon name="events/inv-panel-check" width={11} height={8} />}
               </button>
-            </React.Fragment>
           ))}
         </div>
       )}

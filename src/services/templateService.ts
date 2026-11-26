@@ -76,7 +76,7 @@ export interface TemplatePreviewPayload {
   cardInfo?: { primary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; secondary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null; showIdentityLabel?: boolean; showSecondaryIdentityLabel?: boolean };
 }
 
-export type TextZoneRole = "title" | "dateTime" | "venue" | "inviteeName" | "inviteeMeta" | "qr";
+export type TextZoneRole = "title" | "dateTime" | "venue" | "inviteeName" | "inviteeMeta" | "qr" | "logo";
 export interface TextZone {
   role: TextZoneRole;
   x: number; y: number; w: number; h: number;

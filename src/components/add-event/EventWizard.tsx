@@ -264,7 +264,10 @@ export default function EventWizard({
   // Invitee files cannot be kept in a saved draft: after a restore, name the ones that have to be attached again (none, no mention)
   const missingFiles = Object.entries(draft.inviteeFileNames || {}).filter(([key, name]) => !!name && !sessionFiles[key]).map(([, name]) => name);
 
-  const handleStepChange = (targetStep: number) => {
+  // asked once: someone who chose to go on without a logo is not asked again on this form
+  const logoSkipAccepted = useRef(false);
+
+  const handleStepChange = async (targetStep: number) => {
     if (targetStep === currentStep) return;
     // nothing is being entered, so there is nothing to check: the steps are simply walked through
     if (readOnly) { setCurrentStep(targetStep); return; }
@@ -284,6 +287,25 @@ export default function EventWizard({
       const earliestStepWithErrors = Math.min(...blockingKeys.map(stepOfError));
       setCurrentStep(earliestStepWithErrors);
       return;
+    }
+
+    // a new event leaving the details without a logo is warned: the card will be made without one (an uploaded card takes no logo)
+    const noLogo = !eventId && currentStep === 1 && !draft.logoKey && !!draft.template && !draft.template.staticCard && cardDisplayOfDraft(draft).logo !== false;
+    if (noLogo && !logoSkipAccepted.current) {
+      const goOn = await confirm({
+        title: "No event logo added",
+        message: "Your invitation card will be made without a logo. Add one now, or continue without it?",
+        confirmText: "Continue without logo",
+        cancelText: "Add a logo",
+        cancelButton: true,
+      });
+      if (!goOn) {
+        const field = stepContentRef.current?.querySelector<HTMLElement>("[data-event-logo]");
+        field?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+        field?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+        return;
+      }
+      logoSkipAccepted.current = true;
     }
 
     setCurrentStep(targetStep);
@@ -567,7 +589,7 @@ export default function EventWizard({
           {/* The column runs the full height of the form; only its contents stick, 16px below the 68px sticky page
               header, so the preview stays in view however long the current step is (admin feedback: sticky preview). It never scrolls itself:
               the card is sized to fit the space below the header, so the form is the only thing that scrolls. */}
-          <div className="w-full xl:w-[38%] shrink-0 border-t xl:border-t-0 xl:border-l border-[#E0E0E0] bg-[#F7F3F0]">
+          <div className="w-full xl:w-[38%] shrink-0 border-t xl:border-t-0 xl:border-l border-[#E0E0E0] bg-[#EEF4FF]">
             <div className="xl:sticky xl:top-[84px]">
             <MobileCardPreview
               template={draft.template}

@@ -25,8 +25,8 @@ interface ImageUploadFieldProps {
   disabledMessage?: string;
   optional?: boolean;
   onUploadingChange?: (uploading: boolean) => void;
-  /** Offer a 1:1 crop before the picture is uploaded */
-  squareCrop?: boolean;
+  /** Offer a crop before the picture is uploaded, keeping its own shape (the whole picture by default) or square: for logos */
+  freeShapeCrop?: boolean;
   /** Offer a crop to a fixed shape (width ÷ height, e.g. 9 / 16) before the picture is uploaded; the shape cannot be changed in the crop window */
   cropAspect?: { ratio: number; label: string };
 }
@@ -46,7 +46,7 @@ export default function ImageUploadField({
   disabledMessage,
   optional = false,
   onUploadingChange,
-  squareCrop = false,
+  freeShapeCrop = false,
   cropAspect,
 }: ImageUploadFieldProps) {
   const [cropping, setCropping] = useState<File | null>(null);
@@ -60,7 +60,7 @@ export default function ImageUploadField({
   // a picked picture goes to the crop window first when this field crops; an animated or vector picture is uploaded as it is
   const pick = (file: File | undefined) => {
     if (!file || disabled) return;
-    if ((squareCrop || cropAspect) && /^image\/(jpeg|png|webp)$/.test(file.type)) { setCropping(file); if (inputRef.current) inputRef.current.value = ""; return; }
+    if ((freeShapeCrop || cropAspect) && /^image\/(jpeg|png|webp)$/.test(file.type)) { setCropping(file); if (inputRef.current) inputRef.current.value = ""; return; }
     void upload(file);
   };
 
@@ -92,9 +92,11 @@ export default function ImageUploadField({
         onChange={(e) => pick(e.target.files?.[0])}
       />
       {preview ? (
-        <div className={`relative w-full ${fill ? "flex-1 min-h-[140px]" : aspectClassName} rounded-md overflow-hidden border border-[#E0E0E0] bg-[#F4F5F8]`}>
-          <Image src={preview} alt="Uploaded image preview" fill unoptimized sizes="400px" className="object-contain" />
-          <div className="absolute bottom-2 left-2 right-2 flex gap-2 justify-center">
+        <div className={`flex w-full flex-col rounded-md overflow-hidden border border-[#E0E0E0] bg-[#F4F5F8] ${fill ? "flex-1 min-h-[140px]" : ""}`}>
+          <div className={`relative w-full ${fill ? "flex-1 min-h-[96px]" : aspectClassName}`}>
+            <Image src={preview} alt="Uploaded image preview" fill unoptimized sizes="400px" className="object-contain" />
+          </div>
+          <div className="flex gap-2 justify-center border-t border-[#E0E0E0] bg-white px-2 py-2">
             <button
               type="button"
               disabled={disabled || uploading}
@@ -151,7 +153,7 @@ export default function ImageUploadField({
           )}
         </button>
       )}
-      {cropping && <ImageCropModal file={cropping} onCancel={() => setCropping(null)} aspect={cropAspect?.ratio} aspectLabel={cropAspect?.label} onConfirm={(cropped) => { setCropping(null); void upload(cropped); }} />}
+      {cropping && <ImageCropModal file={cropping} onCancel={() => setCropping(null)} aspect={cropAspect?.ratio} aspectLabel={cropAspect?.label} shapeChoice={freeShapeCrop} onConfirm={(cropped) => { setCropping(null); void upload(cropped); }} />}
       <PopupMessage message={error} />
     </div>
   );

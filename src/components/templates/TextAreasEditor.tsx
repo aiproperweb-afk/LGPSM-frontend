@@ -12,8 +12,10 @@ const ROLES: { value: TextZoneRole; label: string; wording: boolean }[] = [
   { value: "dateTime", label: "Date and time", wording: true },
   { value: "venue", label: "Venue", wording: true },
   { value: "qr", label: "QR code", wording: false },
-  { value: "inviteeName", label: "Guest name", wording: false },
-  { value: "inviteeMeta", label: "Guest details", wording: false },
+  { value: "inviteeName", label: "Primary additional information", wording: false },
+  { value: "inviteeMeta", label: "Secondary additional information", wording: false },
+  // like the wording, the logo changes from event to event, so it is offered for shared designs only
+  { value: "logo", label: "Logo", wording: true },
 ];
 const FONTS = ["Inter", "Manrope", "Playfair Display", "Ancizar Serif", "Alexandria", "Alkatra", "Alex Brush", "Birthstone"];
 const labelOf = (r: TextZoneRole) => ROLES.find((x) => x.value === r)!.label;
@@ -77,10 +79,13 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
   const add = (role: TextZoneRole) => {
     if (!canvas || zones.some((z) => z.role === role)) return;
     const h = role === "title" ? 0.08 : 0.04;
+    const logo = { x: Math.round(canvas.width * 0.3), y: Math.round(canvas.height * 0.05), w: Math.round(canvas.width * 0.4), h: Math.round(canvas.height * 0.1) };
     const y = role === "title" ? 0.42 : role === "dateTime" ? 0.62 : role === "venue" ? 0.72 : role === "inviteeName" ? 0.82 : 0.87;
     const side = Math.round(canvas.width * 0.27);
     setZones((zs) => [...zs, role === "qr"
       ? { role, x: Math.round((canvas.width - side) / 2), y: Math.round(canvas.height * 0.6), w: side, h: side, lines: 1, color: "#000000", fontFamily: "Inter", fontWeight: 400, align: "center" }
+      : role === "logo"
+      ? { role, ...logo, lines: 1, color: "#000000", fontFamily: "Inter", fontWeight: 400, align: "center" }
       : { role, x: Math.round(canvas.width * 0.1), y: Math.round(canvas.height * y), w: Math.round(canvas.width * 0.8), h: Math.round(canvas.height * h), lines: 1, color: "#222222", fontFamily: role === "title" ? "Playfair Display" : "Inter", fontWeight: role === "title" ? 700 : 500, align: "center" }]);
     setSelected(zones.length);
     setChanged(true);
@@ -114,7 +119,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
         <ModalClose onClick={() => onClose(changed)} />
         <div className="px-6 pt-5 pb-3 pr-14">
           <h2 id="areas-title" className="text-base font-medium text-gray-900">Where the event&apos;s details go on your design</h2>
-          <p className="mt-1 text-sm text-[#4B4F52]">Drag a box over the event name, the date and time, and the venue written in your picture. Each event&apos;s own details are written there in the same place, and the picture around them stays as it is.</p>
+          <p className="mt-1 text-sm text-[#4B4F52]">Drag a box over the event name, the date and time, the venue and the logo in your picture. Each event&apos;s own details and logo appear there in the same place, and the picture around them stays as it is.</p>
         </div>
         {notice && <p role="status" className="mx-6 mb-2 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] px-3 py-2 text-sm text-[#0F3A99]">{notice}</p>}
         <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-[minmax(0,320px)_1fr] gap-6 items-start">
@@ -147,7 +152,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
             </div>
 
             {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. {dynamic ? "Add the event name, the date and time and the venue, then drag each box over the wording in your picture." : "Add the QR code, then drag it to the place your design has for it."}</p>}
-            <p className="text-xs text-[#6B6B6B]">{dynamic ? "The guest's name and details are only added if you mark a place for them: nothing is put on top of your artwork." : "Nothing is put on top of your artwork except the QR code (and the guest's name only where you mark a place for it)."}</p>
+            <p className="text-xs text-[#6B6B6B]">{dynamic ? "Each guest's additional information is only added if you mark a place for it: nothing else is put on top of your artwork." : "Nothing is put on top of your artwork except the QR code (and each guest's additional information only where you mark a place for it)."}</p>
 
             {sel && selected !== null && (
               <div className="rounded-md border border-[#E0E0E0] p-4 space-y-3">
@@ -155,7 +160,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
                   <h3 className="text-sm font-semibold text-[#15191C]">{labelOf(sel.role)}</h3>
                   <button type="button" onClick={() => remove(selected)} className="text-xs font-semibold text-[#D92D20] hover:underline cursor-pointer">Remove this area</button>
                 </div>
-                {sel.role === "qr" ? <p className="text-xs text-[#6B6B6B]">{sel.frame ? "The code sits in your design's own QR box." : "The code is printed straight on the picture at this spot."} Drag it to move it; drag the corner to resize it (it stays square).</p> : (
+                {sel.role === "logo" ? <p className="text-xs text-[#6B6B6B]">The event&apos;s logo is shown whole inside this box, in place of what the picture has there. An event with no logo keeps your picture as it is.</p> : sel.role === "qr" ? <p className="text-xs text-[#6B6B6B]">{sel.frame ? "The code sits in your design's own QR box." : "The code is printed straight on the picture at this spot."} Drag it to move it; drag the corner to resize it (it stays square).</p> : (
                 <div className="grid grid-cols-2 gap-3">
                   <label className="text-xs font-medium text-[#4B4F52]">Font
                     <CustomDropdown value={sel.fontFamily} onChange={(v) => update(selected, { fontFamily: v })} options={FONTS.map((f) => ({ value: f, label: f }))} ariaLabel="Font" compact />

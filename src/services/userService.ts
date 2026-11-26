@@ -68,6 +68,13 @@ export const userService = {
     return response;
   },
 
+  /** A code to the profile's mobile number, and typing it in */
+  sendPhoneCode: () => apiClient<{ sent: boolean }>("/api/users/me/phone/send", { method: "POST", body: "{}" }, true),
+  verifyPhone: (code: string) => apiClient<{ verified: boolean }>("/api/users/me/phone/verify", { method: "POST", body: JSON.stringify({ code }) }, true),
+  /** Changing the sign-in email: the password and the new address, then the code sent there */
+  requestEmailChange: (newEmail: string, password: string) => apiClient<{ sentTo: string }>("/api/users/me/email", { method: "POST", body: JSON.stringify({ newEmail, password }) }, true),
+  confirmEmailChange: (code: string) => apiClient<{ email: string }>("/api/users/me/email/confirm", { method: "POST", body: JSON.stringify({ code }) }, true),
+
   /**
    * Change own password (verifies the current password)
    * PATCH /api/users/me/password

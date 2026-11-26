@@ -31,21 +31,12 @@ function loadGoogleScript(): Promise<void> {
   return scriptPromise;
 }
 
-export const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z" />
-    <path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z" />
-    <path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.5-5.8c-2.1 1.4-4.8 2.3-8.1 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
-  </svg>
-);
-
 /**
- * "Continue with Google" for organizers (sign-in and sign-up). Google draws its own button; `onCredential` receives the signed ID token,
- * which the server verifies. Until a client id is configured (NEXT_PUBLIC_GOOGLE_CLIENT_ID) the button is drawn the same way and says
- * that Google sign-in is not set up yet when it is pressed.
+ * "Sign in with Google" for organizers (sign-in and sign-up), one half of the row above the form. Google draws its own button (its rules
+ * require that); `onCredential` receives the signed ID token, which the server verifies. Until a client id is configured
+ * (NEXT_PUBLIC_GOOGLE_CLIENT_ID) a button of the same size says that Google sign-in is not set up yet when it is pressed.
  */
-export default function GoogleAuthButton({ mode, onCredential, disabled = false, orBelow = false, tight = false }: { mode: "signin" | "signup"; onCredential: (credential: string) => void | Promise<void>; disabled?: boolean; /** the "or" line goes under the button instead of above it (the button sits above a form) */ orBelow?: boolean; /** less space around it, for a page that has to fit one screen */ tight?: boolean }) {
+export default function GoogleAuthButton({ mode, onCredential, disabled = false }: { mode: "signin" | "signup"; onCredential: (credential: string) => void | Promise<void>; disabled?: boolean }) {
   const slot = useRef<HTMLDivElement>(null);
   const latest = useRef(onCredential);
   useEffect(() => { latest.current = onCredential; });
@@ -70,9 +61,10 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
           theme: "outline",
           size: "large",
           shape: "rectangular",
-          text: "continue_with",
-          logo_alignment: "left",
-          width: Math.min(400, Math.max(200, slot.current.parentElement?.clientWidth || 320)),
+          text: mode === "signup" ? "signup_with" : "signin_with",
+          logo_alignment: "center",
+          // as wide as its half of the row (Google accepts 200 to 400px, and shrinks the label to fit a narrower box)
+          width: Math.min(400, slot.current.parentElement?.clientWidth || 182),
         });
         setReady(true);
       })
@@ -80,33 +72,25 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
     return () => { cancelled = true; };
   }, [mode]);
 
-  const or = (
-    <div className="flex items-center gap-3 text-xs text-[#6B6B6B]" aria-hidden>
-      <span className="h-px flex-1 bg-[#E0E0E0]" />or<span className="h-px flex-1 bg-[#E0E0E0]" />
-    </div>
-  );
   return (
-    <div className={orBelow ? (tight ? "mb-4" : "mb-6") : "my-5"}>
-      {!orBelow && or}
-      <div className={`${orBelow ? (tight ? "mb-3" : "mb-4") : "mt-4"} flex justify-center ${disabled ? "pointer-events-none opacity-60" : ""}`}>
-        {CLIENT_ID ? (
-          <div className="min-h-[44px] flex flex-col items-center justify-center">
-            {/* Google's script owns everything inside this empty div: React never renders children into it, so the two cannot fight over its nodes */}
-            <div ref={slot} aria-label="Continue with Google" />
-            {!ready && !problem && <span className="text-xs text-[#6B6B6B]">Loading Google…</span>}
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setProblem("Google sign-in is not set up yet. Please use your email and password for now.")}
-            className="w-full max-w-[400px] h-[44px] inline-flex items-center justify-center gap-3 border border-[#DADCE0] rounded-md bg-white text-sm font-medium text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer"
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
-        )}
-      </div>
-      {orBelow && or}
+    <div className={`min-w-0 ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      {CLIENT_ID ? (
+        <div className="flex h-11 w-full flex-col items-center justify-center overflow-hidden">
+          {/* Google's script owns everything inside this div: React never renders children into it, so the two cannot fight over its nodes */}
+          <div ref={slot} aria-label="Continue with Google" className="flex w-full justify-center" />
+          {!ready && !problem && <span className="text-xs text-[#6B6B6B]">Loading Google…</span>}
+        </div>
+      ) : (
+        <button
+          type="button"
+          aria-label={mode === "signup" ? "Sign up with Google" : "Sign in with Google"}
+          onClick={() => setProblem("Google sign-in is not set up yet. Please use your email and password for now.")}
+          className="flex h-11 w-full items-center justify-center rounded-lg border border-[#E0E0E0] bg-white hover:bg-[#F8F9FA] cursor-pointer"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- static icon */}
+          <img src="/images/auth/signin/google.svg" alt="" width={20} height={20} />
+        </button>
+      )}
       <PopupMessage message={problem} title="Google sign-in" />
     </div>
   );

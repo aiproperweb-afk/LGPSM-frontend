@@ -81,11 +81,17 @@ export default function EventAssignUsersPage() {
       if (loadedFor.current !== eventId) setIsLoading(true);
       if (!quiet) setErrorFeedback(null);
 
-      // These resources are independent; load them together instead of serializing four network round trips.
+      // Loaded together rather than one after another; only the staff list waits, for the event, to know whose staff to ask for
+      const eventRequest = eventService.getEvent(eventId);
       const [sessionsRes, eventRes, usersRes, assignRes] = await Promise.all([
         sessionService.getSessions(eventId),
-        eventService.getEvent(eventId),
-        userService.getUsers("SYSTEM_USER"),
+        eventRequest,
+        // only this event's organizer's staff: an administrator would otherwise be shown every organizer's system users
+        eventRequest.then((res) => {
+          const owner = (res.data as { organizerId?: string | { _id?: string } } | undefined)?.organizerId;
+          const ownerId = typeof owner === "string" ? owner : owner?._id;
+          return res.success && ownerId ? userService.getUsers("SYSTEM_USER", ownerId) : { success: false as const, message: res.message || "The event could not be loaded.", data: undefined };
+        }),
         assignmentService.getAssignmentsByEvent(eventId),
       ]);
       // The overlap warnings are advisory and need several lookups on the server: they appear when ready, the list does not wait for them

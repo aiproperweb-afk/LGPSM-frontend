@@ -16,17 +16,27 @@ import { resolveImageUrl } from "@/utils/mediaUrl";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { useRouter } from "next/navigation";
 import { isOrganizationAccount } from "@/utils/accountType";
+import PhoneInput from "@/components/common/PhoneInput";
+import ChangeEmailModal from "@/components/settings/modals/ChangeEmailModal";
+import VerifyPhoneModal from "@/components/settings/modals/VerifyPhoneModal";
 
 
 export default function AccountSettingsPage() {
-  const { user, updateProfile, updateProfilePhoto } = useAuth();
+  const { user, updateProfile, updateProfilePhoto, refreshUser } = useAuth();
   const { showAlert, confirm } = useAlert();
   const router = useRouter();
   // the type chosen in Edit Profile; "" = as saved
   const [chosenType, setChosenType] = useState<"" | "INDIVIDUAL" | "ORGANIZATION">("");
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
-  // (email is displayed read-only; the profile API does not change it)
+  // the ten digits being typed in Edit Profile; null = as saved
+  const [typedPhone, setTypedPhone] = useState<string | null>(null);
+  const savedPhone = (user?.phone || "").replace(/\D/g, "").slice(-10);
+  const phone = typedPhone ?? savedPhone;
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  // an account that signs in with Google keeps Google's address
+  const googleAccount = user?.authProvider === "GOOGLE";
   const [password, setPassword] = useState("••••••••••••••••");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
@@ -38,6 +48,10 @@ export default function AccountSettingsPage() {
   const profileType = user?.profile as { organizationType?: string; organizationName?: string } | undefined;
   const accountType = profileType?.organizationType === "ORGANIZATION" ? "Organization" : profileType?.organizationType === "INDIVIDUAL" ? "Individual" : profileType?.organizationName ? "Organization" : "Not set";
   const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-[13px] text-[#15191C] focus:outline-none focus:border-black";
+
+  // the saved profile says whether the number is verified and whether it can be
+  const refresh = React.useRef(refreshUser);
+  useEffect(() => { void refresh.current(); }, []);
 
   useEffect(() => {
     if (user?.fullName) setFullName(user.fullName);
@@ -58,11 +72,13 @@ export default function AccountSettingsPage() {
     const nextType = isOrganizer && chosenType && chosenType !== savedType ? chosenType : null;
     if (nextType === "INDIVIDUAL" && !(await confirm({ title: "Change to an individual account", message: "Your organisation name and logo will no longer appear on invitations and emails, and the organisation settings are hidden.", confirmText: "Change" }))) return;
     if (nextType === "ORGANIZATION" && !(await confirm({ title: "Change to an organisation account", message: "Your organisation name and logo will appear on invitations and emails once you add them. You will be taken to Logo Settings to add your logo and organisation details.", confirmText: "Change" }))) return;
-    // Only the name and the account type are editable here; email changes are not supported by the profile API
+    // The name, mobile number and account type are saved here; the email address has its own window (it needs a code)
+    if (isOrganizer && phone.length !== 10) return setErrorMessage("Enter your 10-digit mobile number.");
     const profile: Record<string, unknown> = { ...(user?.profile || {}), organizationType: nextType };
     if (nextType === "INDIVIDUAL") delete profile.organizationName;
     const res = await updateProfile({
       fullName: fullName.trim(),
+      ...(phone && phone !== savedPhone ? { phone } : {}),
       ...(nextType ? { profile } : {}),
     });
     if (!res.success) {
@@ -70,6 +86,7 @@ export default function AccountSettingsPage() {
       return;
     }
     setChosenType("");
+    setTypedPhone(null);
     // a new organisation adds its logo and details next
     if (nextType === "ORGANIZATION") {
       showAlert("Your account is now an organisation account. Add your logo and organisation details.", "success");
@@ -138,6 +155,9 @@ export default function AccountSettingsPage() {
   };
 
   const displayName = fullName || user?.fullName || user?.email || "Account Name";
+  const phoneBadge = user?.isPhoneVerified
+    ? <span className="inline-flex rounded-full bg-[#C0FFD5] px-2.5 py-0.5 text-xs font-medium text-[#0F7A33]">Verified</span>
+    : <span className="inline-flex rounded-full bg-[#FFF3C4] px-2.5 py-0.5 text-xs font-medium text-[#8A6A00]">Unverified</span>;
 
   return (
     <div className="w-full min-h-full bg-white font-sans text-gray-900 select-none">
@@ -173,6 +193,15 @@ export default function AccountSettingsPage() {
             <div className="min-w-0 space-y-1.5">
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
               <p className="text-xl text-black break-all">{email}</p>
+              {isOrganizer && (
+                <p className="flex flex-wrap items-center gap-2 text-base text-[#4B4F52]">
+                  Mobile: <span className="font-medium text-black">{savedPhone ? `+91 ${savedPhone}` : "Not added"}</span>
+                  {savedPhone && phoneBadge}
+                  {savedPhone && !user?.isPhoneVerified && user?.phoneVerificationAvailable && (
+                    <button type="button" onClick={() => setPhoneOpen(true)} className="text-sm font-semibold text-[#1F65FF] hover:underline cursor-pointer">Verify</button>
+                  )}
+                </p>
+              )}
               {isOrganizer && <p className="text-base text-[#4B4F52]">Account type: <span className="font-medium text-black">{accountType}</span></p>}
               {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
               <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">
@@ -216,9 +245,24 @@ export default function AccountSettingsPage() {
                     />
                   </div>
                 )}
+                {isOrganizer && (
+                  <div>
+                    <label htmlFor="account-phone" className="block text-sm font-medium text-[#15191C] mb-2">Mobile Number<span className="text-[#D92D20]">*</span></label>
+                    <PhoneInput id="account-phone" required value={phone} onValueChange={setTypedPhone} placeholder="10-digit mobile number" className={field} />
+                    {typedPhone !== null && typedPhone !== savedPhone && <p className="mt-1 text-xs text-[#6B6B6B]">A new number is unverified until you verify it.</p>}
+                  </div>
+                )}
                 <div>
                   <label htmlFor="account-email" className="block text-sm font-medium text-[#15191C] mb-2">Email</label>
-                  <input id="account-email" type="email" value={email} readOnly title="Email changes are not supported yet" className={`${field} text-[#6B6B6B] cursor-not-allowed`} />
+                  <div className="relative">
+                    <input id="account-email" type="email" value={email} readOnly title={googleAccount ? "This account signs in with Google, so it keeps its Google address" : undefined} className={`${field} text-[#6B6B6B] ${isOrganizer && !googleAccount ? "pr-28" : "cursor-not-allowed"}`} />
+                    {isOrganizer && !googleAccount && (
+                      <button type="button" onClick={() => setEmailOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">
+                        Change email
+                      </button>
+                    )}
+                  </div>
+                  {isOrganizer && googleAccount && <p className="mt-1 text-xs text-[#6B6B6B]">You sign in with Google, so this is your Google address.</p>}
                 </div>
                 <div>
                   <label htmlFor="account-password" className="block text-sm font-medium text-[#15191C] mb-2">Password</label>
@@ -232,7 +276,7 @@ export default function AccountSettingsPage() {
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="submit" className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Save</button>
-                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); setChosenType(""); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); setChosenType(""); setTypedPhone(null); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
               </div>
             </div>
           </form>
@@ -240,6 +284,30 @@ export default function AccountSettingsPage() {
 
         {isOrganizer && !editing && <OrganisationDetailsForm />}
       </div>
+
+      {emailOpen && (
+        <ChangeEmailModal
+          currentEmail={user?.email || ""}
+          onClose={() => setEmailOpen(false)}
+          onChanged={async (next) => {
+            await refreshUser();
+            setEmail(next);
+            setEmailOpen(false);
+            showAlert(`Your sign-in email is now ${next}.`, "success");
+          }}
+        />
+      )}
+      {phoneOpen && (
+        <VerifyPhoneModal
+          phone={savedPhone}
+          onClose={() => setPhoneOpen(false)}
+          onVerified={async () => {
+            await refreshUser();
+            setPhoneOpen(false);
+            showAlert("Your mobile number is verified.", "success");
+          }}
+        />
+      )}
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}

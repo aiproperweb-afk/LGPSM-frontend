@@ -112,6 +112,7 @@ function resolveRouteTitle(
   if (pathname === "/forgot-password") return "Forgot Password";
   if (pathname === "/verify-email") return "Verify Email";
   if (pathname === "/signup") return "Create Account";
+  if (pathname === "/account-recovery") return "Account recovery";
   if (pathname === "/signin") {
     const mode = searchParams.get("mode");
     if (mode === "admin") return "Admin Sign In";

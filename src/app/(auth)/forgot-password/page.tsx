@@ -7,15 +7,15 @@ import { authService } from "@/services/authService";
 import { useAlert } from "@/context/AlertContext";
 import {
   AuthAlert,
-  AuthHeading,
+  AuthBackLink,
+  AuthHeader,
   AuthLoadingShell,
-  AuthLogo,
-  AuthSplitLayout,
-  BackLink,
+  AuthPage,
   PasswordInput,
   Spinner,
   authInputClass,
   authLabelClass,
+  authLinkClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
 import { parsePortalMode, signinHref } from "@/components/auth/authPortal";
@@ -91,25 +91,16 @@ function ForgotPasswordContent() {
   };
 
   return (
-    <AuthSplitLayout>
-      <div className="mb-8 lg:mb-[45px] h-[34px]">
-        <AuthLogo />
-      </div>
-      {stage !== "done" && (
-        <div className="mb-10 lg:mb-[76px]">
-          <BackLink label="Back" onClick={goBack} />
-        </div>
-      )}
-
+    <AuthPage>
       {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
 
       {stage === "request" && (
         <>
-          <AuthHeading title="Forgot password" subtitle="No worries! Enter email address below, and we'll send you a link to reset your password." />
-          <form onSubmit={handleRequest} className="space-y-5">
+          <AuthHeader title="Forgot password" prompt="No worries! Enter email address below, and we'll send you a link to reset your password." />
+          <form onSubmit={handleRequest} className="flex flex-col gap-6">
             <div>
               <label htmlFor="forgot-email" className={authLabelClass}>
-                Email Address<span className="text-red-500">*</span>
+                Email Address<span className="text-[#D92D20]">*</span>
               </label>
               <input id="forgot-email" type="email" required autoComplete="email" placeholder={INPUT_PLACEHOLDERS.auth.email}
                 value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -123,23 +114,23 @@ function ForgotPasswordContent() {
 
       {stage === "sent" && (
         <>
-          <div className="w-14 h-14 rounded-full bg-[#D6E4FF] flex items-center justify-center mb-5">
+          <div className="flex h-14 w-14 items-center justify-center self-center rounded-full bg-[#D6E4FF]">
             <span className="w-9 h-9 rounded-full bg-[#1F65FF] flex items-center justify-center text-white">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </span>
           </div>
-          <AuthHeading title="Check your email" subtitle={`We sent a password reset link to ${email || "your email"}. Please check your inbox.`} />
-          <a href="https://mail.google.com" target="_blank" rel="noreferrer" className={`${authPrimaryButtonClass} mb-4`}>
+          <AuthHeader title="Check your email" prompt={`We sent a password reset link to ${email || "your email"}. Please check your inbox.`} />
+          <a href="https://mail.google.com" target="_blank" rel="noreferrer" className={authPrimaryButtonClass}>
             Open Gmail
           </a>
-          <button type="button" onClick={() => setStage("reset")} className="w-full text-sm font-medium text-[#2D2D2D] underline underline-offset-2 hover:text-[#1A56DB] cursor-pointer mb-3">
+          <button type="button" onClick={() => setStage("reset")} className={`w-full text-sm ${authLinkClass}`}>
             I have a reset code
           </button>
-          <p className="text-center text-sm text-[#4A5568]">
+          <p className="text-center text-sm font-medium text-[#666D80]">
             Don&apos;t received the email?{" "}
-            <button type="button" onClick={() => setStage("request")} className="text-[#1A56DB] font-semibold underline cursor-pointer">
+            <button type="button" onClick={() => setStage("request")} className={authLinkClass}>
               Resend
             </button>
           </p>
@@ -148,12 +139,12 @@ function ForgotPasswordContent() {
 
       {stage === "reset" && (
         <>
-          <AuthHeading title="Create a new password" subtitle="Enter your new password below to complete the reset process. Ensure it's strong and secure" />
+          <AuthHeader title="Create a new password" prompt="Enter your new password below to complete the reset process. Ensure it's strong and secure" />
           <form onSubmit={handleReset} className="space-y-4">
             {!tokenFromUrl && (
               <div>
                 <label htmlFor="reset-token" className={authLabelClass}>
-                  Reset Code<span className="text-red-500">*</span>
+                  Reset Code<span className="text-[#D92D20]">*</span>
                 </label>
                 <input id="reset-token" type="text" required placeholder={INPUT_PLACEHOLDERS.auth.resetCode}
                   value={resetToken} onChange={(e) => setResetToken(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -161,7 +152,7 @@ function ForgotPasswordContent() {
             )}
             <div>
               <label htmlFor="reset-new" className={authLabelClass}>
-                New Password<span className="text-red-500">*</span>
+                New Password<span className="text-[#D92D20]">*</span>
               </label>
               <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
@@ -169,7 +160,7 @@ function ForgotPasswordContent() {
             </div>
             <div>
               <label htmlFor="reset-repeat" className={authLabelClass}>
-                Repeat New Password<span className="text-red-500">*</span>
+                Repeat New Password<span className="text-[#D92D20]">*</span>
               </label>
               <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
@@ -183,18 +174,19 @@ function ForgotPasswordContent() {
 
       {stage === "done" && (
         <>
-          <div className="w-14 h-14 rounded-full bg-[#C7F5D9] flex items-center justify-center mb-5">
+          <div className="flex h-14 w-14 items-center justify-center self-center rounded-full bg-[#C7F5D9]">
             <svg className="w-7 h-7 text-[#15803D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <AuthHeading title="Your password has been successfully reset!" subtitle="You can now log in with your new password. If you encounter any issues, please contact support" />
+          <AuthHeader title="Your password has been successfully reset!" prompt="You can now log in with your new password. If you encounter any issues, please contact support" />
           <Link href={loginHref} className={authPrimaryButtonClass}>
             Back to login
           </Link>
         </>
       )}
-    </AuthSplitLayout>
+      {stage !== "done" && <AuthBackLink label={stage === "request" ? "Back to log in" : "Back"} onClick={goBack} />}
+    </AuthPage>
   );
 }
 

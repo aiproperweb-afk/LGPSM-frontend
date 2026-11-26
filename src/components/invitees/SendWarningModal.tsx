@@ -8,11 +8,13 @@ import { CHANNEL_OPTIONS, type Channel } from "./channelOptions";
 
 /** What the organiser is about to do: send invitations, print cards, or (Print and Digital both) send them and then make the cards */
 export type ActionMode = "send" | "both" | "download";
+/** the same window also confirms sending a failed invitation again, so its channel can be chosen */
+type WindowMode = ActionMode | "resend";
 
 interface SendWarningModalProps {
   eventId: string;
   eventTitle: string;
-  mode: ActionMode;
+  mode: WindowMode;
   /** nothing has gone out or been printed yet: the event is about to be locked, so the organiser may still edit it */
   firstTime: boolean;
   /** how many guests the action covers */
@@ -27,7 +29,7 @@ interface SendWarningModalProps {
 
 const secondary = "inline-flex items-center justify-center px-6 py-[11px] bg-[#E6EAED] hover:bg-[#DCE1E5] rounded-lg text-base font-semibold text-[#595D60] cursor-pointer";
 
-const CONFIRM_LABEL: Record<ActionMode, string> = { send: "Send Invitation", both: "Send Invitation & Download cards", download: "Download Cards" };
+const CONFIRM_LABEL: Record<WindowMode, string> = { send: "Send Invitation", both: "Send Invitation & Download cards", download: "Download Cards", resend: "Resend Invitation" };
 
 /**
  * The window before an action goes ahead (Figma 198:2162). The first send or card download locks the event, so the organiser gets a last
@@ -43,7 +45,9 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
 
   const sending = mode !== "download";
   const guests = `${count} ${count === 1 ? "guest" : "guests"}`;
-  const text = firstTime
+  const text = mode === "resend"
+    ? `Send the invitation for this event again to ${guests}? They will receive it straight away.`
+    : firstTime
     ? sending
       ? "Once you start sending the invitations, you will not be able to edit this event any further. Do you want to start sending your invitations now?"
       : "Once you download the cards, you will not be able to edit this event any further. Do you want to download the cards now?"
@@ -56,7 +60,7 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
       <div className="w-full max-w-[648px] bg-white border border-[#E5E5E5] rounded-lg overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
           <p className="flex-1 min-w-0 text-base font-medium text-[#15191C] break-words">
-            {sending ? "Send Invitations" : "Download Cards"} for <span className="font-semibold text-[#1F65FF]">{eventTitle}</span>
+            {mode === "resend" ? "Resend Invitations" : sending ? "Send Invitations" : "Download Cards"} for <span className="font-semibold text-[#1F65FF]">{eventTitle}</span>
           </p>
           <button type="button" onClick={onCancel} aria-label="Close" className="shrink-0 cursor-pointer">
             <Icon name="events/inv-panel-close" width={16} height={16} />

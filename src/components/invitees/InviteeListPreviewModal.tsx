@@ -31,8 +31,8 @@ const PAGE_SIZE = 10;
 
 // Who is on the event's list, one dataset (uploaded list) or all of them, fetched one page at a time so an event with thousands of
 // invitees never loads them all at once. Guests can be edited or deleted here. Deleting a guest nothing has happened to erases them;
-// a guest who was already invited, answered or attended is set aside instead (their history is kept, their pass stops working, and
-// they can be restored from Uploaded Lists > Set-aside guests). The confirmation says which of the two will happen.
+// for a guest who was already invited, answered or attended, the history is kept and their pass stops
+// working. The confirmation says which of the two will happen.
 // the sessions a guest can enter: every one of them reads as "All sessions" when the event has several
 const sessionsText = (m: InviteeSetMember) => (!m.sessions || m.sessions.length === 0 ? "—" : (m.sessionCount ?? 0) > 1 && m.sessions.length === m.sessionCount ? "All sessions" : m.sessions.join(", "));
 
@@ -126,7 +126,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.filter((x) => x.source !== "SESSION").reduce((n, x) => n + x.total, 0)})` }] : []),
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
-  // every guest can be edited and deleted (unless the page is read-only); a guest something has happened to is set aside, not erased
+  // every guest can be edited and deleted (unless the page is read-only); the history of a guest something has happened to is kept
   const canDelete = (m: InviteeSetMember) => !readOnly && !!m.id;
   // a guest invitations were already sent to is no longer edited here, only deleted
   const canEdit = (m: InviteeSetMember) => !readOnly && (m.delivery === "NOT_SENT" || m.delivery === "FAILED");
@@ -214,7 +214,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
+                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. A guest who was already invited loses their access pass.</p>
                 <button type="button" onClick={() => setRemoving(members.filter((m) => selected.includes(m.id)).concat(selected.filter((id) => !members.some((m) => m.id === id)).map((id) => ({ id, name: "Invitee" } as InviteeSetMember))))} disabled={!selected.length || busy} className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                   {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}

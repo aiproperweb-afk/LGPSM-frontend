@@ -71,7 +71,7 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
           <p className="text-sm text-[#4B4F52]">
             {!shared
               ? `Upload your finished invitation design. It is the card, sent exactly as it is: nothing is written or added on it, and it works with Digital only. Only you can use it${categories.isOrganizer ? "." : "; to share it with all organizers, publish it from the Templates page."}`
-              : "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and the guest's name and QR code are added at the bottom. After saving you check where that wording is. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
+              : "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and each guest's QR code is added. After saving you check where that wording is, and can mark where the event's logo goes. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
           </p>
           <div>
             <label htmlFor="own-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">Template name <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
@@ -103,6 +103,8 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
           />
           )}
           <div>
+            {/* once uploaded, the card is previewed small enough to be seen whole, with the Save button still on screen */}
+            <div className={imageKey ? "mx-auto w-full max-w-[200px]" : undefined}>
             <ImageUploadField
               label={<>Your design<span className="text-red-500 ml-0.5">*</span></>}
               value={imageKey}
@@ -114,6 +116,7 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
               emptyClassName="flex flex-col items-center justify-center min-h-[160px]"
               onUploadingChange={setUploading}
             />
+            </div>
             {shown.image && <p className="mt-1 text-xs font-medium text-rose-600">{shown.image}</p>}
             {!shared && imageKey && (
               <p role="status" className="mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">

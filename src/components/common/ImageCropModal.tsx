@@ -14,6 +14,8 @@ interface Props {
   aspect?: number;
   /** what the ratio is called in the words on screen, e.g. "9:16" */
   aspectLabel?: string;
+  /** For a logo: the person picks the picture's own shape (the default, whole picture framed) or a square; `aspect` is then not used */
+  shapeChoice?: boolean;
 }
 
 type Handle = "move" | "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
@@ -28,16 +30,19 @@ function pointerIn(getEl: () => HTMLElement | null, d: number, e: React.PointerE
 }
 
 /**
- * A 1:1 crop on the whole picture, like the phone's crop tool: the picture is shown complete and a square sits on it. Drag the
- * square to move it, and drag its corners or edges to make it larger or smaller. Nothing is stretched or zoomed.
+ * A crop on the whole picture, like the phone's crop tool: the picture is shown complete and a frame of a fixed shape sits on it.
+ * Drag the frame to move it, and drag its corners or edges to make it larger or smaller. Nothing is stretched or zoomed.
  */
-export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, aspectLabel = "1:1" }: Props) {
-  const A = aspect;
-  const outputMax = A === 1 ? OUTPUT_MAX : 1920; // the longer side, at most
+export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, aspectLabel = "1:1", shapeChoice = false }: Props) {
   // the window is mounted afresh for each picture, so the address is made once and released as soon as the picture has loaded
   const [src] = useState(() => URL.createObjectURL(file));
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
   const [box, setBox] = useState<Box | null>(null);
+  const [shape, setShape] = useState<"original" | "square">("original");
+  const ownShape = natural ? natural.w / natural.h : 1;
+  const A = shapeChoice ? (shape === "square" ? 1 : ownShape) : aspect;
+  const label = shapeChoice ? (shape === "square" ? "a square" : "the picture's own shape") : aspectLabel;
+  const outputMax = A === 1 ? OUTPUT_MAX : 1920; // the longer side, at most
   const [failed, setFailed] = useState(false);
   const [room, setRoom] = useState(() => (typeof window === "undefined" ? { w: 320, h: 320 } : { w: window.innerWidth - 32, h: window.innerHeight - 190 }));
   const imgRef = useRef<HTMLImageElement>(null);
@@ -65,9 +70,19 @@ export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, 
     const w = e.currentTarget.naturalWidth;
     const h = e.currentTarget.naturalHeight;
     setNatural({ w, h });
-    const s = Math.min(w, h * A) * 0.9;
-    setBox({ s, x: (w - s) / 2, y: (h - s / A) / 2 });
+    // a logo starts with the whole picture framed; a fixed shape starts a little inside the picture
+    const frame = shapeChoice ? w : Math.min(w, h * aspect) * 0.9;
+    const frameShape = shapeChoice ? w / h : aspect;
+    setBox({ s: frame, x: (w - frame) / 2, y: (h - frame / frameShape) / 2 });
     URL.revokeObjectURL(src);
+  };
+
+  const chooseShape = (next: "original" | "square") => {
+    if (!natural) return;
+    setShape(next);
+    const s = next === "square" ? Math.min(natural.w, natural.h) : natural.w;
+    const h = next === "square" ? s : natural.h;
+    setBox({ s, x: (natural.w - s) / 2, y: (natural.h - h) / 2 });
   };
 
   const begin = (handle: Handle, e: React.PointerEvent) => {
@@ -163,7 +178,7 @@ export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, 
       <div className="flex items-start justify-between gap-4 px-4 sm:px-6 py-4">
         <div>
           <h2 id="crop-title" className="text-base font-medium">Crop the picture</h2>
-          <p className="text-xs text-white/70 mt-0.5">Drag the frame to move it. Drag its corners or edges to make it bigger or smaller. It is saved as {aspectLabel}, so the shape never changes.</p>
+          <p className="text-xs text-white/70 mt-0.5">Drag the frame to move it. Drag its corners or edges to make it bigger or smaller. It is saved as {label}, so nothing is stretched.</p>
         </div>
         <button type="button" onClick={onCancel} aria-label="Close" className="shrink-0 size-9 flex items-center justify-center rounded-full hover:bg-white/15 cursor-pointer">
           <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -187,7 +202,7 @@ export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, 
               className="absolute outline-none cursor-move focus-visible:ring-2 focus-visible:ring-white"
               style={{ left: box.x * d, top: box.y * d, width: box.s * d, height: (box.s / A) * d, border: "2px solid #fff" }}
               tabIndex={0}
-              aria-label={`Crop frame (${aspectLabel}). Use the arrow keys to move it, plus or minus to resize it.`}
+              aria-label={`Crop frame (${label}). Use the arrow keys to move it, plus or minus to resize it.`}
               onPointerDown={(e) => begin("move", e)}
               onPointerMove={move}
               onPointerUp={end}
@@ -204,6 +219,13 @@ export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, 
       </div>
       <div className="px-4 sm:px-6 py-4 flex flex-col items-center gap-3">
         {failed && <p role="alert" className="text-xs font-medium text-rose-300">This picture could not be cropped. Try another image.</p>}
+        {shapeChoice && (
+          <div role="radiogroup" aria-label="Crop shape" className="flex gap-2">
+            {([["original", "Whole picture"], ["square", "Square"]] as const).map(([value, text]) => (
+              <button key={value} type="button" role="radio" aria-checked={shape === value} onClick={() => chooseShape(value)} disabled={!natural} className={`px-4 py-1.5 rounded-full text-xs font-semibold border cursor-pointer ${shape === value ? "bg-white text-black border-white" : "border-white/50 text-white hover:bg-white/15"}`}>{text}</button>
+            ))}
+          </div>
+        )}
         <button type="button" onClick={confirm} disabled={!box || failed} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Use this crop</button>
       </div>
     </div>

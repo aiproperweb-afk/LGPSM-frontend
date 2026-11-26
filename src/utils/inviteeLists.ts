@@ -23,34 +23,11 @@ export function stateExplanation(set: { locked: boolean; lockReasons: { sentGues
     set.unknown ? `${plural(set.unknown, "guest has an unresolved delivery", "guests have unresolved deliveries")} (kept; they may have received it)` : "",
   ].filter(Boolean);
   const base = "Open: no invitation has been sent successfully from this list, nobody has answered and nobody has checked in.";
-  const replace = set.replaceableGuests ? ` A Replace can set aside ${plural(set.replaceableGuests, "guest who was never invited", "guests who were never invited")}.` : "";
+  const replace = set.replaceableGuests ? ` A Replace can remove ${plural(set.replaceableGuests, "guest who was never invited", "guests who were never invited")}.` : "";
   return base + (notes.length ? ` ${notes.join("; ")}.` : "") + replace;
 }
 
-export type RestoreOutcome = { tone: "success" | "warning" | "error"; message: string; conflicts: string[] };
-
-const matchedOn = (m: "email" | "mobile") => (m === "email" ? "email address" : "mobile number");
-
-/** One line for the whole restore, plus one line per refused guest naming who they clash with. */
-export function restoreOutcome(res: { restored: number; alreadyActive: number; refused: number; notFound: number; results: Array<{ id: string; status: string; conflictsWith?: { name: string; matchedOn: "email" | "mobile" } }> }, nameOf: (id: string) => string): RestoreOutcome {
-  const conflicts = res.results
-    .filter((r) => r.status === "DUPLICATE_ACTIVE" && r.conflictsWith)
-    .map((r) => `${nameOf(r.id)} was not restored: ${r.conflictsWith!.name} on the active list has the same ${matchedOn(r.conflictsWith!.matchedOn)}. Edit or remove that guest first, then restore again.`);
-  const parts = [
-    res.restored ? `${plural(res.restored, "guest restored", "guests restored")} as Not sent (no invitation was sent and no access pass was created)` : "",
-    res.alreadyActive ? `${plural(res.alreadyActive, "guest was", "guests were")} already active` : "",
-    res.refused ? `${plural(res.refused, "guest", "guests")} could not be restored` : "",
-    res.notFound ? `${plural(res.notFound, "guest was", "guests were")} not found` : "",
-  ].filter(Boolean);
-  return { tone: res.refused || res.notFound ? (res.restored ? "warning" : "error") : "success", message: parts.join("; ") + ".", conflicts };
-}
-
 export const DELIVERY_LABEL: Record<string, string> = { NOT_SENT: "Not sent", SENT: "Sent", FAILED: "Sending failed", UNKNOWN: "Outcome unknown" };
-
-/** Maps an API refusal to the sentence shown to the organizer. */
-export function restoreErrorMessage(message?: string): string {
-  return message || "The guests could not be restored. Nothing was changed.";
-}
 
 // ---- Replace / Append preview ----
 
@@ -71,7 +48,7 @@ export function previewLines(p: PreviewLike, mode: "REPLACE" | "APPEND"): string
   }
   if (p.rejectedRows - p.duplicateRows > 0) out.push(`${p.rejectedRows - p.duplicateRows} ${p.rejectedRows - p.duplicateRows === 1 ? "row has" : "rows have"} a problem and will be skipped`);
   if (mode === "REPLACE") {
-    out.push(p.wouldSetAside ? `${guests(p.wouldSetAside)} ${p.wouldSetAside === 1 ? "who was" : "who were"} never invited will be set aside` : "No one will be set aside");
+    out.push(p.wouldSetAside ? `${guests(p.wouldSetAside)} ${p.wouldSetAside === 1 ? "who was" : "who were"} never invited will be removed` : "No one will be removed");
     if (p.lockedInvitedKept !== undefined) {
       // already-invited guests and the not-yet-invited guests of a sent list are different people: say so, so the numbers match the header
       if (p.lockedInvitedKept) out.push(`${guests(p.lockedInvitedKept)} already invited stay${p.lockedInvitedKept === 1 ? "s" : ""} exactly as ${p.lockedInvitedKept === 1 ? "it is" : "they are"}`);
@@ -90,7 +67,7 @@ export function previewDiscrepancy(p: PreviewLike | null | undefined, actual: { 
   if (!p) return null;
   const diffs: string[] = [];
   if (actual.imported !== p.validNew) diffs.push(`${guests(actual.imported)} added (previewed ${p.validNew})`);
-  if ((actual.archived ?? 0) !== p.wouldSetAside) diffs.push(`${guests(actual.archived ?? 0)} set aside (previewed ${p.wouldSetAside})`);
+  if ((actual.archived ?? 0) !== p.wouldSetAside) diffs.push(`${guests(actual.archived ?? 0)} removed (previewed ${p.wouldSetAside})`);
   return diffs.length ? `The list changed while you were deciding, so the result differs from the preview: ${diffs.join("; ")}. Guests who were invited in the meantime are always kept.` : null;
 }
 

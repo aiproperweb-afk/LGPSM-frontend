@@ -3,7 +3,7 @@ import type { CustomDropdownOption } from "@/components/common/CustomDropdown";
 
 export type Channel = "EMAIL" | "WHATSAPP" | "BOTH";
 
-/** How an invitation reaches the guest: the choices of the delivery-channel dropdown (in the send window and the Action menu) */
+/** How an invitation reaches the guest: the choices of the delivery-channel dropdown (in the send window) */
 export const CHANNEL_OPTIONS: CustomDropdownOption[] = [
   {
     value: "EMAIL", label: "Email",

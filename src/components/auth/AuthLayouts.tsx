@@ -1,144 +1,101 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import Image from "next/image";
 import Link from "next/link";
 import { gsap } from "gsap";
 
-// Auth screens follow Login-Signup-Flow/02-Login.pdf & 03-Register.pdf (1440-wide frame):
-// left = orange sunburst panel (666px) with a 739px-tall rounded photo card, vertically centred, that
-// overhangs 71px into the white; right = 440px form column starting 190px past the panel, top-aligned at 80px.
-// aside gets z-10 so the card (right-[-10.66%]) overhangs on top of the white main panel.
-// `fit`: the page is exactly one screen tall and does not scroll (sign-up). The form is centred and, on wide screens, laid out in two columns
-// so it fits; only on a screen too short or too narrow for that does the form column scroll by itself, so nothing is ever cut off.
-export function AuthSplitLayout({ children, fit = false }: { children: React.ReactNode; fit?: boolean }) {
-  const [cardLoaded, setCardLoaded] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLDivElement>(null);
+// Auth screens (Figma "Login", "Register" and "Account recovery", node 3354:227 onwards): a white 456px card centred on a navy page
+// with a blue glow at the top right and a purple one at the bottom left.
+const ASSETS = "/images/auth/signin";
 
-  useEffect(() => {
-    const card = cardRef.current;
-    const form = formRef.current;
-    if (!card || !form) return;
-    // Card slides in from the left (horizontal)
-    gsap.fromTo(card,
-      { x: -90, opacity: 0 },
-      { x: 0, opacity: 1, duration: 0.8, ease: "power3.out", delay: 0.05 }
-    );
-    // Form slides up from below (vertical)
-    gsap.fromTo(form,
-      { y: 28, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.65, ease: "power2.out", delay: 0.18 }
-    );
-  }, []);
-
-  return (
-    <div className={`${fit ? "h-dvh overflow-hidden" : "min-h-screen"} bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]`}>
-      {/* z-10 so the card's right-[-10.66%] overhang renders on top of the white main panel */}
-      <aside className="hidden lg:block relative z-10 shrink-0 w-[46.25%] bg-[#1F65FF]">
-        <Image src="/images/auth/auth-sunburst-blue.svg" alt="" fill sizes="47vw" className="object-cover" priority />
-        <div
-          ref={cardRef}
-          className="absolute z-20 left-[12.61%] right-[-10.66%] top-1/2 -translate-y-1/2 h-[min(739px,calc(100%-48px))] rounded-[20px] overflow-hidden shadow-2xl"
-        >
-          <div
-            aria-hidden
-            className={`absolute inset-0 auth-card-shimmer rounded-[20px] transition-opacity duration-500 ${
-              cardLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
-          />
-          <Image
-            src="/images/auth/Auth.webp"
-            alt=""
-            fill
-            sizes="46vw"
-            // The main visual of the sign-in / sign-up screen, so it is the LCP image on desktop: fetch it now
-            // instead of waiting for lazy loading to decide
-            loading="eager"
-            fetchPriority="high"
-            className={`object-cover object-center transition-opacity duration-700 ease-out ${
-              cardLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            onLoad={() => setCardLoaded(true)}
-          />
-        </div>
-      </aside>
-      <main className={fit ? "flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 py-1 h-dvh overflow-y-auto flex" : "flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 pt-10 lg:pt-20 pb-12"}>
-        <div ref={formRef} className={fit ? "w-full max-w-[440px] xl:max-w-[520px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))] xl:ml-[min(24.55%,calc(100%-544px))] my-auto" : "w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))]"}>
-          {children}
-        </div>
-      </main>
-    </div>
-  );
-}
-
-// Admin login: centered white card on a light gray page — no left panel, no Google button.
-export function AdminAuthLayout({ children }: { children: React.ReactNode }) {
+/** `corner` sits at the top right of the page (the way to the other portal); `below` is the small print under the card. */
+export function AuthPage({ children, corner, below }: { children: React.ReactNode; corner?: React.ReactNode; below?: React.ReactNode }) {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!cardRef.current) return;
-    // Card scales + slides up from below (vertical entrance)
-    gsap.fromTo(cardRef.current,
-      { y: 32, opacity: 0, scale: 0.97 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
-    );
+    // The card slides up as it appears (clearProps: no transform is left behind to trap fixed popups inside the card)
+    gsap.fromTo(cardRef.current, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power2.out", clearProps: "transform,opacity" });
   }, []);
 
   return (
-    <div
-      className="min-h-screen bg-[#F5F5F5] flex items-center justify-center font-[family-name:var(--font-inter)] p-4"
-    >
-      <main
-        ref={cardRef}
-        className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.09)] px-8 sm:px-10 py-10"
-      >
-        {children}
+    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-[#000B2C] font-[family-name:var(--font-inter)] text-[#000B2C]">
+      {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG glow */}
+      <img src={`${ASSETS}/blur-purple.svg`} alt="" aria-hidden width={1418} height={1418} className="pointer-events-none absolute -z-10 -left-[602px] -bottom-[602px] max-w-none" />
+      {/* eslint-disable-next-line @next/next/no-img-element -- decorative SVG glow */}
+      <img src={`${ASSETS}/blur-blue.svg`} alt="" aria-hidden width={1418} height={1418} className="pointer-events-none absolute -z-10 -right-[602px] -top-[602px] max-w-none" />
+      {corner && <div className="flex justify-end px-4 pt-4 sm:absolute sm:right-8 sm:top-6 sm:p-0">{corner}</div>}
+      <main className="flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-6 sm:pt-16">
+        <div ref={cardRef} className="flex w-full max-w-[456px] flex-col gap-6 rounded-2xl bg-white p-6 shadow-[0px_24px_48px_0px_rgba(0,0,0,0.35)] sm:p-10">
+          {children}
+        </div>
+        {below && <div className="mt-6 w-full max-w-[456px] text-center text-xs font-medium leading-[18px] text-white/70">{below}</div>}
       </main>
+      <footer className="px-4 pb-8 pt-2 text-center text-xs font-medium text-white/60">© {new Date().getFullYear()} EventQRApp. All rights reserved.</footer>
     </div>
+  );
+}
+
+/** The link in the page's top right corner (to the Super Admin sign-in, or back to the organizer one) */
+export function AuthCornerLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="inline-flex items-center rounded-lg border border-white/35 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white">
+      {children}
+    </Link>
   );
 }
 
 export function AuthLogo() {
   return (
     <Link href="/" className="inline-block">
-      <Image src="/images/branding/Final-Logo.svg" alt="EventQRapp" width={194} height={34} priority fetchPriority="high" className="h-[34px] w-auto" />
+      <Image src={`${ASSETS}/logo.svg`} alt="EventQRapp" width={216} height={38} priority fetchPriority="high" unoptimized />
     </Link>
   );
+}
+
+export function AuthHeader({ title, prompt }: { title: string; prompt?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center text-center">
+      <AuthLogo />
+      <h1 className="mt-[48px] text-[28px] font-semibold leading-[1.22] sm:text-[32px]">{title}</h1>
+      {prompt && <p className="mt-2 text-sm font-medium text-[#666D80]">{prompt}</p>}
+    </div>
+  );
+}
+
+export const authLinkClass = "font-semibold text-[#1F65FF] hover:text-[#1A56DB] hover:underline cursor-pointer";
+
+export function OrDivider() {
+  return (
+    <div className="flex items-center gap-3 text-sm font-medium text-[#666D80]" aria-hidden>
+      <span className="h-px flex-1 bg-[#E0E0E0]" />or<span className="h-px flex-1 bg-[#E0E0E0]" />
+    </div>
+  );
+}
+
+/** "← Back to …" under a recovery or verification card */
+export function AuthBackLink({ href, label, onClick }: { href?: string; label: string; onClick?: () => void }) {
+  const inner = (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element -- static icon */}
+      <img src={`${ASSETS}/arrow-left.svg`} alt="" width={16} height={16} />
+      {label}
+    </>
+  );
+  const cls = `inline-flex items-center gap-1.5 self-center text-sm ${authLinkClass}`;
+  return onClick ? <button type="button" onClick={onClick} className={cls}>{inner}</button> : <Link href={href || "/signin"} className={cls}>{inner}</Link>;
 }
 
 // Server-rendered placeholder for auth pages whose body reads the URL query on the client. Without it
 // the HTML is blank until JavaScript loads, so the brand logo (the LCP element) now paints immediately.
 export function AuthLoadingShell() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <AuthLogo />
-    </div>
-  );
-}
-
-export function BackLink({ href, label = "Back to Home", onClick }: { href?: string; label?: string; onClick?: () => void }) {
-  const inner = (
-    <span className="inline-flex items-center gap-2 text-sm leading-6 font-semibold text-[#15191C] hover:text-[#1A56DB] transition-colors cursor-pointer">
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      {label}
-    </span>
-  );
-  return onClick ? (
-    <button type="button" onClick={onClick}>{inner}</button>
-  ) : (
-    <Link href={href || "/"}>{inner}</Link>
-  );
-}
-
-export function AuthHeading({ title, subtitle, compact = false }: { title: string; subtitle: string; compact?: boolean }) {
-  return (
-    <div className={compact ? "mb-4" : "mb-[35px]"}>
-      <h1 className="text-[22px] leading-7 font-medium text-black">{title}</h1>
-      <p className={`${compact ? "mt-1" : "mt-[9px]"} text-sm leading-5 text-[#5C5C5C]`}>{subtitle}</p>
+    <div className="flex min-h-dvh items-center justify-center bg-[#000B2C] px-4">
+      <div className="flex w-full max-w-[456px] justify-center rounded-2xl bg-white p-10">
+        <AuthLogo />
+      </div>
     </div>
   );
 }
@@ -150,15 +107,14 @@ export function AuthAlert({ tone, children }: { tone: "error" | "success" | "inf
 }
 
 export const authInputClass =
-  "w-full h-[47px] px-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg text-[13px] text-[#15191C] placeholder:text-xs placeholder:text-[#6E6E6E] focus:outline-none focus:border-black transition-colors disabled:opacity-60";
+  "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-sm font-medium text-[#000B2C] placeholder:text-[#898B8D] focus:outline-none focus:border-[#1F65FF] focus:ring-[3px] focus:ring-[#1F65FF]/[0.18] transition-colors disabled:opacity-60";
 
-export const authLabelClass = "block text-sm leading-5 font-medium text-[#15191C] mb-2";
-
-// Vertical rhythm between stacked fields (label top to label top = 87px in the design).
-export const authFieldStackClass = "space-y-3";
+export const authLabelClass = "block text-sm font-medium text-[#000B2C] mb-2";
 
 export const authPrimaryButtonClass =
-  "w-full h-[41px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
+  "w-full h-12 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
+
+export const Required = () => <span className="text-[#D92D20]">*</span>;
 
 export function PasswordInput({
   value,
@@ -167,6 +123,7 @@ export function PasswordInput({
   disabled,
   autoComplete,
   id,
+  hiddenIcon = "eye-off",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -174,8 +131,11 @@ export function PasswordInput({
   disabled?: boolean;
   autoComplete?: string;
   id?: string;
+  /** the icon shown while the password is hidden */
+  hiddenIcon?: "eye" | "eye-off";
 }) {
   const [visible, setVisible] = React.useState(false);
+  const shownIcon = hiddenIcon === "eye" ? "eye-off" : "eye";
   return (
     <div className="relative flex items-center">
       <input
@@ -187,24 +147,17 @@ export function PasswordInput({
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`${authInputClass} pr-11`}
+        className={`${authInputClass} pr-12`}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Hide password" : "Show password"}
-        className="absolute right-3 p-1 text-[#6B6B6B] hover:text-gray-800 cursor-pointer"
+        aria-pressed={visible}
+        className="absolute right-3 flex p-1 cursor-pointer"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-          {!visible ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.05 10.05 0 013.98-1.063c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21M3 3l18 18" />
-          ) : (
-            <>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </>
-          )}
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element -- static icon */}
+        <img src={`${ASSETS}/${visible ? shownIcon : hiddenIcon}.svg`} alt="" width={20} height={20} />
       </button>
     </div>
   );
