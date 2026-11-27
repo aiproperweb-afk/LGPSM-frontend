@@ -35,7 +35,7 @@ export default function Footer({ withCta = true, ctaVariant = "home", inner = fa
     note: text(ctaVariant + "_cta_note", original.note),
   };
   return (
-    <div className="relative overflow-hidden border-b border-[#081E61] bg-[#000B2C]">
+    <div id="footer" className="relative overflow-hidden border-b border-[#081E61] bg-[#000B2C]">
       {withCta ? (
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-[-64px] h-[456px] w-[1061px] -translate-x-1/2">
           <div className="absolute" style={{ inset: "-32.89% -14.14%" }}><Image src="/images/landing/footer-glow.svg" alt="" fill unoptimized className="max-w-none object-fill" /></div>
@@ -44,7 +44,7 @@ export default function Footer({ withCta = true, ctaVariant = "home", inner = fa
       <Squares list={LEFT_SQUARES} className="bottom-[-69px] left-2 h-[407px] w-[324px]" />
       <Squares list={RIGHT_SQUARES} className="right-0 top-[129px] size-[489px]" />
       {withCta ? <FinalCta copy={cta} demoLabel={text("bookDemo", "Book a demo")} /> : null}
-      <footer id="footer" className="relative text-[#A9B4CF]">
+      <footer className="relative text-[#A9B4CF]">
         <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[30px] px-4 pb-8 pt-[72px] sm:px-6 lg:px-12">
           <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
             <div className="flex w-full flex-col gap-4 lg:w-[304px] lg:shrink-0">

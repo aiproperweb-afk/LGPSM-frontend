@@ -5,6 +5,7 @@ import "@puckeditor/core/no-external.css";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { cmsService } from "@/services/cmsService";
+import EditorPagePreview, { EditorPreviewContext } from "./EditorPagePreview";
 import { cmsConfig } from "./config";
 import { UploadActivity } from "./UploadActivity";
 import { validatePageData } from "./validatePageData";
@@ -13,14 +14,7 @@ import type { CmsPageDetail, CmsPageData, CmsSlug } from "./types";
 const overrides: Partial<Overrides<typeof cmsConfig>> = {
   drawer: () => <></>,
   headerActions: () => <></>,
-  iframe: ({ children }) => (
-    <div onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }} onClickCapture={event => {
-      if ((event.target as Element).closest?.("a[href], button[type=submit]")) event.preventDefault();
-    }}>
-      <style>{".reveal,.hero-anim{opacity:1!important;transform:none!important;animation:none!important}"}</style>
-      {children}
-    </div>
-  ),
+  preview: EditorPagePreview,
 };
 
 function fingerprint(data: CmsPageData) {
@@ -30,6 +24,7 @@ function fingerprint(data: CmsPageData) {
 export default function PageEditor({ slug }: { slug: CmsSlug }) {
   const [page, setPage] = useState<CmsPageDetail>();
   const [initial, setInitial] = useState<CmsPageData>();
+  const [previewData, setPreviewData] = useState<CmsPageData>();
   const [generation, remount] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [pending, setPending] = useState(false);
@@ -63,6 +58,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
       latest.current = document.draftData;
       saved.current = fingerprint(document.draftData);
       setInitial(document.draftData);
+      setPreviewData(document.draftData);
       setPage(document);
       setDirty(false);
       setConflict(false);
@@ -103,6 +99,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
         if (action === "discard-draft") {
           latest.current = result.data.draftData;
           setInitial(result.data.draftData);
+          setPreviewData(result.data.draftData);
           remount(n => n + 1);
         }
         setDirty(latest.current !== null && fingerprint(latest.current) !== saved.current);
@@ -153,21 +150,25 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
           uploadCount.current += delta;
           setUploads(uploadCount.current);
         }}>
-          <div className="min-h-0 flex-1" inert={pending || uploads > 0} aria-busy={pending || uploads > 0}>
-            <Puck key={generation}
-              config={cmsConfig}
-              data={initial}
-              ui={(initial.content[0]?.type === "DashboardCopy" || initial.content[0]?.type === "SiteChromeCopy") ? { itemSelector: { index: 0 } } : undefined}
-              headerTitle={page.name}
-              height="100%"
-              permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}
-              overrides={overrides}
-              onChange={data => {
-                latest.current = data;
-                setDirty(fingerprint(data) !== saved.current);
-              }}
-            />
-          </div>
+          <EditorPreviewContext.Provider value={{ slug, route: page.route, data: previewData ?? initial }}>
+            <div className="min-h-0 flex-1" inert={pending || uploads > 0} aria-busy={pending || uploads > 0}>
+              <Puck key={generation}
+                config={cmsConfig}
+                iframe={{ enabled: false }}
+                data={initial}
+                ui={{ itemSelector: { index: 0 } }}
+                headerTitle={page.name}
+                height="100%"
+                permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}
+                overrides={overrides}
+                onChange={data => {
+                  latest.current = data;
+                  setPreviewData(data);
+                  setDirty(fingerprint(data) !== saved.current);
+                }}
+              />
+            </div>
+          </EditorPreviewContext.Provider>
         </UploadActivity.Provider>
       )}
     </div>

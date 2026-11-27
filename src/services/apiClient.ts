@@ -3,6 +3,8 @@ import { loginRedirectPath } from "@/components/auth/authPortal";
 import { refreshOutcome, type RefreshOutcome } from "./refreshOutcome";
 import { ACCOUNT_INACTIVE_CODE, ACCOUNT_INACTIVE_MESSAGE, ACCOUNT_INACTIVE_NOTICE, isAccountInactiveResponse } from "./accountInactive";
 
+import { isCmsPreviewWindow } from "@/components/cms/PreviewBridge";
+
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend-vzuz.onrender.com";
 export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
 
@@ -123,6 +125,9 @@ export async function apiClient<T = unknown>(
   requiresAuth: boolean = false
 ): Promise<ApiResponse<T>> {
   const method = (options.method || "GET").toUpperCase();
+  if (isCmsPreviewWindow() && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+    return { success: false, message: "This CMS preview is read-only." };
+  }
   if (method !== "GET" || options.body || options.signal) {
     if (method !== "GET") recentReads.clear(); // a change: whatever was read before may be out of date
     const result = await requestApi<T>(endpoint, options, requiresAuth);

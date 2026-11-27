@@ -60,7 +60,7 @@ function ClientsMenu({ className, underline, pathname, text }: { className: stri
   }, [open]);
   return (
     <div ref={box} onMouseEnter={show} onMouseLeave={hide}>
-      <button type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${className} inline-flex items-center gap-1.5 cursor-pointer`}>
+      <button type="button" data-cms-preview-toggle aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${className} inline-flex items-center gap-1.5 cursor-pointer`}>
         {text("link_clients", "Clients")}
         <svg width="12" height="18" viewBox="0 0 12 18" fill="none" aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`}><path d="M2.5 7.5L6 11l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
         {underline}
@@ -139,6 +139,7 @@ export default function Navbar() {
         </div>
 
         <button
+          data-cms-preview-toggle
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={text("toggleMenuLabel", "Toggle navigation menu")}
           aria-expanded={mobileMenuOpen}

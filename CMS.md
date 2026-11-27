@@ -1,6 +1,6 @@
 # EventQRapp Pages CMS
 
-Administrators open Pages, choose a public page or a signed-in tab, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot.
+Administrators open Pages, choose a public page or a signed-in tab, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot. The canvas loads the actual page with its styles and images and applies draft edits as you type. Select a section in Outline for Home and Contact. For screens tied to a specific event or organizer, choose a record in the preview toolbar. The preview disables form submissions and operational actions.
 
 ## Public navbar and footer
 

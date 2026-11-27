@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCmsPreviewDraft } from "./PreviewBridge";
 import { cmsService } from "@/services/cmsService";
 import { dashboardPageAt, dashboardSlug } from "./dashboardCatalog";
 import { validatePageData } from "./validatePageData";
@@ -11,7 +12,8 @@ const fallback: Translate = (_key, text) => text;
 const ScreenCopy = createContext<Translate>(fallback);
 const NavigationCopy = createContext<Translate>(fallback);
 
-function usePublishedCopy(slug?: CmsSlug) {
+function usePublishedCopy(slug?: CmsSlug): Translate {
+  const draft = useCmsPreviewDraft(slug);
   const [revision, refresh] = useState(0);
   useEffect(() => {
     const onPublish = () => refresh(value => value + 1);
@@ -30,8 +32,9 @@ function usePublishedCopy(slug?: CmsSlug) {
     });
     return () => { active = false; };
   }, [slug, revision]);
-  if (!published || published.slug !== slug) return fallback;
-  return (key: string, text: string) => Object.hasOwn(published.labels, key) ? published.labels[key] : text;
+  const section = slug && validatePageData(draft, slug) ? draft.content[0] : undefined;
+  const labels = section?.type === "DashboardCopy" ? section.props.labels : published && published.slug === slug ? published.labels : undefined;
+  return labels ? (key, text) => Object.hasOwn(labels, key) ? labels[key] : text : fallback;
 }
 
 export function DashboardCopyProvider({ pathname, children }: { pathname: string; children: ReactNode }) {

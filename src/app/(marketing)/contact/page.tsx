@@ -13,7 +13,7 @@ export default async function ContactPage() {
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1 bg-white py-12 sm:py-16 lg:py-20">
-          <PublicPageRenderer data={content} />
+          <PublicPageRenderer data={content} slug="contact" />
         </main>
 
         <Footer inner ctaVariant="contact" />

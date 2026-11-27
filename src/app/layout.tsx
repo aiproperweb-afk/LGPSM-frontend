@@ -1,4 +1,5 @@
 import DialogKeyboardSupport from "@/components/common/DialogKeyboardSupport";
+import { PreviewBridge } from "@/components/cms/PreviewBridge";
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 import { Inter, Space_Grotesk, Caveat, DM_Sans } from "next/font/google";
@@ -108,7 +109,7 @@ export default function RootLayout({
         <AuthProvider>
           <AlertProvider>
             <PageTitleProvider>
-              <SmoothScrollProvider>{children}</SmoothScrollProvider>
+              <SmoothScrollProvider><PreviewBridge>{children}</PreviewBridge></SmoothScrollProvider>
             </PageTitleProvider>
           </AlertProvider>
         </AuthProvider>
