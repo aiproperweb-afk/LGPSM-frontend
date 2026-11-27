@@ -5,6 +5,15 @@ import { tokenStorage } from "./tokenStorage";
 // Mirrors CARD_DESIGNS in the backend's Template model — the actual server-rendered invitation
 // card layout a template produces, independent of its name/category/preview image.
 export const CARD_DESIGNS = [
+  "MASTER",
+  "BUSINESS_CONFERENCE",
+  "PRODUCT_LAUNCH",
+  "NETWORKING_EVENT",
+  "CORPORATE_MEET",
+  "FESTIVAL_CELEBRATION",
+  "PUJA_GATHERING",
+  "CULTURAL_PROGRAM",
+  "COMMUNITY_FAIR",
   "CLASSIC",
   "CORPORATE_V1",
   "CORPORATE_V2",
@@ -19,6 +28,15 @@ export type TemplateKind = "INVITATION" | "POSTER";
 
 export const CARD_DESIGN_LABELS: Record<CardDesign, string> = {
   CUSTOM: "AI-generated design",
+  MASTER: "Master Card",
+  BUSINESS_CONFERENCE: "Business Conference",
+  PRODUCT_LAUNCH: "Product Launch",
+  NETWORKING_EVENT: "Networking Event",
+  CORPORATE_MEET: "Corporate Meet",
+  FESTIVAL_CELEBRATION: "Festival Celebration",
+  PUJA_GATHERING: "Puja Gathering",
+  CULTURAL_PROGRAM: "Cultural Program",
+  COMMUNITY_FAIR: "Community Fair",
   CLASSIC: "Classic",
   CORPORATE_V1: "Corporate — Award",
   CORPORATE_V2: "Corporate — Summit",
