@@ -8,6 +8,7 @@ import Icon from "@/components/icons/Icon";
 import BillingDateField, { formatDay } from "@/components/billing/BillingDateField";
 import { Invoice, filterInvoices, groupByEvent, validateRange } from "@/components/billing/billingStatement";
 import { formatMoney } from "@/utils/money";
+import { formatDeadline } from "@/utils/deadline";
 import { billingService, type EventBill } from "@/services/billingService";
 import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import { useAuth } from "@/context/AuthContext";
@@ -243,7 +244,7 @@ export default function BillingPage() {
                   <tr key={`due-${b.eventId}`} className="border-b border-[#E0E0E0] h-[46px] bg-[#F8FAFF]">
                     <td className="px-4" />
                     <td className="px-4 text-[#6B6B6B]">Not paid yet</td>
-                    <td className="px-4">{b.eventName}{b.requestedInvitees ? <span className="block text-xs font-medium text-[#854D0E]">The administrator is waiting to send {b.requestedInvitees} WhatsApp invitation{b.requestedInvitees === 1 ? "" : "s"}</span> : null}</td>
+                    <td className="px-4">{b.eventName}{b.requestedInvitees ? <span className="block text-xs font-medium text-[#854D0E]">The administrator is waiting to send {b.requestedInvitees} WhatsApp invitation{b.requestedInvitees === 1 ? "" : "s"}</span> : null}{b.payBy ? <span className={`block text-xs font-medium ${b.overdue ? "text-[#B42318]" : "text-[#854D0E]"}`}>{b.overdue ? `Overdue: was due by ${formatDeadline(b.payBy)}` : `Pay by ${formatDeadline(b.payBy)}`}</span> : null}</td>
                     <td className="px-4">{b.dueInvitees}</td>
                     <td className="px-4 text-[#6B6B6B]">—</td>
                     <td className="px-4 font-medium text-[#15191C]" title={`${b.dueInvitees} invitation${b.dueInvitees === 1 ? "" : "s"} × ${money(b.ratePerInvitee ?? 0)} + ${b.gstPercent ?? 0}% GST`}>{money(b.due)}</td>
@@ -266,7 +267,7 @@ export default function BillingPage() {
                         className="size-4 rounded-sm border-gray-300 cursor-pointer check-green"
                       />
                     </td>
-                    <td className="px-4">{r.invoiceId}</td>
+                    <td className="px-4">{r.invoiceId}{r.offline ? <span className="block text-xs font-medium text-[#15803D]">Paid to the administrator</span> : null}</td>
                     <td className="px-4">{r.eventName}</td>
                     <td className="px-4">{r.invitees}</td>
                     <td className="px-4">{formatDay(r.paymentDate.slice(0, 10))}</td>

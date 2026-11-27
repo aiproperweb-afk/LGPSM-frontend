@@ -10,6 +10,8 @@ export interface Invoice {
   paymentDate: string;
   amount: number;
   currency?: string;
+  /** received by the administrator outside the platform */
+  offline?: boolean;
 }
 
 export interface DateRange { from: string; to: string }

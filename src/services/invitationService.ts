@@ -5,11 +5,14 @@ import { tokenStorage } from "./tokenStorage";
 export interface SendInvitationsPayload {
   inviteeIds: string[];
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "BOTH";
+  /** administrator only: send on WhatsApp now, the organizer pays by the event's end */
+  payLater?: boolean;
 }
 
 export interface ResendInvitationsPayload {
   invitationIds: string[];
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "BOTH";
+  payLater?: boolean;
 }
 
 export interface SendResult {

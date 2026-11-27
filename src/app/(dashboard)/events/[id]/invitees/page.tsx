@@ -28,6 +28,7 @@ import RepeatedGuestsModal from "@/components/invitees/RepeatedGuestsModal";
 import { findRepeatedGuests, type RepeatedGuest } from "@/utils/repeatedGuests";
 import { isTooLarge, secondsLeft, splitNote, UPLOAD_COOLDOWN_MS } from "@/utils/uploadLimits";
 import { formatMoney } from "@/utils/money";
+import { formatDeadline } from "@/utils/deadline";
 import { billingService, type BillQuote } from "@/services/billingService";
 import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import SendSuccessModal from "@/components/invitees/SendSuccessModal";
@@ -377,7 +378,7 @@ export default function InviteesManagementPage() {
   // Who "Send Invitation" goes to: the ticked guests, or everyone shown by the "Not sent" filter. Guests already invited are always left out.
   const sendTargets = (selected.length ? selected : invitationFilter === "NOT_SENT" ? filteredInvitees : []).filter((i) => i.invitationStatus === "PENDING");
 
-  const handleSend = async (via: Channel = channel): Promise<string[]> => {
+  const handleSend = async (via: Channel = channel, payLater = false): Promise<string[]> => {
     if (sendInFlight.current) return [];
     const targets = sendTargets;
     if (targets.length === 0) {
@@ -389,7 +390,7 @@ export default function InviteesManagementPage() {
     setFeedback(null);
     let sentIds: string[] = [];
     try {
-      const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel: via });
+      const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel: via, ...(payLater ? { payLater: true } : {}) });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; inviteeId?: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
       sentIds = results.filter((r) => r.status === "SENT" && r.inviteeId).map((r) => String(r.inviteeId));
       const sendSummary = res.success || results.length ? summarize(results, "sent", via) : { type: "error" as const, message: res.message || "Invitations could not be sent." };
@@ -464,12 +465,64 @@ export default function InviteesManagementPage() {
     }
   };
 
+  // Pay Later: the invitations go now and the organizer owes for them until the event ends
+  const sendOnCredit = async () => {
+    if (!bill) return;
+    const chosen = bill;
+    setBill(null);
+    await runPaid(chosen.kind, chosen.targets, channel, true);
+    await loadOwed();
+  };
+
+  // Payment Settled: what the organizer paid outside the platform is recorded, then what was asked for goes ahead
+  const settleAndSend = async (note: string) => {
+    if (!bill) return;
+    const chosen = bill;
+    setBillBusy(true);
+    setBillError(null);
+    try {
+      const res = await billingService.settle(eventId, chosen.ids, note);
+      if (!res.success) { setBillError(res.message || "The payment could not be recorded. Please try again."); return; }
+      setBill(null);
+      await runPaid(chosen.kind, chosen.targets);
+      await loadOwed();
+    } finally {
+      setBillBusy(false);
+    }
+  };
+
+  // Administrator: an unpaid Pay Later bill is shown above the list, where it can be marked settled when the money arrives (also after
+  // the event, when nothing more can be sent)
+  const [owed, setOwed] = useState<BillQuote | null>(null);
+  // (read once: whether the deadline has passed does not need to tick while the page is open)
+  const [pageOpenedAt] = useState(() => Date.now());
+  const [recordOpen, setRecordOpen] = useState(false);
+  const loadOwed = useCallback(async () => {
+    if (!isAdmin || !eventId) return;
+    const res = await billingService.quote(eventId, [], { channel: "WHATSAPP" }).catch(() => null);
+    setOwed(res?.success && res.data?.payLater && res.data.owed && res.data.owed.total > 0 ? res.data : null);
+  }, [isAdmin, eventId]);
+  useEffect(() => { queueMicrotask(() => { void loadOwed(); }); }, [loadOwed]);
+  const recordPayment = async (note: string) => {
+    setBillBusy(true);
+    setBillError(null);
+    try {
+      const res = await billingService.settle(eventId, [], note);
+      if (!res.success || !res.data) { setBillError(res.message || "The payment could not be recorded. Please try again."); return; }
+      setRecordOpen(false);
+      showAlert(`Payment recorded (invoice ${res.data.invoiceNumber}).`, "success");
+      await loadOwed();
+    } finally {
+      setBillBusy(false);
+    }
+  };
+
   // What goes ahead once any bill is settled: send, resend, download, or (Print and Digital both) send and then make the cards of the guests reached
-  const runPaid = async (mode: ActionMode | "resend", targets?: InvitationData[], via: Channel = channel) => {
+  const runPaid = async (mode: ActionMode | "resend", targets?: InvitationData[], via: Channel = channel, payLater = false) => {
     if (mode === "download") { setDownloadOpen(true); return; }
-    if (mode === "resend") { await handleResend(targets || [], via); return; }
+    if (mode === "resend") { await handleResend(targets || [], via, payLater); return; }
     const asked = sendTargets.map((t) => t._id);
-    const reached = await handleSend(via);
+    const reached = await handleSend(via, payLater);
     if (mode === "both") {
       // only guests whose invitation really went out can have their cards made (the server asks for the invitation first)
       const ids = asked.filter((id) => reached.includes(id));
@@ -539,13 +592,13 @@ export default function InviteesManagementPage() {
   const askResend = (targets: InvitationData[] = resendTargets) => { if (targets.length === 0) return; void noteFor("resend", targets.map(guestOf)); setResendAsk(targets); };
   const confirmResend = async (targets: InvitationData[]) => { if (!(await showBillOrSend("resend", { targets }))) await handleResend(targets); };
 
-  const handleResend = async (targets: InvitationData[], via: Channel = channel) => {
+  const handleResend = async (targets: InvitationData[], via: Channel = channel, payLater = false) => {
     if (targets.length === 0 || resendInFlight.current) return;
     setBusy("resend");
     resendInFlight.current = true;
     setFeedback(null);
     try {
-      const res = await invitationService.resendInvitations(eventId, { invitationIds: targets.map((h) => h._id), channel: via });
+      const res = await invitationService.resendInvitations(eventId, { invitationIds: targets.map((h) => h._id), channel: via, ...(payLater ? { payLater: true } : {}) });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
       const resendSummary = res.success || results.length ? summarize(results, "resent", via) : { type: "error" as const, message: res.message || "Invitations could not be resent." };
       if (results.some((r) => r.status === "SENT") && resendSummary && resendSummary.type === "success") setSentPopup({ title: "Invitations resent successfully", message: resendSummary.message, details: resendSummary.details });
@@ -901,6 +954,16 @@ export default function InviteesManagementPage() {
               </div>
             </div>
 
+            {owed?.owed && (
+              <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm ${owed.payBy && new Date(owed.payBy).getTime() < pageOpenedAt ? "border-[#FECDCA] bg-[#FEF3F2] text-[#B42318]" : "border-[#FDE68A] bg-[#FFFBEB] text-[#854D0E]"}`}>
+                <span className="min-w-0 break-words">
+                  <b>{owed.organizerName || "The organizer"}</b> owes {formatMoney(owed.owed.total)} for {owed.owed.invitees} WhatsApp invitation{owed.owed.invitees === 1 ? "" : "s"} (Pay Later).
+                  {owed.payBy ? ` ${new Date(owed.payBy).getTime() < pageOpenedAt ? "Overdue since" : "Due by"} ${formatDeadline(owed.payBy)}.` : ""}
+                </span>
+                <button type="button" onClick={() => { setBillError(null); setRecordOpen(true); }} className="shrink-0 rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#1F65FF] border border-[#1F65FF] hover:bg-[#EEF4FF] cursor-pointer">Mark settled</button>
+              </div>
+            )}
+
             {/* The list's tools (Figma 195:1154): Select All and Delete on the left; Action menu, the main button for this event's invitation
                 type and the guest count on the right */}
             <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label="Upload invitee Excel file" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
@@ -1194,7 +1257,12 @@ export default function InviteesManagementPage() {
         <SendBillModal quote={bill.quote} kind={bill.kind} busy={billBusy} error={billError} onCancel={() => setBill(null)} onFinish={payAndSend}
           onEmailInstead={bill.kind === "download" ? undefined : () => { const b = bill; setBill(null); void runPaid(b.kind, b.targets, "EMAIL"); }}
           onRequestPayment={isAdmin && bill.kind !== "download" ? () => void requestPayment() : undefined}
+          onPayLater={() => void sendOnCredit()}
+          onSettle={(note) => void settleAndSend(note)}
         />
+      )}
+      {recordOpen && owed && (
+        <SendBillModal quote={owed} settleOnly busy={billBusy} error={billError} onCancel={() => setRecordOpen(false)} onFinish={() => undefined} onSettle={(note) => void recordPayment(note)} />
       )}
       {passAction && (
         <PassActionModal
