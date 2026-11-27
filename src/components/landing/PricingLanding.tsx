@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { homeContent, type HomeContent } from "@/components/cms/homeContent";
+import { approvedLink } from "@/components/cms/approvedContent";
 import Link from "next/link";
 import { BLUE_GRADIENT } from "./BlueButton";
 import Reveal from "./Reveal";
@@ -31,15 +33,15 @@ const TRUST = [
   { icon: "/images/landing/price-download.svg", label: "Statements any time" },
 ];
 
-export default function PricingLanding() {
+export default function PricingLanding({ heading, description, signupLabel, signupHref, contactLabel, contactHref, volumeHeading, volumeDescription }: HomeContent["PricingLanding"]) {
   const subtotal = GUESTS * RATE;
   const gst = subtotal * GST;
   return (
     <section id="pricing" className="scroll-mt-[69px] bg-white py-14 sm:py-20">
       <Container className="flex flex-col items-center gap-10 sm:gap-14">
         <Reveal className="flex w-full flex-col items-center gap-4 text-center">
-          <Headline className="max-w-[820px] text-[#000B2C]">Simple pricing. Pay only for the guests you invite.</Headline>
-          <p className="max-w-[680px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">No subscriptions, no seat fees, no setup costs. You see the exact total before you send a single invitation.</p>
+          <Headline className="max-w-[820px] text-[#000B2C]">{heading}</Headline>
+          <p className="max-w-[680px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{description}</p>
         </Reveal>
         <div className="flex w-full flex-col items-stretch justify-center gap-8 lg:flex-row lg:items-start">
           {/* the plan: a deep navy card with two soft glows and the dashed squares */}
@@ -66,7 +68,7 @@ export default function PricingLanding() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="flex h-[50px] w-full items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white transition hover:brightness-110">Create your event — pay when you send</Link>
+                <Link href={approvedLink(signupHref, homeContent.PricingLanding.signupHref)} style={{ backgroundImage: BLUE_GRADIENT }} className="flex h-[50px] w-full items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white transition hover:brightness-110">{signupLabel}</Link>
               </div>
             </div>
           </Reveal>
@@ -86,9 +88,9 @@ export default function PricingLanding() {
               </div>
             </div>
             <div className="flex flex-col items-start justify-center gap-3 rounded-[19px] border border-[#CDC4C4] px-6 py-7 sm:px-10">
-              <h3 className="text-[17px] font-bold text-[#000B2C]">Planning many events, or need a custom card?</h3>
-              <p className="text-[17px] leading-[1.3] text-[#4A5470]">Planning many events a year, or need a custom card design? Talk to us for volume pricing.</p>
-              <Link href="/contact" className="inline-flex items-center rounded-md border border-[#1F65FF] bg-white px-3.5 py-2 text-[17px] font-semibold text-[#1F65FF] transition-colors hover:bg-[#EAF1FF]">Talk to us</Link>
+              <h3 className="text-[17px] font-bold text-[#000B2C]">{volumeHeading}</h3>
+              <p className="text-[17px] leading-[1.3] text-[#4A5470]">{volumeDescription}</p>
+              <Link href={approvedLink(contactHref, homeContent.PricingLanding.contactHref)} className="inline-flex items-center rounded-md border border-[#1F65FF] bg-white px-3.5 py-2 text-[17px] font-semibold text-[#1F65FF] transition-colors hover:bg-[#EAF1FF]">{contactLabel}</Link>
             </div>
             <ul className="flex flex-wrap items-start justify-center gap-x-5 gap-y-2">
               {TRUST.map((t) => (

@@ -27,6 +27,7 @@ export function getActiveItemFromPathname(pathname: string, role: WebRole): stri
   }
 
   // ADMIN
+  if (within("/admin/pages")) return "pages";
   if (within("/events/add")) return "add-event";
   if (within("/events/select")) return "add-invitees";
   if (within("/events")) return "events-list";

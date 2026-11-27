@@ -11,6 +11,7 @@
     "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
+    "@puckeditor/core": "^0.24.2",
     "@types/qrcode": "^1.5.6",
     "gsap": "^3.15.0",
     "jsqr": "^1.4.0",

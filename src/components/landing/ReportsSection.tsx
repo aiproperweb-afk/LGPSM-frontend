@@ -1,3 +1,5 @@
+import { homeContent, type HomeContent } from "@/components/cms/homeContent";
+import { approvedLink, resolveCmsImage } from "@/components/cms/approvedContent";
 import Image from "next/image";
 import Link from "next/link";
 import Reveal from "./Reveal";
@@ -13,14 +15,14 @@ const BULLETS = [
   "Billing history with invoices and downloadable statements by date range",
 ];
 
-export default function ReportsSection() {
+export default function ReportsSection({ heading, description, details, buttonLabel, buttonHref, image, imageAlt }: HomeContent["ReportsSection"]) {
   return (
     <section className="bg-white py-14 sm:py-20">
       <Container className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <Reveal variant="left" className="flex flex-col gap-5">
-          <Headline className="text-[#000B2C]">Every event ends with answers, not guesses</Headline>
-          <p className="text-[16px] leading-[1.5] text-[#000B2C] sm:text-[17px]">One report shows how many you invited, how many came, and what happened at every session.</p>
-          <p className="text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">After the event, open a full report for it, or download it to share with clients, sponsors or family. Compare invited and attended guests session by session, and drill down to any single guest.</p>
+          <Headline className="text-[#000B2C]">{heading}</Headline>
+          <p className="text-[16px] leading-[1.5] text-[#000B2C] sm:text-[17px]">{description}</p>
+          <p className="text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{details}</p>
           <ul className="flex flex-col gap-3">
             {BULLETS.map((b) => (
               <li key={b} className="flex items-start gap-3 text-[16px] leading-[1.45] text-[#4A5470]">
@@ -30,11 +32,11 @@ export default function ReportsSection() {
             ))}
           </ul>
           <div>
-            <Link href="/signup" className="inline-flex h-11 items-center rounded-xl border border-[#000B2C] bg-white px-6 text-[15px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF] transition-colors">Explore a sample report</Link>
+            <Link href={approvedLink(buttonHref, homeContent.ReportsSection.buttonHref)} className="inline-flex h-11 items-center rounded-xl border border-[#000B2C] bg-white px-6 text-[15px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF] transition-colors">{buttonLabel}</Link>
           </div>
         </Reveal>
         <Reveal variant="right" delay={120} className="overflow-hidden rounded-[20px]">
-          <Image src="/images/landing/reports.webp" alt="Event report with total invitees, assigned system users, total sessions and an invited versus attended chart" width={560} height={654} sizes="(max-width:1024px) 92vw, 560px" className="h-auto w-full" />
+          <Image src={resolveCmsImage(image) ?? homeContent.ReportsSection.image} alt={imageAlt} unoptimized={image !== homeContent.ReportsSection.image} width={560} height={654} sizes="(max-width:1024px) 92vw, 560px" className="h-auto w-full" />
         </Reveal>
       </Container>
     </section>

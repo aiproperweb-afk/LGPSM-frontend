@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/services/apiClient";
 export function resolveImageUrl(key?: string | null, serveFromApi = false): string | null {
   if (!key) return null;
   const media = /^media:([0-9a-fA-F]{24})$/.exec(key);
-  if (media) return `${API_BASE_URL}/api/v1/media/${media[1]}${serveFromApi ? "?raw=1" : ""}`;
+  if (media) return `${API_BASE_URL.replace(/\/api\/v1$/, "")}/api/v1/media/${media[1]}${serveFromApi ? "?raw=1" : ""}`;
   if (key.startsWith("https://") || key.startsWith("http://") || key.startsWith("/") || key.startsWith("blob:")) return key;
   return null;
 }

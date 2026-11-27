@@ -1,3 +1,5 @@
+import { homeContent, type HomeContent } from "@/components/cms/homeContent";
+import { approvedLink, resolveCmsImage } from "@/components/cms/approvedContent";
 import Image from "next/image";
 import Link from "next/link";
 import { BLUE_GRADIENT } from "./BlueButton";
@@ -11,7 +13,7 @@ const POINTS = [
   { title: "Activity trail", body: "Every action your team takes, such as sending invites or changing access rules, is logged with who did it and when.", icon: "/images/landing/day-3.svg" },
 ];
 
-export default function EventDay() {
+export default function EventDay({ heading, description, details, buttonLabel, buttonHref, image, imageAlt }: HomeContent["EventDay"]) {
   return (
     <section className="bg-white py-14 sm:py-20">
       <Container className="flex flex-col gap-12">
@@ -19,15 +21,15 @@ export default function EventDay() {
           <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E1E7F2] bg-white px-3 py-1 text-[13px] font-medium text-[#15803D]">
             <span className="size-1.5 rounded-full bg-[#15803D]" />On event day
           </span>
-          <Headline className="text-[#000B2C]">Watch your event fill up in real time</Headline>
-          <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">Guests show the QR code from their email or WhatsApp at the entrance. Your staff scan it to verify entry. You see every entry the moment it happens.</p>
+          <Headline className="text-[#000B2C]">{heading}</Headline>
+          <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{description}</p>
         </Reveal>
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[560px_1fr] lg:gap-12">
           <Reveal variant="left" className="overflow-hidden rounded-[20px]">
-            <Image src="/images/landing/event-day.webp" alt="Session health overview with live logged-in guests, check-ins today and occupancy, and the access logs table" width={560} height={593} sizes="(max-width:1024px) 92vw, 560px" className="h-auto w-full" />
+            <Image src={resolveCmsImage(image) ?? homeContent.EventDay.image} alt={imageAlt} unoptimized={image !== homeContent.EventDay.image} width={560} height={593} sizes="(max-width:1024px) 92vw, 560px" className="h-auto w-full" />
           </Reveal>
           <Reveal variant="right" delay={120} className="flex flex-col gap-0">
-            <p className="pb-5 text-[16px] leading-[1.55] text-[#4A5470] sm:text-[17px]">The live Event Details dashboard shows who is inside, how full each session is, and which gate each guest came through. Spot a crowded session, a late arrival or a failed invite while there is still time to act.</p>
+            <p className="pb-5 text-[16px] leading-[1.55] text-[#4A5470] sm:text-[17px]">{details}</p>
             {POINTS.map((p) => (
               <div key={p.title} className="flex gap-3 border-t border-[#E1E7F2] py-4">
                 <Image src={p.icon} alt="" width={24} height={24} className="size-6 shrink-0" />
@@ -38,7 +40,7 @@ export default function EventDay() {
               </div>
             ))}
             <div className="border-t border-[#E1E7F2] pt-6">
-              <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-11 items-center rounded-xl px-6 text-[15px] font-semibold text-white hover:brightness-95 transition">See the live dashboard</Link>
+              <Link href={approvedLink(buttonHref, homeContent.EventDay.buttonHref)} style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-11 items-center rounded-xl px-6 text-[15px] font-semibold text-white hover:brightness-95 transition">{buttonLabel}</Link>
             </div>
           </Reveal>
         </div>

@@ -1,3 +1,4 @@
+import { type HomeContent } from "@/components/cms/homeContent";
 import Image from "next/image";
 import Reveal from "./Reveal";
 import { Container, SectionHeading } from "./ui";
@@ -9,11 +10,11 @@ const POINTS = [
   { icon: "/images/landing/pain-3.svg", title: "Sessions blur together.", body: "The lunch, the after-party and the VIP dinner all need different guest lists, but nobody can enforce them." },
 ];
 
-export default function PainPoints() {
+export default function PainPoints({ heading, description }: HomeContent["PainPoints"]) {
   return (
     <section className="bg-white py-14 sm:py-20">
       <Container className="flex flex-col gap-12">
-        <Reveal><SectionHeading wide title="Guest lists live in spreadsheets. Entry happens on hope." subtitle="Most events are still run with printed cards, forwarded messages and a clipboard at the door." /></Reveal>
+        <Reveal><SectionHeading wide title={heading} subtitle={description} /></Reveal>
         <div className="grid grid-cols-1 border-y border-[#D3D3D3] md:grid-cols-3">
           {POINTS.map((p, i) => (
             <Reveal key={p.title} variant="pop" delay={i * 110} className={`flex flex-col gap-3.5 py-9 ${i > 0 ? "border-t border-[#D3D3D3] md:border-l md:border-t-0 md:pl-8" : ""} ${i < 2 ? "md:pr-8" : ""}`}>

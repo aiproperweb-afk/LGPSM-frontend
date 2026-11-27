@@ -15,6 +15,7 @@ export function proxy(request: NextRequest) {
   // Protect every authenticated dashboard section (role checks happen in the dashboard layout and the API)
   const protectedRoutes = [
     "/dashboard",
+    "/admin/pages",
     "/events",
     "/user-management",
     "/event-organizer",
@@ -47,6 +48,7 @@ export const config = {
   matcher: [
     "/",
     "/dashboard/:path*",
+    "/admin/pages/:path*",
     "/events/:path*",
     "/user-management/:path*",
     "/event-organizer/:path*",

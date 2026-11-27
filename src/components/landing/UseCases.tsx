@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { homeContent, type HomeContent } from "@/components/cms/homeContent";
+import { approvedLink } from "@/components/cms/approvedContent";
 import Link from "next/link";
 import Reveal from "./Reveal";
 import { Container, Headline } from "./ui";
@@ -13,7 +15,7 @@ const CASES = [
   { tag: "Event planners and agencies", title: "Run many clients' events from one login", body: "Manage several events at once, assign your crew per event, and hand every client a clean report.", icon: "/images/landing/case-6.svg" },
 ];
 
-export default function UseCases() {
+export default function UseCases({ heading, description, buttonLabel, buttonHref }: HomeContent["UseCases"]) {
   return (
     <section
       id="use-cases"
@@ -22,8 +24,8 @@ export default function UseCases() {
     >
       <Container className="flex flex-col items-center gap-10 sm:gap-12">
         <Reveal className="flex w-full flex-col items-center gap-4 text-center">
-          <Headline className="text-[#F2F2F7]">Built for every kind of guest list</Headline>
-          <p className="max-w-[740px] text-[16px] text-[#BDC6E0] sm:text-[17px]">From a 50-person birthday to a 2,000-guest college fest, the same tools scale with you.</p>
+          <Headline className="text-[#F2F2F7]">{heading}</Headline>
+          <p className="max-w-[740px] text-[16px] text-[#BDC6E0] sm:text-[17px]">{description}</p>
         </Reveal>
         {/* six cards in a 3 x 2 grid, one outer rounded frame, hairline dividers (Figma 66:6486) */}
         <div className="grid w-full grid-cols-1 overflow-hidden rounded-[19px] border border-[#E1E7F2] bg-white sm:grid-cols-2 lg:grid-cols-3">
@@ -40,7 +42,7 @@ export default function UseCases() {
             </Reveal>
           ))}
         </div>
-        <Link href="/contact" className="inline-flex h-[50px] items-center rounded-xl border border-white px-6 text-[16px] font-semibold text-white hover:bg-white/10 transition-colors">Find the right setup for your event</Link>
+        <Link href={approvedLink(buttonHref, homeContent.UseCases.buttonHref)} className="inline-flex h-[50px] items-center rounded-xl border border-white px-6 text-[16px] font-semibold text-white hover:bg-white/10 transition-colors">{buttonLabel}</Link>
       </Container>
     </section>
   );

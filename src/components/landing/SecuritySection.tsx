@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { type HomeContent } from "@/components/cms/homeContent";
 import { Container, Headline } from "./ui";
 import Reveal from "./Reveal";
 
@@ -10,13 +11,13 @@ const POINTS = [
   { title: "Full audit trail", body: "Every invite sent and every access rule changed is logged with the person and time.", icon: "/images/landing/sec-4.svg" },
 ];
 
-export default function SecuritySection() {
+export default function SecuritySection({ heading, description }: HomeContent["SecuritySection"]) {
   return (
     <section className="border-t border-[#E6EBF5] bg-white py-14 sm:py-20">
       <Container className="flex flex-col items-center gap-10 sm:gap-14">
         <Reveal className="flex w-full flex-col items-center gap-4 text-center">
-          <Headline className="max-w-[900px] text-[#000B2C]">Your guest list stays yours, and your gate stays shut to strangers</Headline>
-          <p className="max-w-[640px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">Every invitation is unique, every entry is logged, and every change has a name next to it.</p>
+          <Headline className="max-w-[900px] text-[#000B2C]">{heading}</Headline>
+          <p className="max-w-[640px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{description}</p>
         </Reveal>
         <div className="grid w-full grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {POINTS.map((p, i) => (

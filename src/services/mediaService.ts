@@ -1,4 +1,4 @@
-import { apiClient, ApiResponse } from "./apiClient";
+import { apiClient, API_BASE_URL, ApiResponse } from "./apiClient";
 
 export interface PresignPayload {
   fileName: string;
@@ -12,7 +12,7 @@ export interface PresignData {
   publicUrl?: string;
 }
 
-export type MediaPurpose = "TEMPLATE" | "EVENT_LOGO" | "ORGANIZATION_LOGO" | "AVATAR";
+export type MediaPurpose = "TEMPLATE" | "EVENT_LOGO" | "ORGANIZATION_LOGO" | "AVATAR" | "CMS_PAGE";
 
 export interface StoredImage {
   key: string; // "media:<id>"
@@ -41,7 +41,7 @@ export const mediaService = {
     const form = new FormData();
     form.append("purpose", purpose);
     form.append("file", file);
-    return apiClient<StoredImage>("/api/v1/media/upload", { method: "POST", body: form }, true);
+    return apiClient<StoredImage>(purpose === "CMS_PAGE" ? API_BASE_URL.replace(/\/api\/v1$/, "") + "/api/v1/media/upload" : "/api/v1/media/upload", { method: "POST", body: form }, true);
   },
 
   /**

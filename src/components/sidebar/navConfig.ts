@@ -42,6 +42,7 @@ export const NAV_ENTRIES: NavEntry[] = [
     ],
   },
   { key: "templates", label: "Templates", icon: "templates", href: "/templates", roles: ["ADMIN"] },
+  { key: "pages", label: "Pages", icon: "list-alt", href: "/admin/pages", roles: ["ADMIN"] },
   // ORGANIZER shell: Event Management and Invitees Management are top-level items with their own icons (the "Configurations"
   // group they used to sit in was removed at the client's request). The keys are unchanged, so active-state matching still works.
   { key: "event-management", label: "Event Management", icon: "event", href: "/events", roles: ["ORGANIZER"] },
@@ -102,6 +103,7 @@ export function navForRole(role: WebRole): NavEntry[] {
 const BLOCKED: Record<WebRole, string[]> = {
   ADMIN: ["/billing", "/settings/logo"],
   ORGANIZER: [
+    "/admin/pages",
     "/event-organizer",
     "/earnings",
     "/settings/price-rate",

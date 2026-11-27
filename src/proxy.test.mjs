@@ -16,7 +16,7 @@ test("the proxy sits beside src/app and exports the handler Next looks for", () 
 
 test("every private section is both protected and matched", () => {
   const source = fs.readFileSync(url, "utf8");
-  for (const section of ["dashboard", "events", "user-management", "event-organizer", "earnings", "reports", "settings", "templates", "notification", "notifications", "billing"]) {
+  for (const section of ["dashboard", "admin/pages", "events", "user-management", "event-organizer", "earnings", "reports", "settings", "templates", "notification", "notifications", "billing"]) {
     assert.ok(source.includes(`"/${section}"`), `${section} is in the protected list`);
     assert.ok(source.includes(`"/${section}/:path*"`), `${section} is in the matcher`);
   }

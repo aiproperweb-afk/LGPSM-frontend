@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [
         "/dashboard",
+        "/admin/pages",
         "/events",
         "/user-management",
         "/event-organizer",

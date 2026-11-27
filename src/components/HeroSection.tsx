@@ -1,9 +1,11 @@
+import { homeContent, type HomeContent } from "@/components/cms/homeContent";
+import { approvedLink, resolveCmsImage } from "@/components/cms/approvedContent";
 import type React from "react";
 import Image from "next/image";
 import { OutlineLink, PrimaryLink } from "@/components/landing/BlueButton";
 
 // Landing hero (Figma "EventQRapp — Landing Page-Ver2", node 66:119)
-export default function HeroSection() {
+export default function HeroSection({ badge, heading, description, note, primaryLabel, primaryHref, secondaryLabel, secondaryHref, image, imageAlt }: HomeContent["HeroSection"]) {
   return (
     <section id="home" className="scroll-mt-[69px] relative w-full overflow-hidden bg-[#F6F6FF]">
       {/* faint grid lines behind the headline */}
@@ -15,26 +17,22 @@ export default function HeroSection() {
             <span className="flex size-[22px] items-center justify-center rounded-full bg-[#EAF1FF]">
               <Image src="/images/landing/hero-badge-icon.svg" alt="" width={13} height={13} />
             </span>
-            <span className="text-[13px] sm:text-[15px] text-[#4A5470]">Event invitations, RSVP and entry control in one place</span>
+            <span className="text-[13px] sm:text-[15px] text-[#4A5470]">{badge}</span>
           </div>
 
-          <h1 style={{ "--d": "110ms" } as React.CSSProperties} className="hero-anim font-[family-name:var(--font-dm-sans)] text-[34px] leading-[40px] tracking-[-1px] text-[#000B2C] sm:text-[46px] sm:leading-[52px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]">
-            From invitation to entry, manage every guest and every session with ease.
-          </h1>
+          <h1 style={{ "--d": "110ms" } as React.CSSProperties} className="hero-anim font-[family-name:var(--font-dm-sans)] text-[34px] leading-[40px] tracking-[-1px] text-[#000B2C] sm:text-[46px] sm:leading-[52px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]">{heading}</h1>
 
-          <p style={{ "--d": "220ms" } as React.CSSProperties} className="hero-anim max-w-[1100px] text-[15px] leading-relaxed text-[#4A5470] sm:text-[17px] lg:px-10">
-            EventQRapp lets you design a QR invitation card, upload your guest list from Excel, set who can enter which session, and send every invite by email and WhatsApp in one click. On the day, your staff scan guests in while you watch attendance live.
-          </p>
+          <p style={{ "--d": "220ms" } as React.CSSProperties} className="hero-anim max-w-[1100px] text-[15px] leading-relaxed text-[#4A5470] sm:text-[17px] lg:px-10">{description}</p>
 
           <div style={{ "--d": "330ms" } as React.CSSProperties} className="hero-anim flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            <PrimaryLink href="/signup">Create your first event</PrimaryLink>
-            <OutlineLink href="/#how-it-works">
-              See how it works
+            <PrimaryLink href={approvedLink(primaryHref, homeContent.HeroSection.primaryHref)}>{primaryLabel}</PrimaryLink>
+            <OutlineLink href={approvedLink(secondaryHref, homeContent.HeroSection.secondaryHref)}>
+              {secondaryLabel}
               <Image src="/images/landing/play-circle.svg" alt="" width={24} height={24} />
             </OutlineLink>
           </div>
 
-          <p style={{ "--d": "410ms" } as React.CSSProperties} className="hero-anim text-[15px] text-[#4A5470]">No subscription. Pay only for the guests you invite.</p>
+          <p style={{ "--d": "410ms" } as React.CSSProperties} className="hero-anim text-[15px] text-[#4A5470]">{note}</p>
         </div>
 
         {/* product shot on a blue stage */}
@@ -42,7 +40,7 @@ export default function HeroSection() {
           <Image src="/images/landing/hero-wave-1.svg" alt="" aria-hidden width={470} height={693} unoptimized className="pointer-events-none absolute left-[-8px] top-[-190px] max-w-none opacity-80" />
           <Image src="/images/landing/hero-wave-2.svg" alt="" aria-hidden width={1240} height={650} unoptimized className="pointer-events-none absolute left-[-47px] top-[-40px] hidden max-w-none lg:block" />
           <div className="absolute left-1/2 top-[6%] aspect-[964/575] w-[88%] max-w-[964px] -translate-x-1/2 overflow-hidden rounded-t-md">
-            <Image src="/images/landing/dashboard-hero.jpg" alt="The EventQRapp organiser dashboard: events, system users, billing overview, recent notifications and the events overview" width={1440} height={859} priority sizes="(max-width: 1024px) 88vw, 964px" className="w-full h-auto" />
+            <Image src={resolveCmsImage(image) ?? homeContent.HeroSection.image} alt={imageAlt} unoptimized={image !== homeContent.HeroSection.image} width={1440} height={859} priority sizes="(max-width: 1024px) 88vw, 964px" className="w-full h-auto" />
           </div>
         </div>
       </div>
