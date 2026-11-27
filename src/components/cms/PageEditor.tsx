@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { cmsService } from "@/services/cmsService";
 import { cmsConfig } from "./config";
 import { UploadActivity } from "./UploadActivity";
-import { upgradePageData, validatePageData } from "./validatePageData";
+import { validatePageData } from "./validatePageData";
 import type { CmsPageDetail, CmsPageData, CmsSlug } from "./types";
 
 const overrides: Partial<Overrides<typeof cmsConfig>> = {
@@ -56,14 +56,13 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
       if (!active) return;
       if (!result.success || !result.data) { setMessage(result.message || "Could not load page."); return; }
       const document = result.data;
-      const draft = upgradePageData(document.draftData, slug);
-      if (document.schemaVersion !== 1 || !validatePageData(draft, slug)) {
+      if (document.schemaVersion !== 1 || !validatePageData(document.draftData, slug)) {
         setMessage("This page uses an unsupported CMS document.");
         return;
       }
-      latest.current = draft;
-      saved.current = fingerprint(draft);
-      setInitial(draft);
+      latest.current = document.draftData;
+      saved.current = fingerprint(document.draftData);
+      setInitial(document.draftData);
       setPage(document);
       setDirty(false);
       setConflict(false);
@@ -99,12 +98,11 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
         return;
       }
       setPage(result.data);
-      const draft = upgradePageData(result.data.draftData, slug);
-      if (validatePageData(draft, slug)) {
-        saved.current = fingerprint(draft);
+      if (validatePageData(result.data.draftData, slug)) {
+        saved.current = fingerprint(result.data.draftData);
         if (action === "discard-draft") {
-          latest.current = draft;
-          setInitial(draft);
+          latest.current = result.data.draftData;
+          setInitial(result.data.draftData);
           remount(n => n + 1);
         }
         setDirty(latest.current !== null && fingerprint(latest.current) !== saved.current);

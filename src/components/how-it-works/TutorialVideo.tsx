@@ -1,6 +1,5 @@
 "use client";
 
-import { resolveCmsImage } from "@/components/cms/approvedContent";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -9,7 +8,7 @@ import { useState } from "react";
 // instead of showing a play button that leads nowhere.
 const VIDEO_URL = process.env.NEXT_PUBLIC_TUTORIAL_VIDEO_URL ?? "";
 
-export default function TutorialVideo({ image, unavailable }: { image: string; unavailable: string }) {
+export default function TutorialVideo() {
   const [playing, setPlaying] = useState(false);
   return (
     <div id="tutorial" className="relative mx-auto h-[260px] w-full max-w-[1080px] scroll-mt-[90px] overflow-hidden rounded-3xl bg-[#EAF1FF] sm:h-[420px] lg:h-[593px]">
@@ -17,8 +16,8 @@ export default function TutorialVideo({ image, unavailable }: { image: string; u
         <video src={VIDEO_URL} controls autoPlay playsInline className="absolute inset-0 size-full bg-black object-contain" />
       ) : (
         <>
-          <div className="absolute left-1/2 top-[56px] hidden h-[602px] w-[964px] -translate-x-1/2 sm:block"><Image src={resolveCmsImage(image) ?? "/images/how-it-works/poster.jpg"} unoptimized={image.startsWith("media:")} alt="" fill sizes="964px" className="object-contain" /></div>
-          <div className="absolute inset-0 sm:hidden"><Image src={resolveCmsImage(image) ?? "/images/how-it-works/poster.jpg"} unoptimized={image.startsWith("media:")} alt="" fill sizes="100vw" className="object-cover object-top" /></div>
+          <div className="absolute left-1/2 top-[56px] hidden h-[602px] w-[964px] -translate-x-1/2 sm:block"><Image src="/images/how-it-works/poster.jpg" alt="" fill sizes="964px" className="object-contain" /></div>
+          <div className="absolute inset-0 sm:hidden"><Image src="/images/how-it-works/poster.jpg" alt="" fill sizes="100vw" className="object-cover object-top" /></div>
           <div aria-hidden className="absolute inset-0 bg-[rgba(74,84,112,0.48)] backdrop-blur-[2px]" />
           <div className="absolute inset-0 flex items-center justify-center">
             {VIDEO_URL ? (
@@ -26,7 +25,7 @@ export default function TutorialVideo({ image, unavailable }: { image: string; u
                 <svg width="36" height="40" viewBox="0 0 36 40" aria-hidden><path d="M6 4l26 16L6 36z" fill="#1F65FF" /></svg>
               </button>
             ) : (
-              <span className="rounded-full bg-white px-5 py-2.5 text-[15px] font-semibold text-[#000B2C] shadow-lg">{unavailable}</span>
+              <span className="rounded-full bg-white px-5 py-2.5 text-[15px] font-semibold text-[#000B2C] shadow-lg">Tutorial video coming soon</span>
             )}
           </div>
         </>

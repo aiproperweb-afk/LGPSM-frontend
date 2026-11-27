@@ -1,8 +1,5 @@
-import PublicPageRenderer from "@/components/cms/PublicPageRenderer";
-import { getPublishedPage } from "@/components/cms/publishedPage";
+import FeaturesPage from "@/components/features/FeaturesPage";
 
-export const dynamic = "force-dynamic";
-
-export default async function Page() {
-  return <PublicPageRenderer data={await getPublishedPage("features")} />;
+export default function Page() {
+  return <FeaturesPage />;
 }
