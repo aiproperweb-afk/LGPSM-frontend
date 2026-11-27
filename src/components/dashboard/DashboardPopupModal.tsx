@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
@@ -10,6 +12,7 @@ export default function DashboardPopupModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const cmsText = useDashboardCopy();
   // Closing plays a short exit animation before the parent actually unmounts the modal
   const [closing, setClosing] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -105,7 +108,7 @@ export default function DashboardPopupModal({
         <button
           type="button"
           onClick={handleClose}
-          aria-label="Close modal"
+          aria-label={cmsText("closeModal", "Close modal")}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/40 text-white hover:bg-[#1F65FF] hover:rotate-90 hover:scale-110 flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md"
         >
           ✕
@@ -113,9 +116,7 @@ export default function DashboardPopupModal({
 
         {/* Left Section */}
         <div className="flex-1 p-8 md:p-10 flex flex-col justify-center space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight welcome-popup-item" style={{ animationDelay: "380ms" }}>
-            Create an event
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight welcome-popup-item" style={{ animationDelay: "380ms" }}>{cmsText("createAnEvent", "Create an event")}</h2>
           <ul className="space-y-3.5">
             {steps.map((item, idx) => (
               <li

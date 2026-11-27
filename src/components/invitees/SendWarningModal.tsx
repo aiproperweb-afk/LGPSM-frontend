@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useEffect } from "react";
 import Link from "next/link";
 import Icon from "@/components/icons/Icon";
@@ -37,6 +39,7 @@ const CONFIRM_LABEL: Record<WindowMode, string> = { send: "Send Invitation", bot
  * Print only: download, both: send and download), and the delivery channel is chosen here whenever an invitation is sent.
  */
 export default function SendWarningModal({ eventId, eventTitle, mode, firstTime, count, billNote, channel, onChannelChange, onCancel, onConfirm }: SendWarningModalProps) {
+  const cmsText = useDashboardCopy();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
@@ -60,24 +63,24 @@ export default function SendWarningModal({ eventId, eventTitle, mode, firstTime,
       <div className="w-full max-w-[648px] bg-white border border-[#E5E5E5] rounded-lg overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
           <p className="flex-1 min-w-0 text-base font-medium text-[#15191C] break-words">
-            {mode === "resend" ? "Resend Invitations" : sending ? "Send Invitations" : "Download Cards"} for <span className="font-semibold text-[#1F65FF]">{eventTitle}</span>
+            {mode === "resend" ? cmsText("resendInvitations", "Resend Invitations") : sending ? cmsText("sendInvitations2", "Send Invitations") : cmsText("downloadCards", "Download Cards")}{" " + cmsText("for", "for") + " "}<span className="font-semibold text-[#1F65FF]">{eventTitle}</span>
           </p>
-          <button type="button" onClick={onCancel} aria-label="Close" className="shrink-0 cursor-pointer">
+          <button type="button" onClick={onCancel} aria-label={cmsText("close", "Close")} className="shrink-0 cursor-pointer">
             <Icon name="events/inv-panel-close" width={16} height={16} />
           </button>
         </div>
         <div className="flex flex-col items-center gap-6 px-6 pt-[48px] pb-8 text-center">
           <Icon name="events/warning" width={34} height={32} />
           <div className="flex flex-col gap-2 max-w-[442px] font-medium">
-            <h2 id="send-warning-title" className="text-[26px] text-[#15191C]">{firstTime ? "Warning" : "Confirm"}</h2>
+            <h2 id="send-warning-title" className="text-[26px] text-[#15191C]">{firstTime ? cmsText("warning", "Warning") : cmsText("confirm", "Confirm")}</h2>
             <p className="text-base text-[#15191C]/80">{text}</p>
           </div>
           {firstTime && (
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link href={`/events/${eventId}/edit`} className={secondary}>Edit Event</Link>
+              <Link href={`/events/${eventId}/edit`} className={secondary}>{cmsText("editEvent", "Edit Event")}</Link>
               {/* The template is chosen from the card preview on the edit form's first step */}
-              <Link href={`/events/${eventId}/edit`} className={secondary}>Change Template</Link>
-              <button type="button" onClick={onCancel} className={secondary}>I’ll do later</button>
+              <Link href={`/events/${eventId}/edit`} className={secondary}>{cmsText("changeTemplate", "Change Template")}</Link>
+              <button type="button" onClick={onCancel} className={secondary}>{cmsText("iLlDoLater", "I’ll do later")}</button>
             </div>
           )}
           {/* what comes next sits last, just above the send button */}

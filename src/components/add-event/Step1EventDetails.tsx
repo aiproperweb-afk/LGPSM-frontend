@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import PhoneInput, { PhoneNote } from "@/components/common/PhoneInput";
 import React, { useEffect, useRef, useState } from "react";
 import { DraftErrors, EventDraft } from "./eventDraft";
@@ -54,6 +56,7 @@ function OrganizerSelectField({
   onChange: (ids: string[]) => void;
   error?: string;
 }) {
+  const cmsText = useDashboardCopy();
   const [organizers, setOrganizers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   // Only a successful load can say which saved organizers no longer exist; a failed one says nothing
@@ -115,11 +118,9 @@ function OrganizerSelectField({
   return (
     <div className="space-y-1.5" ref={dropdownRef}>
       <div className="flex items-center justify-between">
-        <label className={labelClass}>
-          Select Organizer
-        </label>
+        <label className={labelClass}>{cmsText("selectOrganizer", "Select Organizer")}</label>
       </div>
-      <p className="-mt-1 text-xs text-[#828282]">Choose the one organizer this event is created for, or leave empty to create it under your admin account.</p>
+      <p className="-mt-1 text-xs text-[#828282]">{cmsText("chooseTheOneOrganizerThisEventIsCreated", "Choose the one organizer this event is created for, or leave empty to create it under your admin account.")}</p>
 
       <div className="relative">
         <button
@@ -131,7 +132,7 @@ function OrganizerSelectField({
         >
           {selectedIds.length === 0 ? (
             <span className="text-[#828282]">
-              {loading ? "Loading organizers..." : "Select the organizer this event will be created for"}
+              {loading ? cmsText("loadingOrganizers", "Loading organizers...") : cmsText("selectTheOrganizerThisEventWillBeCreated", "Select the organizer this event will be created for")}
             </span>
           ) : (
             <div className="flex flex-wrap gap-1.5 py-0.5">
@@ -140,11 +141,9 @@ function OrganizerSelectField({
                 // While names load (or if loading failed) show a neutral placeholder, never the internal id
                 if (!org) {
                   return loading ? (
-                    <span key={id} aria-label="Loading organizer" className="inline-block h-6 w-28 rounded-full bg-gray-200 animate-pulse" />
+                    <span key={id} aria-label={cmsText("loadingOrganizer", "Loading organizer")} className="inline-block h-6 w-28 rounded-full bg-gray-200 animate-pulse" />
                   ) : (
-                    <span key={id} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                      Selected organizer
-                    </span>
+                    <span key={id} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">{cmsText("selectedOrganizer", "Selected organizer")}</span>
                   );
                 }
                 const name = org.profile?.organizationName || "Organisation not set";
@@ -180,7 +179,7 @@ function OrganizerSelectField({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search organizer by name or email..."
+                placeholder={cmsText("searchOrganizerByNameOrEmail", "Search organizer by name or email...")}
                 className="w-full px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black"
               />
               <div className="flex items-center gap-1 shrink-0">
@@ -188,16 +187,14 @@ function OrganizerSelectField({
                   type="button"
                   onClick={clearAll}
                   className="text-[11px] font-semibold text-gray-500 hover:underline px-1 py-0.5"
-                >
-                  Clear
-                </button>
+                >{cmsText("clear", "Clear")}</button>
               </div>
             </div>
 
             {loading ? (
-              <SkeletonRegion label="Loading organizers" className="p-3 space-y-2"><Skeleton className="h-6" /><Skeleton className="h-6" /><Skeleton className="h-6" /></SkeletonRegion>
+              <SkeletonRegion label={cmsText("loadingOrganizers2", "Loading organizers")} className="p-3 space-y-2"><Skeleton className="h-6" /><Skeleton className="h-6" /><Skeleton className="h-6" /></SkeletonRegion>
             ) : filtered.length === 0 ? (
-              <p className="p-3 text-xs text-gray-500 text-center">No matching organizers found</p>
+              <p className="p-3 text-xs text-gray-500 text-center">{cmsText("noMatchingOrganizersFound", "No matching organizers found")}</p>
             ) : (
               filtered.map((org) => {
                 const isSelected = selectedIds.includes(org._id);
@@ -220,7 +217,7 @@ function OrganizerSelectField({
                       />
                       <div className="truncate">
                         <div className="text-xs font-semibold text-gray-900 truncate">{organizationName}</div>
-                        <div className="text-[10px] text-gray-500 truncate">Account: {org.fullName || "Organizer"}</div>
+                        <div className="text-[10px] text-gray-500 truncate">{cmsText("account", "Account:") + " "}{org.fullName || "Organizer"}</div>
                         <div className="text-[11px] text-gray-500 truncate">{org.email}</div>
                       </div>
                     </div>
@@ -257,6 +254,7 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
 
 // Controlled step: all values live in the wizard draft owned by the page
 export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, printOnly = false, errors, onNext, onCancel, readOnly = false }: Step1EventDetailsProps) {
+  const cmsText = useDashboardCopy();
   // what to tell the person when something other than a digit was typed in the contact number
   const [contactNote, setContactNote] = useState<string | null>(null);
   // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
@@ -282,8 +280,8 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       )}
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
-          <label htmlFor="event-title" className={labelClass}>Title<Req /></label>
-          <span className="text-xs text-[#828282]">{titleMax - draft.title.length} Chars remaining</span>
+          <label htmlFor="event-title" className={labelClass}>{cmsText("title", "Title")}<Req /></label>
+          <span className="text-xs text-[#828282]">{titleMax - draft.title.length}{" " + cmsText("charsRemaining", "Chars remaining")}</span>
         </div>
         <input
           id="event-title"
@@ -291,7 +289,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           value={draft.title}
           maxLength={titleMax}
           onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Product Launch Event 2026"
+          placeholder={cmsText("productLaunchEvent2026", "Product Launch Event 2026")}
           aria-invalid={!!errors.title}
           className={`${inputClass} ${border(errors.title)} focus:border-[#1F65FF]`}
         />
@@ -301,21 +299,21 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       {/* The host: who the invitation comes from (their name replaces the organizer's everywhere on it) and the number guests call */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-host" className={`block ${labelClass}`}>Host Name<Req /></label><InfoTip label="About the host name" text="The name guests see as the host of this event: on the invitation email, the invitation page and the card, in place of the organizer's own name. Use a person or organisation guests know." align="left" /></span>
+          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-host" className={`block ${labelClass}`}>{cmsText("hostName", "Host Name")}<Req /></label><InfoTip label={cmsText("aboutTheHostName", "About the host name")} text="The name guests see as the host of this event: on the invitation email, the invitation page and the card, in place of the organizer's own name. Use a person or organisation guests know." align="left" /></span>
           <input
             id="event-host"
             type="text"
             value={draft.hostName ?? ""}
             maxLength={100}
             onChange={(e) => onChange({ hostName: e.target.value })}
-            placeholder="Host or organisation name"
+            placeholder={cmsText("hostOrOrganisationName", "Host or organisation name")}
             aria-invalid={!!errors.hostName}
             className={`${inputClass} ${border(errors.hostName)} focus:border-[#1F65FF]`}
           />
           <Err msg={errors.hostName} />
         </div>
         <div>
-          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-contact" className={`block ${labelClass}`}>Host Contact Number<Req /></label><InfoTip label="About the host contact number" text="The number guests can call or message with questions about the event. It is shown on the invitation email, the invitation page and the card." align="left" /></span>
+          <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-contact" className={`block ${labelClass}`}>{cmsText("hostContactNumber", "Host Contact Number")}<Req /></label><InfoTip label={cmsText("aboutTheHostContactNumber", "About the host contact number")} text="The number guests can call or message with questions about the event. It is shown on the invitation email, the invitation page and the card." align="left" /></span>
           <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-black ${border(errors.contactNumber)}`}>
             <span className="px-3 text-sm text-[#6B6B6B] border-r border-[#E0E0E0]">+91</span>
             <PhoneInput
@@ -323,7 +321,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
               value={draft.contactNumber}
               onValueChange={(v) => onChange({ contactNumber: v })}
               onNote={setContactNote}
-              placeholder="Enter Number"
+              placeholder={cmsText("enterNumber", "Enter Number")}
               aria-invalid={!!errors.contactNumber}
               className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
             />
@@ -335,8 +333,8 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
 
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
-          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>Invitation Message <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About the invitation message" text="Your own words to the guest, shown in the blue box at the top of the invitation email and on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and a standard line is used." align="left" /></span>
-          <span className="text-xs text-[#828282]">{DESCRIPTION_MAX - draft.description.length} Chars remaining</span>
+          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>{cmsText("invitationMessage", "Invitation Message") + " "}<span className="font-normal text-[#828282]">{cmsText("optional", "(optional)")}</span></label><InfoTip label={cmsText("aboutTheInvitationMessage", "About the invitation message")} text="Your own words to the guest, shown in the blue box at the top of the invitation email and on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and a standard line is used." align="left" /></span>
+          <span className="text-xs text-[#828282]">{DESCRIPTION_MAX - draft.description.length}{" " + cmsText("charsRemaining", "Chars remaining")}</span>
         </div>
         <textarea
           id="event-description"
@@ -344,7 +342,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           value={draft.description}
           maxLength={DESCRIPTION_MAX}
           onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="Eg: Join us for an unforgettable event filled with celebration, connection, and memorable moments."
+          placeholder={cmsText("egJoinUsForAnUnforgettableEventFilled", "Eg: Join us for an unforgettable event filled with celebration, connection, and memorable moments.")}
           aria-invalid={!!errors.description}
           className={`${inputClass} ${border(errors.description)} focus:border-[#16A34A] leading-relaxed`}
         />
@@ -352,14 +350,10 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       </div>
 
       {draft.template && draft.categoryId && !draft.subcategoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0 && (
-        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          The template &ldquo;{draft.template.name}&rdquo; set the category, but its subcategory is not set or has since been changed, so choose the subcategory that fits your event.
-        </p>
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{cmsText("theTemplate", "The template “")}{draft.template.name}{cmsText("setTheCategoryButItsSubcategoryIsNot", "” set the category, but its subcategory is not set or has since been changed, so choose the subcategory that fits your event.")}</p>
       )}
       {draft.template && !draft.categoryId && (
-        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          The template &ldquo;{draft.template.name}&rdquo; is not tied to one event type, so choose the category and subcategory that fit your event.
-        </p>
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{cmsText("theTemplate", "The template “")}{draft.template.name}{cmsText("isNotTiedToOneEventTypeSo", "” is not tied to one event type, so choose the category and subcategory that fit your event.")}</p>
       )}
 
       <CategoryFields
@@ -378,13 +372,13 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <span className={`block ${labelClass} mb-1.5`}>Event Start Date Time<Req /></span>
-          <DateButton label="Event start date and time" value={draft.start} placeholder="Select start date and time" onClick={() => onOpenDatePicker("start")} error={errors.start} />
+          <span className={`block ${labelClass} mb-1.5`}>{cmsText("eventStartDateTime", "Event Start Date Time")}<Req /></span>
+          <DateButton label={cmsText("eventStartDateAndTime", "Event start date and time")} value={draft.start} placeholder={cmsText("selectStartDateAndTime", "Select start date and time")} onClick={() => onOpenDatePicker("start")} error={errors.start} />
           <Err msg={errors.start} />
         </div>
         <div>
-          <span className={`block ${labelClass} mb-1.5`}>Event End Date Time<Req /></span>
-          <DateButton label="Event end date and time" value={draft.end} placeholder="Select end date and time" onClick={() => onOpenDatePicker("end")} error={errors.end} />
+          <span className={`block ${labelClass} mb-1.5`}>{cmsText("eventEndDateTime", "Event End Date Time")}<Req /></span>
+          <DateButton label={cmsText("eventEndDateAndTime", "Event end date and time")} value={draft.end} placeholder={cmsText("selectEndDateAndTime", "Select end date and time")} onClick={() => onOpenDatePicker("end")} error={errors.end} />
           <Err msg={errors.end} />
         </div>
       </div>
@@ -403,20 +397,20 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
                   onChange={(e) => onChange({ rsvpEnabled: e.target.checked })}
                   className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
                 />
-                <span className={labelClass}>Event RSVP Acceptance</span>
+                <span className={labelClass}>{cmsText("eventRsvpAcceptance", "Event RSVP Acceptance")}</span>
               </label>
-              <InfoTip label="About RSVP acceptance" text="Lets invitees accept or decline from their invitation. RSVP acceptance is optional, but once it is ticked a last date is required: responses stop after it." />
+              <InfoTip label={cmsText("aboutRsvpAcceptance", "About RSVP acceptance")} text="Lets invitees accept or decline from their invitation. RSVP acceptance is optional, but once it is ticked a last date is required: responses stop after it." />
             </div>
             {draft.rsvpEnabled && (
               <div>
-                <span className={`block ${labelClass} mb-1.5`}>Acceptance Last Date<Req /></span>
-                <DateButton label="RSVP acceptance last date" value={draft.rsvpDeadline} placeholder="Select last date to respond" onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} />
+                <span className={`block ${labelClass} mb-1.5`}>{cmsText("acceptanceLastDate", "Acceptance Last Date")}<Req /></span>
+                <DateButton label={cmsText("rsvpAcceptanceLastDate", "RSVP acceptance last date")} value={draft.rsvpDeadline} placeholder={cmsText("selectLastDateToRespond", "Select last date to respond")} onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} />
                 <Err msg={errors.rsvpDeadline} />
               </div>
             )}
           </div>
         ) : (
-          <p className="flex-1 p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
+          <p className="flex-1 p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">{cmsText("rsvpCollectionIsTurnedOffByThePlatform", "RSVP collection is turned off by the platform administrator.")}</p>
         )}
         </div>
         <div data-event-logo className={`flex flex-col ${printOnly ? "sm:col-span-2" : ""}`}>
@@ -439,41 +433,37 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       </div>
 
       <div>
-        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-location" className={`block ${labelClass}`}>Event Location<Req /></label><InfoTip label="About Event Location" text="A short place name, such as a venue or city. It is printed on the invitation card design. Put the full street address in the Address field below." align="left" /></span>
+        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-location" className={`block ${labelClass}`}>{cmsText("eventLocation", "Event Location")}<Req /></label><InfoTip label={cmsText("aboutEventLocation", "About Event Location")} text="A short place name, such as a venue or city. It is printed on the invitation card design. Put the full street address in the Address field below." align="left" /></span>
         <input
           id="event-location"
           type="text"
           value={draft.venue}
           maxLength={EVENT_LOCATION_MAX_LENGTH}
           onChange={(e) => onChange({ venue: e.target.value })}
-          placeholder="Where is it? (shown on the invitation card)"
+          placeholder={cmsText("whereIsItShownOnTheInvitationCard", "Where is it? (shown on the invitation card)")}
           aria-invalid={!!errors.venue}
           className={`${inputClass} ${border(errors.venue)} focus:border-[#1F65FF]`}
         />
-        <p className="mt-1 text-xs text-[#828282] text-right">{EVENT_LOCATION_MAX_LENGTH - draft.venue.length} Chars remaining</p>
+        <p className="mt-1 text-xs text-[#828282] text-right">{EVENT_LOCATION_MAX_LENGTH - draft.venue.length}{" " + cmsText("charsRemaining", "Chars remaining")}</p>
         <Err msg={errors.venue} />
       </div>
 
       <div>
-        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-address-details" className={`block ${labelClass}`}>Address <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About Address" text="The full address, landmark or directions. It is shown to guests on their invitation page, not on the card design. Leave it empty if the Event Location is enough." align="left" /></span>
+        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-address-details" className={`block ${labelClass}`}>{cmsText("address", "Address") + " "}<span className="font-normal text-[#828282]">{cmsText("optional", "(optional)")}</span></label><InfoTip label={cmsText("aboutAddress", "About Address")} text="The full address, landmark or directions. It is shown to guests on their invitation page, not on the card design. Leave it empty if the Event Location is enough." align="left" /></span>
         <textarea
           id="event-address-details"
           rows={2}
           value={draft.addressDetails ?? ""}
           maxLength={300}
           onChange={(e) => onChange({ addressDetails: e.target.value })}
-          placeholder="Full address, landmark or directions"
+          placeholder={cmsText("fullAddressLandmarkOrDirections", "Full address, landmark or directions")}
           className={`${inputClass} ${border()} focus:border-[#16A34A] leading-relaxed`}
         />
       </div>
 
       {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
-        <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
-          Cancel
-        </button>
-        <button type="submit" className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">
-          Next
-        </button>
+        <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">{cmsText("cancel2", "Cancel")}</button>
+        <button type="submit" className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">{cmsText("next", "Next")}</button>
       </div>}
     </form>
   );

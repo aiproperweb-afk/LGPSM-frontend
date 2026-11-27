@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import { InviteeLog, AccessLog, SessionReport, ReportSessionColumn } from "@/types/reports";
 import { CheckInRecord } from "@/services/checkInService";
@@ -61,6 +63,7 @@ export default function ReportsLogsTable({
   loadingMoreAccess = false,
   onLoadMoreAccess,
 }: ReportsLogsTableProps) {
+  const cmsText = useDashboardCopy();
   const statusRow = (colSpan: number, text: string) =>
     /^Loading/.test(text) ? (
       <TableSkeletonRows rows={4} cols={colSpan} />
@@ -86,9 +89,7 @@ export default function ReportsLogsTable({
                 ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
-          >
-            Check-In Logs
-          </button>
+          >{cmsText("checkInLogs", "Check-In Logs")}</button>
 
           <button
             type="button"
@@ -98,9 +99,7 @@ export default function ReportsLogsTable({
                 ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
-          >
-            Invitee List
-          </button>
+          >{cmsText("inviteeList", "Invitee List")}</button>
 
           <button
             type="button"
@@ -110,9 +109,7 @@ export default function ReportsLogsTable({
                 ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
-          >
-            Action Log
-          </button>
+          >{cmsText("actionLog", "Action Log")}</button>
 
           <button
             type="button"
@@ -122,9 +119,7 @@ export default function ReportsLogsTable({
                 ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
-          >
-            Sessions
-          </button>
+          >{cmsText("sessions2", "Sessions")}</button>
         </div>
 
         </div>
@@ -140,8 +135,8 @@ export default function ReportsLogsTable({
               </span>
               <input
                 type="text"
-                placeholder="Search..."
-                aria-label="Search logs"
+                placeholder={cmsText("search2", "Search...")}
+                aria-label={cmsText("searchLogs", "Search logs")}
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
                 className="flex-1 min-w-0 bg-transparent text-xs font-medium text-[#15191C] placeholder-[#828282] focus:outline-none"
@@ -170,32 +165,30 @@ export default function ReportsLogsTable({
             className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#EEF3FF] transition-colors"
           >
             <Icon name="reports/download" width={15.83} height={19.22} />
-            <span>Download List</span>
+            <span>{cmsText("downloadList", "Download List")}</span>
           </button>
         </div>
 
         {/* Table Render */}
         {/* long tables scroll inside the card (header stays in view), wide ones scroll sideways */}
-        <div className="overflow-auto max-h-[min(65vh,620px)]" tabIndex={0} role="region" aria-label="Scrollable table">
+        <div className="overflow-auto max-h-[min(65vh,620px)]" tabIndex={0} role="region" aria-label={cmsText("scrollableTable", "Scrollable table")}>
           {/* REAL CHECK-IN LOGS TAB */}
           {activeTab === "checkins" && (
             <div>
               {loadingCheckIns ? (
-                <TableSkeleton rows={5} cols={6} label="Loading check-in records" />
+                <TableSkeleton rows={5} cols={6} label={cmsText("loadingCheckInRecords", "Loading check-in records")} />
               ) : checkInLogs.length === 0 ? (
-                <div className="py-12 text-center text-xs text-gray-500">
-                  No check-in records found for this event/session filter.
-                </div>
+                <div className="py-12 text-center text-xs text-gray-500">{cmsText("noCheckInRecordsFoundForThisEvent", "No check-in records found for this event/session filter.")}</div>
               ) : (
                 <table className="w-full text-left text-xs whitespace-nowrap">
                   <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                     <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                      <th className="py-3 px-4 font-medium">Invitee</th>
-                      <th className="py-3 px-4 font-medium">Session</th>
-                      <th className="py-3 px-4 font-medium">Method</th>
-                      <th className="py-3 px-4 font-medium">Check-In Time</th>
-                      <th className="py-3 px-4 font-medium">Checked In By</th>
-                      <th className="py-3 px-4 font-medium">RSVP</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("invitee2", "Invitee")}</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("session2", "Session")}</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("method", "Method")}</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("checkInTime", "Check-In Time")}</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("checkedInBy", "Checked In By")}</th>
+                      <th className="py-3 px-4 font-medium">{cmsText("rsvp", "RSVP")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -224,13 +217,9 @@ export default function ReportsLogsTable({
                           <td className="py-4 px-4 font-medium text-gray-700">{sessionName}</td>
                           <td className="py-4 px-4">
                             {method === "QR" ? (
-                              <span className="bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">
-                                QR SCAN
-                              </span>
+                              <span className="bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">{cmsText("qrScan", "QR SCAN")}</span>
                             ) : (
-                              <span className="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">
-                                MANUAL
-                              </span>
+                              <span className="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">{cmsText("manual", "MANUAL")}</span>
                             )}
                           </td>
                           <td className="py-4 px-4 text-gray-600 font-medium">{checkInTime}</td>
@@ -250,27 +239,21 @@ export default function ReportsLogsTable({
               {/* REAL BACKEND PAGINATION CONTROLS */}
               {totalPages > 1 && onPageChange && (
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
-                  <div>
-                    Showing page <span className="font-bold text-gray-900">{page}</span> of{" "}
-                    <span className="font-bold text-gray-900">{totalPages}</span> ({total} total records)
-                  </div>
+                  <div>{cmsText("showingPage", "Showing page") + " "}<span className="font-bold text-gray-900">{page}</span>{" " + cmsText("of", "of")}{" "}
+                    <span className="font-bold text-gray-900">{totalPages}</span> ({total}{" " + cmsText("totalRecords", "total records)")}</div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       disabled={page <= 1}
                       onClick={() => onPageChange(page - 1)}
                       className="px-3 py-1 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
-                    >
-                      Previous
-                    </button>
+                    >{cmsText("previous", "Previous")}</button>
                     <button
                       type="button"
                       disabled={page >= totalPages}
                       onClick={() => onPageChange(page + 1)}
                       className="px-3 py-1 bg-white border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer"
-                    >
-                      Next
-                    </button>
+                    >{cmsText("next", "Next")}</button>
                   </div>
                 </div>
               )}
@@ -282,12 +265,12 @@ export default function ReportsLogsTable({
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                  <th className="py-3 px-4 font-medium">Invitee Name</th>
-                  <th className="py-3 px-4 font-medium">Mobile No.</th>
-                  <th className="py-3 px-4 font-medium">Invitation Status</th>
-                  <th className="py-3 px-4 font-medium">RSVP Status</th>
-                  <th className="py-3 px-4 font-medium">Check-in Status</th>
-                  <th className="py-3 px-4 font-medium">Last Check-in Time</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("inviteeName", "Invitee Name")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("mobileNo", "Mobile No.")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("invitationStatus", "Invitation Status")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("rsvpStatus", "RSVP Status")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("checkInStatus", "Check-in Status")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("lastCheckInTime", "Last Check-in Time")}</th>
                   {sessionColumns.map((col) => (
                     <th key={col.id} className="py-3 px-4 font-medium text-center max-w-[140px] truncate" title={col.name}>
                       {col.name}
@@ -304,54 +287,36 @@ export default function ReportsLogsTable({
                     <td className="py-4 px-4 text-gray-600">{log.mobile}</td>
                     <td className="py-4 px-4">
                       {log.invitationStatus === "Sent" && (
-                        <span className="bg-emerald-100/70 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Successfully Sent
-                        </span>
+                        <span className="bg-emerald-100/70 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("successfullySent", "Successfully Sent")}</span>
                       )}
                       {log.invitationStatus === "Failed" && (
-                        <span className="bg-red-100/70 text-red-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Sending failed
-                        </span>
+                        <span className="bg-red-100/70 text-red-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("sendingFailed", "Sending failed")}</span>
                       )}
                       {log.invitationStatus === "Pending" && (
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Not sent yet
-                        </span>
+                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("notSentYet", "Not sent yet")}</span>
                       )}
                     </td>
                     <td className="py-4 px-4">
                       {log.rsvpStatus === "Accepted" && (
-                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Accepted
-                        </span>
+                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("accepted", "Accepted")}</span>
                       )}
                       {log.rsvpStatus === "Pending" && (
-                        <span className="bg-amber-100/70 text-amber-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Pending
-                        </span>
+                        <span className="bg-amber-100/70 text-amber-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("pending", "Pending")}</span>
                       )}
                       {log.rsvpStatus === "Declined" && (
-                        <span className="bg-red-100/70 text-red-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Declined
-                        </span>
+                        <span className="bg-red-100/70 text-red-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("declined", "Declined")}</span>
                       )}
-                      {log.rsvpStatus === "Not requested" && <span className="text-[#6B6B6B]" aria-label="RSVP not requested">--</span>}
+                      {log.rsvpStatus === "Not requested" && <span className="text-[#6B6B6B]" aria-label={cmsText("rsvpNotRequested", "RSVP not requested")}>--</span>}
                     </td>
                     <td className="py-4 px-4">
                       {log.checkInStatus === "Checked-in" && (
-                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Checked-in
-                        </span>
+                        <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("checkedIn2", "Checked-in")}</span>
                       )}
                       {log.checkInStatus === "Not Checked-in" && (
-                        <span className="bg-amber-500 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Not Checked-in
-                        </span>
+                        <span className="bg-amber-500 text-white px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("notCheckedIn", "Not Checked-in")}</span>
                       )}
                       {log.checkInStatus === "Partially Checked-in" && (
-                        <span className="border border-emerald-500 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block bg-emerald-50/30">
-                          Partially Checked-in
-                        </span>
+                        <span className="border border-emerald-500 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block bg-emerald-50/30">{cmsText("partiallyCheckedIn", "Partially Checked-in")}</span>
                       )}
                     </td>
                     <td className="py-4 px-4 text-gray-600">{log.lastCheckInTime}</td>
@@ -379,12 +344,12 @@ export default function ReportsLogsTable({
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                  <th className="py-3 px-4 font-medium">Organizer ID</th>
-                  <th className="py-3 px-4 font-medium">Organizer / Organisation</th>
-                  <th className="py-3 px-4 font-medium">User Type</th>
-                  <th className="py-3 px-4 font-medium">Date & Time</th>
-                  <th className="py-3 px-4 font-medium">Action</th>
-                  <th className="py-3 px-4 font-medium">Status</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("organizerId", "Organizer ID")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("organizerOrganisation", "Organizer / Organisation")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("userType", "User Type")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("dateTime", "Date & Time")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("action", "Action")}</th>
+                  <th className="py-3 px-4 font-medium">{cmsText("status", "Status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -399,13 +364,9 @@ export default function ReportsLogsTable({
                     <td className="py-4 px-4 text-gray-700 font-medium max-w-[280px] truncate" title={log.action}>{log.action}</td>
                     <td className="py-4 px-4">
                       {log.status === "Successful" ? (
-                        <span className="bg-emerald-100/70 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          Successful
-                        </span>
+                        <span className="bg-emerald-100/70 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("successful", "Successful")}</span>
                       ) : (
-                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
-                          failed
-                        </span>
+                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">{cmsText("failed2", "failed")}</span>
                       )}
                     </td>
                   </tr>
@@ -417,17 +378,17 @@ export default function ReportsLogsTable({
           {/* SESSIONS TAB */}
           {activeTab === "sessions" && (
             <div className="space-y-3">
-              <h4 className="text-xs font-bold text-gray-900">Sessions</h4>
+              <h4 className="text-xs font-bold text-gray-900">{cmsText("sessions2", "Sessions")}</h4>
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                   <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                     <th className="py-3 px-4 font-medium w-12">#</th>
-                    <th className="py-3 px-4 font-medium">Session Name</th>
-                    <th className="py-3 px-4 font-medium">Date & Time</th>
-                    <th className="py-3 px-4 font-medium">Invitees</th>
-                    <th className="py-3 px-4 font-medium">Attendees</th>
-                    <th className="py-3 px-4 font-medium">Access Control</th>
-                    <th className="py-3 px-4 font-medium">System Users</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("sessionName", "Session Name")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("dateTime", "Date & Time")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("invitees", "Invitees")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("attendees", "Attendees")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("accessControl", "Access Control")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("systemUsers", "System Users")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -456,7 +417,7 @@ export default function ReportsLogsTable({
             <span>{accessLogs.length < accessTotal ? `Showing the newest ${accessLogs.length} of ${accessTotal} entries` : `Showing all ${accessTotal} ${accessTotal === 1 ? "entry" : "entries"}`}</span>
             {onLoadMoreAccess && accessLogs.length < accessTotal && (
               <button type="button" onClick={onLoadMoreAccess} disabled={loadingMoreAccess} className="rounded-md border border-[#E0E0E0] px-3.5 py-1.5 font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50 cursor-pointer">
-                {loadingMoreAccess ? "Loading…" : "Load older entries"}
+                {loadingMoreAccess ? cmsText("loading2", "Loading…") : cmsText("loadOlderEntries", "Load older entries")}
               </button>
             )}
           </div>

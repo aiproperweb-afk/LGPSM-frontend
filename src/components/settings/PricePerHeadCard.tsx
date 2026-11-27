@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState } from "react";
 import { formatMoney } from "@/utils/money";
 
@@ -15,6 +17,7 @@ export default function PricePerHeadCard({
   saving = false,
   onSaveRate,
 }: PricePerHeadCardProps) {
+  const cmsText = useDashboardCopy();
   // what the administrator has moved the rate to (null = the saved rate is shown)
   const [edited, setEdited] = useState<number | null>(null);
   const sliderVal = edited ?? currentRate ?? 3;
@@ -35,7 +38,7 @@ export default function PricePerHeadCard({
     <div className="bg-white rounded-lg border border-[#E0E0E0] p-6 space-y-4">
       {/* Title Header */}
       <div>
-        <h2 className="text-xl font-medium text-[#15191C]">Price Per-Head</h2>
+        <h2 className="text-xl font-medium text-[#15191C]">{cmsText("pricePerHead", "Price Per-Head")}</h2>
         <p className="text-xs text-[#4B4F52] mt-0.5">
           {rateLine}
         </p>
@@ -49,7 +52,7 @@ export default function PricePerHeadCard({
             <span className="text-5xl font-semibold text-[#1F65FF]">
               {rateText}
             </span>
-            <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
+            <span className="text-sm font-medium text-[#4B4F52]">{cmsText("perHead", "Per head")}</span>
           </div>
           <p className="text-xs text-gray-500">{rateLine}</p>
         </div>
@@ -57,9 +60,7 @@ export default function PricePerHeadCard({
         {/* Right Side Slider Adjuster */}
         <div className="w-full md:w-[480px] bg-[#F7F7F7] rounded-md p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium tracking-wide text-[#4B4F52] uppercase">
-              ADJUST RATE
-            </span>
+            <span className="text-xs font-medium tracking-wide text-[#4B4F52] uppercase">{cmsText("adjustRate", "ADJUST RATE")}</span>
             <span className={`text-sm font-semibold ${changed ? "text-[#1F65FF]" : "text-[#4B4F52]"}`} aria-live="polite">
               {changed ? `New rate: ${formatMoney(sliderVal)} per head` : `Current: ${formatMoney(sliderVal)} per head`}
             </span>
@@ -77,7 +78,7 @@ export default function PricePerHeadCard({
                 max={20}
                 step={1}
                 value={sliderVal}
-                aria-label="Price per invitee"
+                aria-label={cmsText("pricePerInvitee", "Price per invitee")}
                 onChange={(e) => setSliderVal(parseFloat(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1F65FF]"
               />
@@ -96,7 +97,7 @@ export default function PricePerHeadCard({
                 max={20}
                 step={0.5}
                 value={Number.isFinite(sliderVal) ? sliderVal : ""}
-                aria-label="Price per invitee in rupees"
+                aria-label={cmsText("pricePerInviteeInRupees", "Price per invitee in rupees")}
                 onChange={(e) => setSliderVal(parseFloat(e.target.value))}
                 className="w-[72px] h-10 px-2 border border-[#E0E0E0] rounded-md text-sm font-medium text-[#15191C] bg-white focus:outline-none focus:border-black"
               />
@@ -107,7 +108,7 @@ export default function PricePerHeadCard({
               disabled={saving || !changed || !valid}
               className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#1F65FF] text-white text-sm font-semibold rounded-md hover:bg-[#1A56DB] transition-colors shrink-0"
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? cmsText("saving", "Saving...") : cmsText("save", "Save")}
             </button>
           </div>
         </div>

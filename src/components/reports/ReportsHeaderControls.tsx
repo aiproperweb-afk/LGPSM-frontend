@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import Icon from "@/components/icons/Icon";
@@ -36,6 +38,7 @@ export default function ReportsHeaderControls({
   eventOptions = [{ value: "", label: "Select Event" }],
   showOrganizer = true,
 }: ReportsHeaderControlsProps) {
+  const cmsText = useDashboardCopy();
   return (
     <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
       <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 min-w-[220px] items-center gap-2.5 focus-within:border-black transition-colors">
@@ -44,8 +47,8 @@ export default function ReportsHeaderControls({
         </span>
         <input
           type="text"
-          placeholder="Search..."
-          aria-label="Search reports"
+          placeholder={cmsText("search2", "Search...")}
+          aria-label={cmsText("searchReports", "Search reports")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 min-w-0 bg-transparent text-xs font-medium text-[#15191C] placeholder-[#828282] focus:outline-none"
@@ -63,7 +66,7 @@ export default function ReportsHeaderControls({
                 value={selectedOrganizer}
                 onChange={setSelectedOrganizer}
                 options={organizerOptions}
-                placeholder="Organizer name here"
+                placeholder={cmsText("organizerNameHere", "Organizer name here")}
                 ariaLabel="Organizer"
                 className="w-full! max-w-none!"
               />
@@ -79,7 +82,7 @@ export default function ReportsHeaderControls({
             value={selectedEvent}
             onChange={setSelectedEvent}
             options={eventOptions}
-            placeholder="Event name here"
+            placeholder={cmsText("eventNameHere", "Event name here")}
             ariaLabel="Event"
             className="w-full! max-w-none!"
           />
@@ -91,7 +94,7 @@ export default function ReportsHeaderControls({
           className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#EEF3FF] transition-colors"
         >
           <Icon name="reports/download" width={15.83} height={19.22} />
-          <span>Download Report</span>
+          <span>{cmsText("downloadReport", "Download Report")}</span>
         </button>
       </div>
     </div>

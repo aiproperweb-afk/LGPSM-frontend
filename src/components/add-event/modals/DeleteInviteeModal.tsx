@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { createPortal } from "react-dom";
 import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useRef, useState } from "react";
@@ -37,6 +39,7 @@ function DeleteInviteeForm({
   defaultChannels = { email: true, whatsapp: false },
   askReason = true,
 }: DeleteInviteeModalProps) {
+  const cmsText = useDashboardCopy();
   const [reason, setReason] = useState("");
   // nothing is sent unless the organizer chooses to send a reason; "No" to start with
   const [sendReason, setSendReason] = useState(false);
@@ -77,7 +80,7 @@ function DeleteInviteeForm({
       >
         {/* Modal Header (Image #3) */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between text-left">
-          <h2 className="text-base font-bold text-gray-900">Delete Invitees</h2>
+          <h2 className="text-base font-bold text-gray-900">{cmsText("deleteInvitees", "Delete Invitees")}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer"
@@ -93,38 +96,38 @@ function DeleteInviteeForm({
           {/* Warning Triangle Icon */}
           <AlertIcon kind="warning" className="w-14 h-14 mb-4" />
 
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Warning</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{cmsText("warning", "Warning")}</h3>
           <p className="text-xs text-gray-600 leading-relaxed max-w-sm mb-4">
             {askReason
-              ? <>Are you sure you want to delete the records of {many ? `these ${count} invitees` : "this invitee"}? All the details of {many ? "these invitees" : "this invitee"} will become invalid once deleted, and any invitation or access pass they were sent stops working.</>
-              : <>Do you want to delete {many ? `these ${count} invitees` : "this invitee"}? Are you sure?</>}
+              ? <>{cmsText("areYouSureYouWantToDeleteThe", "Are you sure you want to delete the records of") + " "}{many ? `these ${count} invitees` : cmsText("thisInvitee", "this invitee")}{cmsText("allTheDetailsOf", "? All the details of") + " "}{many ? cmsText("theseInvitees", "these invitees") : cmsText("thisInvitee", "this invitee")}{" " + cmsText("willBecomeInvalidOnceDeletedAndAnyInvitation", "will become invalid once deleted, and any invitation or access pass they were sent stops working.")}</>
+              : <>{cmsText("doYouWantToDelete", "Do you want to delete") + " "}{many ? `these ${count} invitees` : cmsText("thisInvitee", "this invitee")}{cmsText("areYouSure", "? Are you sure?")}</>}
           </p>
 
           {askReason && <div className="w-full text-left">
             <fieldset>
-              <legend className="text-xs font-semibold text-gray-800 mb-1.5">Do you want to send a reason?</legend>
+              <legend className="text-xs font-semibold text-gray-800 mb-1.5">{cmsText("doYouWantToSendAReason", "Do you want to send a reason?")}</legend>
               <div className="flex items-center gap-5 text-xs text-gray-700">
-                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={sendReason} onChange={() => setSendReason(true)} className="accent-[#16A34A]" />Yes</label>
-                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={!sendReason} onChange={() => setSendReason(false)} className="accent-[#16A34A]" />No</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={sendReason} onChange={() => setSendReason(true)} className="accent-[#16A34A]" />{cmsText("yes", "Yes")}</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="send-reason" checked={!sendReason} onChange={() => setSendReason(false)} className="accent-[#16A34A]" />{cmsText("no", "No")}</label>
               </div>
             </fieldset>
             {sendReason && <div className="mt-3">
-              <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason</label>
+              <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">{cmsText("reason", "Reason")}</label>
               <textarea
                 id="remove-reason"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 maxLength={500}
                 rows={3}
-                placeholder={many ? "Why are these invitees being removed? This is sent to them." : "Why is this invitee being removed? This is sent to them."}
+                placeholder={many ? cmsText("whyAreTheseInviteesBeingRemovedThisIs", "Why are these invitees being removed? This is sent to them.") : cmsText("whyIsThisInviteeBeingRemovedThisIs", "Why is this invitee being removed? This is sent to them.")}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-xs text-gray-900 outline-none focus:border-[#1F65FF] resize-none"
               />
-              <p className="mt-3 mb-1 text-xs font-semibold text-gray-800">Send this message by</p>
+              <p className="mt-3 mb-1 text-xs font-semibold text-gray-800">{cmsText("sendThisMessageBy", "Send this message by")}</p>
               <div className="flex items-center gap-5 text-xs text-gray-700">
-                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#16A34A]" />Email</label>
-                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#16A34A]" />WhatsApp</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#16A34A]" />{cmsText("email", "Email")}</label>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#16A34A]" />{cmsText("whatsapp", "WhatsApp")}</label>
               </div>
-              {unfinished && <p className="mt-2 text-[11px] text-gray-500">Write the reason and choose at least one way to send it, or choose No.</p>}
+              {unfinished && <p className="mt-2 text-[11px] text-gray-500">{cmsText("writeTheReasonAndChooseAtLeastOne", "Write the reason and choose at least one way to send it, or choose No.")}</p>}
             </div>}
           </div>}
 
@@ -133,9 +136,7 @@ function DeleteInviteeForm({
               onClick={onClose}
               disabled={busy}
               className="w-full px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-md transition-colors cursor-pointer disabled:opacity-50"
-            >
-              No, Cancel
-            </button>
+            >{cmsText("noCancel", "No, Cancel")}</button>
             <button
               disabled={busy || unfinished}
               onClick={async () => {
@@ -145,7 +146,7 @@ function DeleteInviteeForm({
               }}
               className="w-full px-6 py-2.5 bg-[#D92D20] hover:bg-[#B42318] text-white font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {busy ? "Deleting..." : "Yes, Delete"}
+              {busy ? cmsText("deleting2", "Deleting...") : cmsText("yesDelete", "Yes, Delete")}
             </button>
           </div>
         </div>

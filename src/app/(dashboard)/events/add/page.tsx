@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { forgetEventCounts } from "@/components/EventSubNav";
 import { isStaticTemplate, titleLimitOf } from "@/components/add-event/eventDraft";
 import React, { Suspense, useEffect, useRef, useState } from "react";
@@ -24,6 +26,7 @@ import {
 import { persistSessionsAndInvitees } from "@/components/add-event/persistEventExtras";
 
 function AddEventContent() {
+  const cmsText = useDashboardCopy();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -104,7 +107,7 @@ function AddEventContent() {
 
   return (
     <EventWizard
-      heading="Add Event"
+      heading={cmsText("addEvent", "Add Event")}
       draftHydrated={draftState.hydrated && !templateLoading}
       draft={draftState.value}
       setDraft={draftState.update}

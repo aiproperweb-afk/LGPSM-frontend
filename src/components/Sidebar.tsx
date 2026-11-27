@@ -8,6 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import SidebarFooter from "./sidebar/SidebarFooter";
 import { getActiveItemFromPathname } from "./sidebar/sidebarUtils";
 import { NavEntry, WebRole, navForRole } from "./sidebar/navConfig";
+import { useNavigationCopy } from "./cms/DashboardCopyProvider";
+import { navigationKey } from "./cms/dashboardCatalog";
 import NavIcon from "./sidebar/NavIcon";
 
 
@@ -85,9 +87,13 @@ function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; ro
 
 function NavList({ role, activeItem, onNavigate }: { role: WebRole; activeItem: string; onNavigate: () => void }) {
   const { itemPad } = ROLE_STYLE[role];
+  const text = useNavigationCopy();
+  const entries = navForRole(role).map(entry => ({ ...entry, label: text(navigationKey(entry.key), entry.label),
+    children: entry.children?.map(child => ({ ...child, label: text(navigationKey(child.key), child.label) })),
+  }));
   return (
     <nav aria-label="Main" className="flex flex-col gap-[22px]">
-      {navForRole(role).map((entry) =>
+      {entries.map((entry) =>
         entry.children ? (
           <NavGroup key={entry.key} entry={entry} role={role} activeItem={activeItem} onNavigate={onNavigate} />
         ) : (
@@ -110,6 +116,7 @@ function NavList({ role, activeItem, onNavigate }: { role: WebRole; activeItem: 
 }
 
 function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: () => void }) {
+  const text = useNavigationCopy();
   return (
     <Link
       href="/events/add"
@@ -119,7 +126,7 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
       }`}
     >
       <NavIcon name="add" />
-      Add Event
+      {text("navigation_add_event_shortcut", "Add Event")}
     </Link>
   );
 }

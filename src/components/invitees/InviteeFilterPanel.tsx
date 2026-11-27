@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -48,6 +50,7 @@ export default function InviteeFilterPanel(props: Props) {
 }
 
 function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showCards, showFood, food, showRsvp, onApply }: Props) {
+  const cmsText = useDashboardCopy();
   const [draft, setDraft] = useState<InviteeFilters>(value);
   useEffect(() => {
     // Escape closes an open dropdown first, and the panel only when none is open
@@ -69,9 +72,9 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <Icon name="events/inv-panel-filter" width={20} height={20} />
-            <h2 id="invitee-filter-title" className="text-base font-medium text-[#000B2C]">Filter &amp; Sorting</h2>
+            <h2 id="invitee-filter-title" className="text-base font-medium text-[#000B2C]">{cmsText("filterSorting", "Filter & Sorting")}</h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="cursor-pointer"><Icon name="events/inv-panel-close" width={16} height={16} /></button>
+          <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="cursor-pointer"><Icon name="events/inv-panel-close" width={16} height={16} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 pb-4 pt-3 flex flex-col gap-[18px]">
@@ -85,7 +88,7 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
 
           {showInvitation && (
             <Group<InvitationFilter>
-              title="Invitees"
+              title={cmsText("invitees", "Invitees")}
               value={draft.invitation}
               onPick={(v) => setDraft((d) => ({ ...d, invitation: v }))}
               options={[{ value: "", label: "All Invitees" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Invitation Not Sent" }]}
@@ -94,7 +97,7 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
 
           {showCards && (
             <Group<CardsFilter>
-              title="Cards"
+              title={cmsText("cards", "Cards")}
               value={draft.cards}
               onPick={(v) => setDraft((d) => ({ ...d, cards: v }))}
               options={[{ value: "", label: "All Cards" }, { value: "DOWNLOADED", label: "Cards Downloaded" }, { value: "NOT_DOWNLOADED", label: "Cards Not Downloaded" }]}
@@ -103,15 +106,15 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
 
           {showFood && food.length === 0 && (
             <div className="flex flex-col gap-2 w-full">
-              <p className="text-sm font-medium text-[#000B2C]">Food Preference</p>
-              <p className="rounded-md border border-[#E0E0E0] bg-[#F8F9FA] px-3 py-2.5 text-xs text-[#6B6B6B]">This event does not ask guests about food.</p>
+              <p className="text-sm font-medium text-[#000B2C]">{cmsText("foodPreference", "Food Preference")}</p>
+              <p className="rounded-md border border-[#E0E0E0] bg-[#F8F9FA] px-3 py-2.5 text-xs text-[#6B6B6B]">{cmsText("thisEventDoesNotAskGuestsAboutFood", "This event does not ask guests about food.")}</p>
             </div>
           )}
 
           {showFood && food.map((q) => (
             <Group<string>
               key={q.title}
-              title={food.length === 1 ? "Food Preference" : q.title}
+              title={food.length === 1 ? cmsText("foodPreference", "Food Preference") : q.title}
               value={draft.food?.title === q.title ? draft.food.value : ""}
               onPick={(v) => setDraft((d) => ({ ...d, food: v ? { title: q.title, value: v } : null }))}
               options={[{ value: "", label: "All choices" }, ...q.options.map((o) => ({ value: o, label: o }))]}
@@ -120,15 +123,15 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
 
           {showRsvp && (
             <Group<RsvpFilter>
-              title="RSVP"
+              title={cmsText("rsvp", "RSVP")}
               value={draft.rsvp}
               onPick={(v) => setDraft((d) => ({ ...d, rsvp: v }))}
               options={[{ value: "", label: "All Invited Guests" }, { value: "ACCEPTED", label: "Who Accepted Invitation" }, { value: "DECLINED", label: "Who Declined Invitation" }, { value: "PENDING", label: "Not Responded" }]}
             />
           )}
 
-          <div className="flex flex-col gap-2 w-full" role="radiogroup" aria-label="Alphabetical Order">
-            <p className="text-sm font-medium text-[#000B2C]">Alphabetical Order</p>
+          <div className="flex flex-col gap-2 w-full" role="radiogroup" aria-label={cmsText("alphabeticalOrder", "Alphabetical Order")}>
+            <p className="text-sm font-medium text-[#000B2C]">{cmsText("alphabeticalOrder", "Alphabetical Order")}</p>
             {sortOptions.map((o) => (
               <button key={o.value} type="button" role="radio" aria-checked={draft.sort === o.value} onClick={() => setDraft((d) => ({ ...d, sort: o.value }))} className="flex items-center justify-between gap-2 text-left text-xs text-[#000B2C] cursor-pointer">
                 {o.label}
@@ -139,8 +142,8 @@ function PanelBody({ onClose, eventTitle, sessions, value, showInvitation, showC
         </div>
 
         <div className="flex items-center gap-3 px-6 py-4 border-t border-[#EEE]">
-          <button type="button" onClick={() => { setDraft(NO_FILTERS); onApply(NO_FILTERS); onClose(); }} className={filterSecondaryButtonClass}>Clear</button>
-          <button type="button" onClick={() => { onApply(draft); onClose(); }} className={filterPrimaryButtonClass}>Apply</button>
+          <button type="button" onClick={() => { setDraft(NO_FILTERS); onApply(NO_FILTERS); onClose(); }} className={filterSecondaryButtonClass}>{cmsText("clear", "Clear")}</button>
+          <button type="button" onClick={() => { onApply(draft); onClose(); }} className={filterPrimaryButtonClass}>{cmsText("apply", "Apply")}</button>
         </div>
       </div>
     </div>,

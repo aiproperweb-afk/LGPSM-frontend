@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
@@ -26,6 +28,7 @@ interface OrganizerRow {
 }
 
 export default function AllOrganizersPage() {
+  const cmsText = useDashboardCopy();
   const router = useRouter();
   const { user } = useAuth();
   const [organizers, setOrganizers] = useState<OrganizerRow[]>([]);
@@ -111,16 +114,14 @@ export default function AllOrganizersPage() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
-        <PageHeader title="Event Organizer" />
+        <PageHeader title={cmsText("eventOrganizer", "Event Organizer")} />
 
         {/* Page Content */}
         <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-6">
           {/* Controls (Figma 462:10218) */}
-          <ListControls label="Organizer" searchId="organizer-search" placeholder="Search organizers" value={searchQuery} onChange={(v) => { setSearchQuery(v); setPage(1); }}>
+          <ListControls label={cmsText("organizer", "Organizer")} searchId="organizer-search" placeholder={cmsText("searchOrganizers", "Search organizers")} value={searchQuery} onChange={(v) => { setSearchQuery(v); setPage(1); }}>
             <Link href="/event-organizer/add" className={addButtonClass}>
-              <Icon name="events/add-white" width={24} height={24} />
-              Add Organizer
-            </Link>
+              <Icon name="events/add-white" width={24} height={24} />{cmsText("addOrganizer", "Add Organizer")}</Link>
           </ListControls>
 
           {/* Stats tiles: separate bordered cards (Figma 462:10218) */}
@@ -128,7 +129,7 @@ export default function AllOrganizersPage() {
             {/* 1. Active Organizer */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">Active Organizer</span>
+                <span className="text-sm font-medium text-[#15191C] block">{cmsText("activeOrganizer", "Active Organizer")}</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">
                   {organizers.filter((o) => o.status === "Active").length}
                 </span>
@@ -143,7 +144,7 @@ export default function AllOrganizersPage() {
             {/* 2. Inactive Organizers */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">Inactive Organizers</span>
+                <span className="text-sm font-medium text-[#15191C] block">{cmsText("inactiveOrganizers", "Inactive Organizers")}</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">
                   {organizers.filter((o) => o.status !== "Active").length}
                 </span>
@@ -158,7 +159,7 @@ export default function AllOrganizersPage() {
             {/* 3. Earnings */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">Earnings</span>
+                <span className="text-sm font-medium text-[#15191C] block">{cmsText("earnings", "Earnings")}</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">{formatMoney(0, { maxFractionDigits: 0 })}</span>
               </div>
               <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
@@ -181,7 +182,7 @@ export default function AllOrganizersPage() {
                         onClick={toggleSelectAll}
 role="checkbox"
 aria-checked={selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0}
-aria-label="Select all"
+aria-label={cmsText("selectAll3", "Select all")}
                         className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
 <span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
                           selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0
@@ -196,12 +197,12 @@ aria-label="Select all"
                       </span>
 </button>
                     </th>
-                    <th className="py-3 px-4 font-medium text-gray-500">Organizer</th>
-                    <th className="py-3 px-4 font-medium text-gray-500">Type</th>
-                    <th className="py-3 px-4 font-medium text-gray-500">Email</th>
-                    <th className="py-3 px-4 font-medium text-gray-500">Phone Number</th>
-                    <th className="py-3 px-4 font-medium text-gray-500">Status</th>
-                    <th className="py-3 px-4 text-right font-medium text-gray-500">Action</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">{cmsText("organizer", "Organizer")}</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">{cmsText("type", "Type")}</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">{cmsText("email", "Email")}</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">{cmsText("phoneNumber", "Phone Number")}</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">{cmsText("status", "Status")}</th>
+                    <th className="py-3 px-4 text-right font-medium text-gray-500">{cmsText("action", "Action")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -212,7 +213,7 @@ aria-label="Select all"
                     <tr><td colSpan={7} className="py-12 text-center text-rose-600 text-sm">{loadError}</td></tr>
                   )}
                   {!loading && !loadError && filteredOrganizers.length === 0 && (
-                    <tr><td colSpan={7} className="py-12 text-center text-gray-500 text-sm">No organizers found.</td></tr>
+                    <tr><td colSpan={7} className="py-12 text-center text-gray-500 text-sm">{cmsText("noOrganizersFound", "No organizers found.")}</td></tr>
                   )}
                   {pageOrganizers.map((org) => {
                     const isSelected = selectedIds.includes(org.id);
@@ -255,7 +256,7 @@ aria-label={`Select ${org.name}`}
                             className="hover:text-[#1A56DB] transition-colors cursor-pointer"
                           >
                             {org.name}
-                            <span className="block text-xs font-normal text-gray-500">Account: {org.accountName}</span>
+                            <span className="block text-xs font-normal text-gray-500">{cmsText("account", "Account:") + " "}{org.accountName}</span>
                           </Link>
                         </td>
 
@@ -266,19 +267,13 @@ aria-label={`Select ${org.name}`}
                         {/* Status Badge */}
                         <td className="py-4 px-4">
                           {org.status === "Active" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
-                              Active
-                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">{cmsText("active", "Active")}</span>
                           )}
                           {org.status === "In Active" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600">
-                              In Active
-                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600">{cmsText("inActive", "In Active")}</span>
                           )}
                           {org.status === "Deactivate" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
-                              Deactivate
-                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">{cmsText("deactivate", "Deactivate")}</span>
                           )}
                         </td>
 
@@ -295,8 +290,8 @@ aria-label={`Select ${org.name}`}
 
             {totalPages > 1 && (
               <div className="p-4 border-t border-gray-200 flex items-center justify-between gap-3 text-xs text-[#6B6B6B]">
-                <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label="Organizer pages" />
-                <span>Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrganizers.length)} of {filteredOrganizers.length}</span>
+                <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label={cmsText("organizerPages", "Organizer pages")} />
+                <span>{cmsText("showing", "Showing") + " "}{(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrganizers.length)}{" " + cmsText("of", "of") + " "}{filteredOrganizers.length}</span>
               </div>
             )}
           </div>

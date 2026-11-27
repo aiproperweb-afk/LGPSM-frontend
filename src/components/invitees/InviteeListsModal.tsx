@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useCallback, useEffect, useState } from "react";
 import ModalClose from "@/components/common/ModalClose";
 import { inviteeService, type InviteeSetInfo, type InviteeSetMember, type RemovedInviteeList } from "@/services/inviteeService";
@@ -34,6 +36,7 @@ const Lock = () => <svg className="w-3 h-3" fill="none" stroke="currentColor" vi
 // The same shell as the Delivery History dialog: centred modal, title bar with close, table body.
 // A list's Open/Locked state (a property of the list, decided by the server) is kept apart from each guest's delivery state.
 export default function InviteeListsModal({ eventId, onChanged, onClose, onAddInvitees, reloadSignal = 0 }: Props) {
+  const cmsText = useDashboardCopy();
   const [sets, setSets] = useState<InviteeSetInfo[] | null>(null);
   const [removedLists, setRemovedLists] = useState<RemovedInviteeList[]>([]);
   // an empty list the organizer is about to delete (asked first)
@@ -107,12 +110,12 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="lists-title">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl">
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-          <h2 id="lists-title" className="text-base font-medium text-gray-900">Invitees Dataset</h2>
+          <h2 id="lists-title" className="text-base font-medium text-gray-900">{cmsText("inviteesDataset2", "Invitees Dataset")}</h2>
           <div className="flex items-center gap-3">
             {onAddInvitees && (
-              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">{cmsText("addInvitees", "Add Invitees")}</button>
             )}
-            <button type="button" onClick={onClose} aria-label="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
+            <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
               <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -124,18 +127,18 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
             </div>
           )}
 
-              {setsError && <p role="alert" className="text-sm text-rose-600">{setsError} <button type="button" onClick={loadSets} className="underline cursor-pointer">Try again</button></p>}
-              {!sets && !setsError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
-              {sets && sets.length === 0 && <p className="text-sm text-[#6B6B6B]">No lists yet. Upload an Excel file with Add Invitees.</p>}
+              {setsError && <p role="alert" className="text-sm text-rose-600">{setsError} <button type="button" onClick={loadSets} className="underline cursor-pointer">{cmsText("tryAgain", "Try again")}</button></p>}
+              {!sets && !setsError && <p className="text-sm text-[#6B6B6B]">{cmsText("loading2", "Loading…")}</p>}
+              {sets && sets.length === 0 && <p className="text-sm text-[#6B6B6B]">{cmsText("noListsYetUploadAnExcelFileWith", "No lists yet. Upload an Excel file with Add Invitees.")}</p>}
               {sets && sets.length > 0 && (
                 <table className="w-full text-left text-sm min-w-[760px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="py-2 pr-3 font-medium">List</th>
-                      <th className="py-2 pr-3 font-medium">Guests</th>
-                      <th className="py-2 pr-3 font-medium">Delivery of invitations</th>
-                      <th className="py-2 pr-3 font-medium">List state</th>
-                      <th className="py-2 font-medium text-right">Action</th>
+                      <th className="py-2 pr-3 font-medium">{cmsText("list", "List")}</th>
+                      <th className="py-2 pr-3 font-medium">{cmsText("guests2", "Guests")}</th>
+                      <th className="py-2 pr-3 font-medium">{cmsText("deliveryOfInvitations", "Delivery of invitations")}</th>
+                      <th className="py-2 pr-3 font-medium">{cmsText("listState", "List state")}</th>
+                      <th className="py-2 font-medium text-right">{cmsText("action", "Action")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
@@ -144,15 +147,15 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
                         <tr className="align-top">
                           <td className="py-3 pr-3 max-w-[220px]">
                             <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#1A56DB] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
-                            {s.source === "SESSION" && <span className="block text-xs text-[#6B6B6B]">The guests of this session, taken from the other lists (not an upload)</span>}
-                            {s.createdAt && <span className="block text-xs text-[#6B6B6B]">{s.source === "MANUAL" ? "Added" : "Uploaded"} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
+                            {s.source === "SESSION" && <span className="block text-xs text-[#6B6B6B]">{cmsText("theGuestsOfThisSessionTakenFromThe", "The guests of this session, taken from the other lists (not an upload)")}</span>}
+                            {s.createdAt && <span className="block text-xs text-[#6B6B6B]">{s.source === "MANUAL" ? cmsText("added", "Added") : cmsText("uploaded", "Uploaded")} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
                             <span className="sm:hidden mt-1 inline-block">{s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked") : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open")}</span>
                           </td>
-                          <td className="py-3 pr-3 whitespace-nowrap">{s.total}{s.importedCount !== null ? <span className="block text-xs text-[#6B6B6B]">{s.importedCount} added by this upload</span> : null}</td>
+                          <td className="py-3 pr-3 whitespace-nowrap">{s.total}{s.importedCount !== null ? <span className="block text-xs text-[#6B6B6B]">{s.importedCount}{" " + cmsText("addedByThisUpload", "added by this upload")}</span> : null}</td>
                           <td className="py-3 pr-3 text-xs space-y-0.5">
-                            {allSentLine(s) && <span className="block mb-1"><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E6F6EC] text-[#0F7A33] font-medium">Invitations sent</span><span className="block text-[#6B6B6B] mt-0.5">{allSentLine(s)}</span></span>}
-                            <span className="block">Sent <b className="text-[#0F7A33]">{s.sent}</b> · Not sent <b>{s.notSent}</b></span>
-                            <span className="block">Failed <b className={s.failed ? "text-rose-600" : ""}>{s.failed}</b> · Unknown <b className={s.unknown ? "text-amber-700" : ""} title="Delivery was attempted but the outcome was never settled. The guest may have received it.">{s.unknown}</b></span>
+                            {allSentLine(s) && <span className="block mb-1"><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E6F6EC] text-[#0F7A33] font-medium">{cmsText("invitationsSent", "Invitations sent")}</span><span className="block text-[#6B6B6B] mt-0.5">{allSentLine(s)}</span></span>}
+                            <span className="block">{cmsText("sent", "Sent") + " "}<b className="text-[#0F7A33]">{s.sent}</b>{" " + cmsText("notSent2", "· Not sent") + " "}<b>{s.notSent}</b></span>
+                            <span className="block">{cmsText("failed", "Failed") + " "}<b className={s.failed ? "text-rose-600" : ""}>{s.failed}</b>{" " + cmsText("unknown", "· Unknown") + " "}<b className={s.unknown ? "text-amber-700" : ""} title={cmsText("deliveryWasAttemptedButTheOutcomeWasNever", "Delivery was attempted but the outcome was never settled. The guest may have received it.")}>{s.unknown}</b></span>
                           </td>
                           <td className="py-3">
                             {s.source === "SESSION" ? pill("bg-[#EDEDED] text-[#4B4F52]", "From other lists", "This session uses guests from the lists above, so it has no list of its own to change.") : s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open", "No invitation has been sent successfully from this list.")}
@@ -167,12 +170,12 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
                                   {why ? (
                                     <span role="img" aria-label={`Edit list not available: ${why}`} title={why} className={off}><PencilIcon /></span>
                                   ) : (
-                                    <button type="button" onClick={() => { setOutcome(null); setRenameValue(listDisplayName(s.name)); setRenameList(s); }} aria-label={`Rename ${listDisplayName(s.name)}`} title="Edit list name" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"><PencilIcon /></button>
+                                    <button type="button" onClick={() => { setOutcome(null); setRenameValue(listDisplayName(s.name)); setRenameList(s); }} aria-label={`Rename ${listDisplayName(s.name)}`} title={cmsText("editListName", "Edit list name")} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"><PencilIcon /></button>
                                   )}
                                   {why ? (
                                     <span role="img" aria-label={`Delete list not available: ${why}`} title={why} className={off}><BinIcon /></span>
                                   ) : (
-                                    <button type="button" onClick={() => { setOutcome(null); setDropList(s); }} aria-label={`Delete ${listDisplayName(s.name)}`} title="Delete list" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"><BinIcon /></button>
+                                    <button type="button" onClick={() => { setOutcome(null); setDropList(s); }} aria-label={`Delete ${listDisplayName(s.name)}`} title={cmsText("deleteList", "Delete list")} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"><BinIcon /></button>
                                   )}
                                 </span>
                               );
@@ -183,7 +186,7 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
                           <tr>
                             <td colSpan={5} className="pb-4">
                               <div className="rounded-md bg-[#F8F8F8] border border-[#E5E5E5] p-4 text-sm">
-                                <p className="text-[#4B4F52]">{s.source === "SESSION" ? "These are the guests who can attend this session, taken from the lists above. To change them, change the lists they came from." : stateExplanation(s)}</p>
+                                <p className="text-[#4B4F52]">{s.source === "SESSION" ? cmsText("theseAreTheGuestsWhoCanAttendThis", "These are the guests who can attend this session, taken from the lists above. To change them, change the lists they came from.") : stateExplanation(s)}</p>
                                 <GuestTable state={members[s.id]} />
                               </div>
                             </td>
@@ -196,16 +199,16 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
               )}
               {removedLists.length > 0 && (
                 <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">Deleted lists (history)</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">{cmsText("deletedListsHistory", "Deleted lists (history)")}</h3>
                   <table className="w-full text-left text-xs min-w-[760px]">
-                    <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">List</th><th className="py-1.5 pr-3 font-medium">Uploaded</th><th className="py-1.5 pr-3 font-medium">Added by upload</th><th className="py-1.5 font-medium">Deleted</th></tr></thead>
+                    <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">{cmsText("list", "List")}</th><th className="py-1.5 pr-3 font-medium">{cmsText("uploaded", "Uploaded")}</th><th className="py-1.5 pr-3 font-medium">{cmsText("addedByUpload", "Added by upload")}</th><th className="py-1.5 font-medium">{cmsText("deleted", "Deleted")}</th></tr></thead>
                     <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                       {removedLists.map((r) => (
                         <tr key={r.id} className="align-top">
                           <td className="py-2 pr-3 text-gray-900 break-words" title={r.name}>{listDisplayName(r.name)}</td>
-                          <td className="py-2 pr-3">{r.createdAt ? formatDateTime(r.createdAt, "") : "—"}{r.uploadedBy ? <span className="block text-[#6B6B6B]">by {r.uploadedBy.name}</span> : null}</td>
+                          <td className="py-2 pr-3">{r.createdAt ? formatDateTime(r.createdAt, "") : "—"}{r.uploadedBy ? <span className="block text-[#6B6B6B]">{cmsText("by", "by") + " "}{r.uploadedBy.name}</span> : null}</td>
                           <td className="py-2 pr-3">{r.importedCount ?? "—"}</td>
-                          <td className="py-2">{formatDateTime(r.removedAt, "")}{r.removedBy ? <span className="block text-[#6B6B6B]">by {r.removedBy.name}</span> : null}</td>
+                          <td className="py-2">{formatDateTime(r.removedAt, "")}{r.removedBy ? <span className="block text-[#6B6B6B]">{cmsText("by", "by") + " "}{r.removedBy.name}</span> : null}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -219,11 +222,11 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rename-title">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 relative">
             <ModalClose onClick={() => setRenameList(null)} disabled={renaming} />
-            <h3 id="rename-title" className="pr-8 text-base font-semibold text-gray-900">Edit list name</h3>
-            <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} maxLength={200} aria-label="List name" className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black" />
+            <h3 id="rename-title" className="pr-8 text-base font-semibold text-gray-900">{cmsText("editListName", "Edit list name")}</h3>
+            <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} maxLength={200} aria-label={cmsText("listName", "List name")} className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black" />
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setRenameList(null)} disabled={renaming} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">Cancel</button>
-              <button type="button" onClick={doRename} disabled={renaming || !renameValue.trim()} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{renaming ? "Saving…" : "Save"}</button>
+              <button type="button" onClick={() => setRenameList(null)} disabled={renaming} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{cmsText("cancel2", "Cancel")}</button>
+              <button type="button" onClick={doRename} disabled={renaming || !renameValue.trim()} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{renaming ? cmsText("saving2", "Saving…") : cmsText("save", "Save")}</button>
             </div>
           </div>
         </div>
@@ -233,11 +236,11 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="drop-title">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative">
             <ModalClose onClick={() => setDropList(null)} disabled={dropping} />
-            <h3 id="drop-title" className="pr-8 text-base font-semibold text-gray-900">Delete “{listDisplayName(dropList.name)}”?</h3>
-            <p className="text-sm text-[#4B4F52]">Do you want to delete this set of list? {dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : "It has no guests left. "}The list is removed from Uploaded lists, and its history (when it was uploaded and by whom) stays under Deleted lists.</p>
+            <h3 id="drop-title" className="pr-8 text-base font-semibold text-gray-900">{cmsText("delete2", "Delete “")}{listDisplayName(dropList.name)}”?</h3>
+            <p className="text-sm text-[#4B4F52]">{cmsText("doYouWantToDeleteThisSetOf", "Do you want to delete this set of list?") + " "}{dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : cmsText("itHasNoGuestsLeft", "It has no guests left.")}{cmsText("theListIsRemovedFromUploadedListsAnd", "The list is removed from Uploaded lists, and its history (when it was uploaded and by whom) stays under Deleted lists.")}</p>
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={() => setDropList(null)} disabled={dropping} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">No, keep it</button>
-              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#D92D20] hover:bg-[#B42318] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
+              <button type="button" onClick={() => setDropList(null)} disabled={dropping} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{cmsText("noKeepIt", "No, keep it")}</button>
+              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#D92D20] hover:bg-[#B42318] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? cmsText("deleting", "Deleting…") : cmsText("yesDelete2", "Yes, delete")}</button>
             </div>
           </div>
         </div>
@@ -248,25 +251,26 @@ export default function InviteeListsModal({ eventId, onChanged, onClose, onAddIn
 }
 
 function GuestTable({ state }: { state: { rows: InviteeSetMember[]; total: number; page: number } | "loading" | string | undefined }) {
-  if (!state || state === "loading") return <p className="mt-3 text-[#6B6B6B]">Loading guests…</p>;
+  const cmsText = useDashboardCopy();
+  if (!state || state === "loading") return <p className="mt-3 text-[#6B6B6B]">{cmsText("loadingGuests", "Loading guests…")}</p>;
   if (typeof state === "string") return <p role="alert" className="mt-3 text-rose-600">{state}</p>;
-  if (state.rows.length === 0) return <p className="mt-3 text-[#6B6B6B]">No active guests in this list.</p>;
+  if (state.rows.length === 0) return <p className="mt-3 text-[#6B6B6B]">{cmsText("noActiveGuestsInThisList", "No active guests in this list.")}</p>;
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-left text-xs min-w-[520px]">
-        <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">Guest</th><th className="py-1.5 pr-3 font-medium">Invitation</th><th className="py-1.5 pr-3 font-medium">RSVP</th><th className="py-1.5 font-medium">Checked in</th></tr></thead>
+        <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">{cmsText("guest", "Guest")}</th><th className="py-1.5 pr-3 font-medium">{cmsText("invitation", "Invitation")}</th><th className="py-1.5 pr-3 font-medium">{cmsText("rsvp", "RSVP")}</th><th className="py-1.5 font-medium">{cmsText("checkedIn", "Checked in")}</th></tr></thead>
         <tbody className="divide-y divide-[#EEEEEE]">
           {state.rows.map((m) => (
             <tr key={m.id}>
               <td className="py-1.5 pr-3 text-gray-900">{m.name}<span className="block text-[#6B6B6B] break-all">{m.email || m.mobile || "—"}</span></td>
               <td className="py-1.5 pr-3">{m.delivery === "SENT" ? pill("bg-[#C0FFD5] text-[#0F7A33]", DELIVERY_LABEL.SENT) : m.delivery === "FAILED" ? pill("bg-rose-100 text-rose-700", DELIVERY_LABEL.FAILED) : m.delivery === "UNKNOWN" ? pill("bg-amber-100 text-amber-800", DELIVERY_LABEL.UNKNOWN, "The guest may already have received it") : pill("bg-[#EDEDED] text-[#6E6E6E]", DELIVERY_LABEL.NOT_SENT)}</td>
-              <td className="py-1.5 pr-3">{m.rsvpStatus === "PENDING" ? "—" : m.rsvpStatus === "ACCEPTED" ? "Accepted" : "Declined"}</td>
-              <td className="py-1.5">{m.checkedIn ? "Yes" : "—"}</td>
+              <td className="py-1.5 pr-3">{m.rsvpStatus === "PENDING" ? "—" : m.rsvpStatus === "ACCEPTED" ? cmsText("accepted", "Accepted") : cmsText("declined", "Declined")}</td>
+              <td className="py-1.5">{m.checkedIn ? cmsText("yes", "Yes") : "—"}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {state.total > state.rows.length && <p className="mt-2 text-[#6B6B6B]">Showing the first {state.rows.length} of {state.total} guests.</p>}
+      {state.total > state.rows.length && <p className="mt-2 text-[#6B6B6B]">{cmsText("showingTheFirst", "Showing the first") + " "}{state.rows.length}{" " + cmsText("of", "of") + " "}{state.total}{" " + cmsText("guests3", "guests.")}</p>}
     </div>
   );
 }

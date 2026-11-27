@@ -107,6 +107,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
         }
         setDirty(latest.current !== null && fingerprint(latest.current) !== saved.current);
       }
+      if (action === "publish") window.dispatchEvent(new Event("cms:published"));
       setMessage(action === "publish" ? "Page published." : action === "draft" ? "Draft saved." : "Draft discarded.");
     } finally {
       busy.current = false;
@@ -142,7 +143,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
           <button disabled={pending || !!uploads || conflict} onClick={() => void save("publish")}>Publish</button>
           <button disabled={pending || !!uploads || conflict || !page.publishedAt} onClick={() => void save("discard-draft")}>Discard Draft</button>
           <button onClick={download}>Download JSON</button>
-          {page.publishedAt && <Link href={page.route} target="_blank" rel="noopener">View Live Page</Link>}
+          {page.publishedAt && !page.route.includes("[id]") && <Link href={page.route} target="_blank" rel="noopener">View Live Page</Link>}
         </>}
         {(conflict || (!page && message)) && <button onClick={reload}>Reload saved draft</button>}
         <p role="status">{pending ? "Saving…" : uploads ? "Uploading image…" : message || (!page ? "Loading page…" : dirty ? "Unsaved changes" : "")}</p>
@@ -156,6 +157,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
             <Puck key={generation}
               config={cmsConfig}
               data={initial}
+              ui={initial.content[0]?.type === "DashboardCopy" ? { itemSelector: { index: 0 } } : undefined}
               headerTitle={page.name}
               height="100%"
               permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}

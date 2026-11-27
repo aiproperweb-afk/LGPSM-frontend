@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useRef, useState, useEffect } from "react";
 
 interface CameraCaptureModalProps {
@@ -13,6 +15,7 @@ export default function CameraCaptureModal({
   onClose,
   onCapture,
 }: CameraCaptureModalProps) {
+  const cmsText = useDashboardCopy();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string>("");
@@ -98,7 +101,7 @@ export default function CameraCaptureModal({
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
       <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-lg w-full overflow-y-auto space-y-4 p-6 font-sans animate-modal max-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-          <h3 className="text-base font-bold text-gray-900">Take a Photo</h3>
+          <h3 className="text-base font-bold text-gray-900">{cmsText("takeAPhoto2", "Take a Photo")}</h3>
           <button
             onClick={handleClose}
             className="text-gray-500 hover:text-gray-600 cursor-pointer"
@@ -122,9 +125,7 @@ export default function CameraCaptureModal({
               className="w-full h-full object-cover"
             />
             {!isCameraReady && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-xs bg-black/40">
-                Starting camera...
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-white text-xs bg-black/40">{cmsText("startingCamera", "Starting camera...")}</div>
             )}
           </div>
         )}
@@ -136,9 +137,7 @@ export default function CameraCaptureModal({
               onClick={handleSnap}
               disabled={!isCameraReady}
               className="px-6 py-2 text-xs font-semibold text-white bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md transition-colors cursor-pointer disabled:opacity-50"
-            >
-              Capture Photo
-            </button>
+            >{cmsText("capturePhoto", "Capture Photo")}</button>
           )}
         </div>
       </div>

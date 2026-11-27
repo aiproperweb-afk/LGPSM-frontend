@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -38,6 +40,7 @@ const templateCategoryId = (t: Template) => (typeof t.categoryId === "object" &&
 
 // The parent remounts this modal (via key) each time it opens, so its state starts from the props
 export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate, selectedTemplateId, invitationType: initialType = "DIGITAL", categoryId, subcategoryId, required = false, onLeave, extraCategory, organizerId }: SelectTemplateModalProps) {
+  const cmsText = useDashboardCopy();
   const categories = useCategories(extraCategory);
   const { user } = useAuth();
   const { confirm, showAlert } = useAlert();
@@ -159,18 +162,18 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="select-template-title">
       <div ref={cardRef} tabIndex={-1} className="bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] animate-modal outline-none">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
-          <h2 id="select-template-title" className="text-base font-medium text-gray-900">{required ? "Choose a template to start your event" : "Select Template"}</h2>
-          <button type="button" onClick={() => void requestClose()} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
+          <h2 id="select-template-title" className="text-base font-medium text-gray-900">{required ? cmsText("chooseATemplateToStartYourEvent", "Choose a template to start your event") : cmsText("selectTemplate", "Select Template")}</h2>
+          <button type="button" onClick={() => void requestClose()} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        {required && <p className="px-6 pt-3 text-sm text-[#4B4F52]">The template decides how every guest&apos;s card looks and sets the event category and subcategory for you. You can change the template later while creating the event.</p>}
+        {required && <p className="px-6 pt-3 text-sm text-[#4B4F52]">{cmsText("theTemplateDecidesHowEveryGuestSCard", "The template decides how every guest's card looks and sets the event category and subcategory for you. You can change the template later while creating the event.")}</p>}
 
         <div className="px-6 pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</span>
+            <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventCategory", "Event Category")}</span>
             <CustomDropdown portal
               value={filterCategory}
               onChange={(v) => {
@@ -184,18 +187,18 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
             />
           </div>
           <div>
-            <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Subcategory</span>
+            <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventSubcategory", "Event Subcategory")}</span>
             <CustomDropdown portal
               value={filterSub}
               onChange={setFilterSub}
               disabled={!filterCategory}
-              placeholder={filterCategory ? "All subcategories" : "Select a category first"}
+              placeholder={filterCategory ? cmsText("allSubcategories", "All subcategories") : cmsText("selectACategoryFirst", "Select a category first")}
               options={filterCategory ? [{ value: "", label: "All subcategories" }, ...categories.subcategoryOptionsFor(filterCategory)] : []}
               ariaLabel="Filter templates by subcategory"
             />
           </div>
           <div>
-            <span className="block text-sm font-medium text-gray-900 mb-1.5">Invitation Type<span className="text-[#D92D20]">*</span></span>
+            <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("invitationType", "Invitation Type")}<span className="text-[#D92D20]">*</span></span>
             <CustomDropdown portal
               value={invitationType}
               onChange={(v) => {
@@ -213,14 +216,14 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
         </div>
         {/* what the choice means, in plain words, so nobody is surprised later */}
         <div className="mx-6 mt-3 rounded-md border border-[#D6E4FF] bg-[#F5F8FF] px-4 py-3 text-xs text-[#15191C]" role="status" aria-live="polite">
-          {invitationType === "DIGITAL" && <>Guests are sent their card by email and WhatsApp. You can use a ready template <b>or upload your own card design</b>.</>}
-          {invitationType === "PRINT" && <><b>Print only:</b> the cards are downloaded as print-ready PDFs and are not sent. Guests are not asked to RSVP or choose food. <b>Your own uploaded card can&apos;t be used</b> with this option, so please choose a ready template. To upload your own card, choose Digital only.</>}
-          {invitationType === "BOTH" && <><b>Print and Digital both:</b> you can send the card to guests and also download print-ready PDFs. <b>Your own uploaded card can&apos;t be used</b> with this option, so please choose a ready template. To upload your own card, choose Digital only.</>}
+          {invitationType === "DIGITAL" && <>{cmsText("guestsAreSentTheirCardByEmailAnd", "Guests are sent their card by email and WhatsApp. You can use a ready template") + " "}<b>{cmsText("orUploadYourOwnCardDesign", "or upload your own card design")}</b>.</>}
+          {invitationType === "PRINT" && <><b>{cmsText("printOnly", "Print only:")}</b>{" " + cmsText("theCardsAreDownloadedAsPrintReadyPdfs", "the cards are downloaded as print-ready PDFs and are not sent. Guests are not asked to RSVP or choose food.") + " "}<b>{cmsText("yourOwnUploadedCardCanTBeUsed", "Your own uploaded card can't be used")}</b>{" " + cmsText("withThisOptionSoPleaseChooseAReady", "with this option, so please choose a ready template. To upload your own card, choose Digital only.")}</>}
+          {invitationType === "BOTH" && <><b>{cmsText("printAndDigitalBoth", "Print and Digital both:")}</b>{" " + cmsText("youCanSendTheCardToGuestsAnd", "you can send the card to guests and also download print-ready PDFs.") + " "}<b>{cmsText("yourOwnUploadedCardCanTBeUsed", "Your own uploaded card can't be used")}</b>{" " + cmsText("withThisOptionSoPleaseChooseAReady", "with this option, so please choose a ready template. To upload your own card, choose Digital only.")}</>}
         </div>
 
         {/* outside the scrolling list, and always there, including when My templates is empty: there is always a way back to All templates */}
         <div className="px-6 pt-3 shrink-0">
-        <div role="tablist" aria-label="Which templates" className="flex gap-2">
+        <div role="tablist" aria-label={cmsText("whichTemplates", "Which templates")} className="flex gap-2">
                 {([["all", "All templates"], ["mine", `My templates${mineCount ? ` (${mineCount})` : ""}`]] as const).map(([key, label]) => (
                   <button key={key} type="button" role="tab" aria-selected={scope === key} onClick={() => setScope(key)} className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${scope === key ? "bg-[#1F65FF] border-[#1F65FF] text-white" : "bg-white border-[#E0E0E0] text-[#4B4F52] hover:border-gray-400"}`}>{label}</button>
                 ))}
@@ -229,14 +232,14 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
 
         <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4 min-h-[220px]">
           {loading ? (
-            <SkeletonRegion label="Loading templates" className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+            <SkeletonRegion label={cmsText("loadingTemplates", "Loading templates")} className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
 {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[302/524]" />)}
 </SkeletonRegion>
           ) : loadError ? (
             <p role="alert" className="text-sm text-rose-600 py-10 text-center break-words">{loadError}</p>
           ) : visible.length === 0 ? (
             <p className="text-sm text-[#6B6B6B] py-10 text-center">
-              {scope === "mine" && mineCount === 0 ? "You have not uploaded a template yet. Use “Upload your own template” below." : templates.length === 0 ? "No templates have been published yet." : "No templates for this category. Try another category or clear the filter."}
+              {scope === "mine" && mineCount === 0 ? cmsText("youHaveNotUploadedATemplateYetUse", "You have not uploaded a template yet. Use “Upload your own template” below.") : templates.length === 0 ? cmsText("noTemplatesHaveBeenPublishedYet", "No templates have been published yet.") : cmsText("noTemplatesForThisCategoryTryAnotherCategory", "No templates for this category. Try another category or clear the filter.")}
             </p>
           ) : (
             // Figma 217:7912: a heading for the chosen subcategory, then a 6-up grid of small cards; the name shows on hover
@@ -258,10 +261,10 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                       >
                         <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="" />
                       </button>
-                      {staticBlocked(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Digital only</span> : !usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : isStaticTemplate(t.templateData) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-[#1F65FF] px-1.5 py-0.5 text-[10px] text-white">Static card</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
+                      {staticBlocked(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">{cmsText("digitalOnly", "Digital only")}</span> : !usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">{cmsText("otherOrganizer", "Other organizer")}</span> : isStaticTemplate(t.templateData) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-[#1F65FF] px-1.5 py-0.5 text-[10px] text-white">{cmsText("staticCard", "Static card")}</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">{cmsText("draft", "Draft")}</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">{cmsText("own", "Own")}</span>}
                       {canDelete(t) && (
                         <>
-                          <button type="button" onClick={() => void removeOwn(t)} aria-label={`Delete ${t.name}`} title="Delete this template" className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow hover:bg-rose-50 cursor-pointer">
+                          <button type="button" onClick={() => void removeOwn(t)} aria-label={`Delete ${t.name}`} title={cmsText("deleteThisTemplate", "Delete this template")} className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow hover:bg-rose-50 cursor-pointer">
                             <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                           </button>
                         </>
@@ -276,23 +279,18 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
 
         <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 min-w-0 text-xs text-[#4B4F52]">
-            <button type="button" onClick={() => setUploadOpen(true)} disabled={!digitalOnly} title={digitalOnly ? undefined : "Your own card can be uploaded only when Invitation Type is Digital only"} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer disabled:text-[#9CA3AF] disabled:no-underline disabled:cursor-not-allowed">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
-              Upload your own template
-            </button>
-            <span>
-              Need a custom design?{" "}
-              <Link href="/contact" className="text-[#15803D] font-medium underline">Contact us</Link>
+            <button type="button" onClick={() => setUploadOpen(true)} disabled={!digitalOnly} title={digitalOnly ? undefined : cmsText("yourOwnCardCanBeUploadedOnlyWhen", "Your own card can be uploaded only when Invitation Type is Digital only")} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer disabled:text-[#9CA3AF] disabled:no-underline disabled:cursor-not-allowed">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>{cmsText("uploadYourOwnTemplate", "Upload your own template")}</button>
+            <span>{cmsText("needACustomDesign", "Need a custom design?")}{" "}
+              <Link href="/contact" className="text-[#15803D] font-medium underline">{cmsText("contactUs", "Contact us")}</Link>
             </span>
           </div>
           <div className="flex items-center justify-end gap-3 shrink-0">
             {pendingId && !required && (
-              <button type="button" onClick={() => setPendingId(null)} className="text-sm text-gray-700 hover:underline cursor-pointer">
-                Clear selection
-              </button>
+              <button type="button" onClick={() => setPendingId(null)} className="text-sm text-gray-700 hover:underline cursor-pointer">{cmsText("clearSelection", "Clear selection")}</button>
             )}
             <button type="button" onClick={handleSave} disabled={required && !pendingId} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              {required ? "Use this template" : "Save"}
+              {required ? cmsText("useThisTemplate", "Use this template") : cmsText("save", "Save")}
             </button>
           </div>
         </div>

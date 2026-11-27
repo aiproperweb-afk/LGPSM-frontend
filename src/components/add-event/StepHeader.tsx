@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 
 interface StepHeaderProps {
@@ -9,6 +11,7 @@ interface StepHeaderProps {
 }
 
 export default function StepHeader({ currentStep, onStepClick, maxUnlockedStep }: StepHeaderProps) {
+  const cmsText = useDashboardCopy();
   const steps = [
     { num: 1, label: "Event Details" },
     { num: 2, label: "Settings" },
@@ -28,7 +31,7 @@ export default function StepHeader({ currentStep, onStepClick, maxUnlockedStep }
               key={step.num}
               type="button"
               onClick={() => onStepClick(step.num)}
-              title={isLocked ? "Complete required details on previous steps to unlock" : undefined}
+              title={isLocked ? cmsText("completeRequiredDetailsOnPreviousStepsToUnlock", "Complete required details on previous steps to unlock") : undefined}
               className={`flex items-center gap-2 pb-3 text-sm font-medium transition-all relative cursor-pointer ${
                 isActive
                   ? "text-gray-900"

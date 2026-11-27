@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -72,6 +74,7 @@ const clickableCard = "relative cursor-pointer transition-colors hover:bg-[#EEF3
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
+  const cmsText = useDashboardCopy();
   const tones = { peach: "bg-[#D6E4FF] text-[#1F65FF]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   const arrow = { peach: "group-hover:text-[#1F65FF]", mint: "group-hover:text-[#15803D]", lavender: "group-hover:text-[#2C2EB5]" };
   const hover = { peach: "hover:bg-[#D6E4FF]/60", mint: "hover:bg-[#C9F6E6]/60", lavender: "hover:bg-[#DCE1FF]/60" };
@@ -82,7 +85,7 @@ function MetricCard({ value, label, href, tone, icon }: { value: number | null; 
         <ArrowLink href={href} label={`Open ${label}`} stretch arrow={arrow[tone]} />
       </div>
       <div>
-        <p className="text-3xl font-medium text-black leading-none">{value === null ? <span role="status" aria-label="Loading" className="inline-block h-[30px] w-12 rounded bg-gray-200 animate-pulse align-top" /> : String(value).padStart(2, "0")}</p>
+        <p className="text-3xl font-medium text-black leading-none">{value === null ? <span role="status" aria-label={cmsText("loading", "Loading")} className="inline-block h-[30px] w-12 rounded bg-gray-200 animate-pulse align-top" /> : String(value).padStart(2, "0")}</p>
         <p className="mt-1.5 text-sm text-[#4B4F52]">{label}</p>
       </div>
     </div>
@@ -108,6 +111,7 @@ function Ring({ value, max, center, label }: { value: number; max: number; cente
 }
 
 function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: number; failed: number }) {
+  const cmsText = useDashboardCopy();
   const total = sent + notSent + failed;
   const r = 36;
   const c = 2 * Math.PI * r;
@@ -132,7 +136,7 @@ function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: numbe
         </svg>
         <span className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-medium text-gray-900 leading-none">{total}</span>
-          <span className="text-[10px] text-[#6B6B6B]">guests</span>
+          <span className="text-[10px] text-[#6B6B6B]">{cmsText("guests", "guests")}</span>
         </span>
       </div>
       <ul className="min-w-0 space-y-2 text-xs text-[#4B4F52]">
@@ -148,6 +152,7 @@ function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: numbe
 }
 
 export default function EventDetailsPage() {
+  const cmsText = useDashboardCopy();
   const router = useRouter();
   const params = useParams();
   const eventId = (params?.id as string) || "";
@@ -252,7 +257,7 @@ export default function EventDetailsPage() {
     return (
       <div className="w-full min-h-full bg-white">
         <PageHeader title={pageTitle} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
-        <SkeletonRegion label="Loading event" className="px-6 pt-8 space-y-6">
+        <SkeletonRegion label={cmsText("loadingEvent", "Loading event")} className="px-6 pt-8 space-y-6">
           <Skeleton className="h-9 w-1/3" /><Skeleton className="h-4 w-1/2" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-5">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[120px]" />)}</div>
           <Skeleton className="h-[260px]" />
@@ -266,11 +271,11 @@ export default function EventDetailsPage() {
       <div className="w-full min-h-full bg-white">
         <PageHeader title={pageTitle} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
         <div role="alert" className="max-w-md mx-auto mt-16 border border-[#E0E0E0] rounded-lg p-8 text-center space-y-4">
-          <h2 className="text-lg font-medium text-gray-900">Event unavailable</h2>
+          <h2 className="text-lg font-medium text-gray-900">{cmsText("eventUnavailable", "Event unavailable")}</h2>
           <p className="text-sm text-[#4B4F52] break-words">{loadError}</p>
           <div className="flex justify-center gap-3">
-            <button type="button" onClick={load} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Retry</button>
-            <Link href="/events" className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium">Back to Events</Link>
+            <button type="button" onClick={load} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">{cmsText("retry", "Retry")}</button>
+            <Link href="/events" className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium">{cmsText("backToEvents", "Back to Events")}</Link>
           </div>
         </div>
       </div>
@@ -313,14 +318,12 @@ export default function EventDetailsPage() {
         <PopupMessage message={notice} type="success" onClose={() => setNotice(null)} />
         {event.status === "CANCELLED" && (
           <div role="status" className="p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-800">
-            <p className="font-medium">This event was cancelled{event.cancelledAt ? ` on ${formatDateTime(event.cancelledAt)}` : ""}.</p>
-            <p className="mt-0.5">Its QR passes no longer work, invitations and RSVPs are closed, and it cannot be reinstated. Attendance, RSVPs, reports and the activity log are kept.{event.cancellationReason ? ` Reason given: ${event.cancellationReason}` : ""}</p>
+            <p className="font-medium">{cmsText("thisEventWasCancelled", "This event was cancelled")}{event.cancelledAt ? ` on ${formatDateTime(event.cancelledAt)}` : ""}.</p>
+            <p className="mt-0.5">{cmsText("itsQrPassesNoLongerWorkInvitationsAnd", "Its QR passes no longer work, invitations and RSVPs are closed, and it cannot be reinstated. Attendance, RSVPs, reports and the activity log are kept.")}{event.cancellationReason ? ` Reason given: ${event.cancellationReason}` : ""}</p>
           </div>
         )}
         {event.operationalDataCleared && (
-          <p className="p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">
-            Operational data (sessions, invitees, invitations and staff assignments) for this completed event was permanently deleted by an administrator.
-          </p>
+          <p className="p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">{cmsText("operationalDataSessionsInviteesInvitationsAndStaffAssignments", "Operational data (sessions, invitees, invitations and staff assignments) for this completed event was permanently deleted by an administrator.")}</p>
         )}
 
         <EventHeaderBar
@@ -337,13 +340,13 @@ export default function EventDetailsPage() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-5 items-start xl:items-stretch">
           <div className="space-y-5 min-w-0">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <MetricCard value={totalInvitees} label="Total Invitees" href={`/events/${eventId}/invitees`} tone="peach" icon={
+              <MetricCard value={totalInvitees} label={cmsText("totalInvitees", "Total Invitees")} href={`/events/${eventId}/invitees`} tone="peach" icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               } />
-              <MetricCard value={assignmentsCount} label="Assigned System Users" href={`/events/${eventId}/assign-users`} tone="mint" icon={
+              <MetricCard value={assignmentsCount} label={cmsText("assignedSystemUsers", "Assigned System Users")} href={`/events/${eventId}/assign-users`} tone="mint" icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
               } />
-              <MetricCard value={sessions.length} label="Total Sessions" href={`/events/${eventId}/sessions`} tone="lavender" icon={
+              <MetricCard value={sessions.length} label={cmsText("totalSessions", "Total Sessions")} href={`/events/${eventId}/sessions`} tone="lavender" icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               } />
             </div>
@@ -351,19 +354,19 @@ export default function EventDetailsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
               <section className={`${card} ${clickableCard} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
-                  <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" stretch />
+                  <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">{cmsText("guestLogs", "Guest Logs")}</h3>
+                  <ArrowLink href={`/events/${eventId}/invitees`} label={cmsText("openInviteesList", "Open invitees list")} stretch />
                 </div>
-                {event.operationalDataCleared ? <p className="text-sm text-[#6B6B6B] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
+                {event.operationalDataCleared ? <p className="text-sm text-[#6B6B6B] py-8 text-center">{cmsText("dataCleared", "Data cleared")}</p> : !reportLoaded ? <div role="status" aria-label={cmsText("loadingGuestLogs", "Loading guest logs")} className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>
 
               <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">Sessions</h3>
-                  <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
+                  <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">{cmsText("sessions2", "Sessions")}</h3>
+                  <ArrowLink href={`/events/${eventId}/sessions`} label={cmsText("openSessionsList", "Open sessions list")} />
                 </div>
                 {sessions.length === 0 ? (
-                  <p className="text-sm text-[#6B6B6B] py-6 text-center">No sessions yet.</p>
+                  <p className="text-sm text-[#6B6B6B] py-6 text-center">{cmsText("noSessionsYet", "No sessions yet.")}</p>
                 ) : (
                   <HorizontalScroll>
                     {/* fits the card at any width: names, times and headings wrap (no fixed minimum width), so no scroll bar appears */}
@@ -371,11 +374,11 @@ export default function EventDetailsPage() {
                       <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                         <tr>
                           <th className="py-2 pr-2 font-medium">#</th>
-                          <th className="py-2 pr-3 font-medium">Session Name</th>
-                          <th className="py-2 pr-3 font-medium">Start Date &amp; Time</th>
-                          <th className="py-2 pr-3 font-medium">End Date &amp; Time</th>
-                          <th className="py-2 pr-3 font-medium">No. of Guests</th>
-                          <th className="py-2 font-medium">Checked in</th>
+                          <th className="py-2 pr-3 font-medium">{cmsText("sessionName", "Session Name")}</th>
+                          <th className="py-2 pr-3 font-medium">{cmsText("startDateTime", "Start Date & Time")}</th>
+                          <th className="py-2 pr-3 font-medium">{cmsText("endDateTime", "End Date & Time")}</th>
+                          <th className="py-2 pr-3 font-medium">{cmsText("noOfGuests", "No. of Guests")}</th>
+                          <th className="py-2 font-medium">{cmsText("checkedIn", "Checked in")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
@@ -387,8 +390,8 @@ export default function EventDetailsPage() {
                               <td className="py-2.5 pr-4 text-gray-900 break-words align-top">{s.name}</td>
                               <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}</td>
                               <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.end, "—")}</td>
-                              <td className="py-2.5 pr-4">{reportLoaded ? r?.invitedCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
-                              <td className="py-2.5">{reportLoaded ? r?.attendeeCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
+                              <td className="py-2.5 pr-4">{reportLoaded ? r?.invitedCount ?? 0 : <span role="status" aria-label={cmsText("loading", "Loading")} className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
+                              <td className="py-2.5">{reportLoaded ? r?.attendeeCount ?? 0 : <span role="status" aria-label={cmsText("loading", "Loading")} className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
                             </tr>
                           );
                         })}
@@ -402,8 +405,8 @@ export default function EventDetailsPage() {
 
           <section className={`${card} p-4 flex flex-col`} aria-labelledby="card-preview-heading">
             <div className="flex items-center justify-between mb-3">
-              <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">Card Preview</h3>
-              <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#1A56DB] cursor-pointer">
+              <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">{cmsText("cardPreview", "Card Preview")}</h3>
+              <button type="button" onClick={() => setCardExpanded(true)} aria-label={cmsText("expandCardPreview", "Expand card preview")} className="p-1 -m-1 text-gray-900 hover:text-[#1A56DB] cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
@@ -412,8 +415,8 @@ export default function EventDetailsPage() {
             <div
               role="button"
               tabIndex={0}
-              aria-label="Open the card preview"
-              title="Click to enlarge"
+              aria-label={cmsText("openTheCardPreview", "Open the card preview")}
+              title={cmsText("clickToEnlarge", "Click to enlarge")}
               onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setCardExpanded(true); }}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) setCardExpanded(true); }}
               className="rounded-md overflow-hidden border border-[#EEEEEE] xl:flex-1 xl:min-h-0 xl:flex focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
@@ -428,32 +431,22 @@ export default function EventDetailsPage() {
             {/* A print-only event is never sent: its button downloads the cards instead (the guests are ticked on the Invitees tab) */}
             {event.invitationType === "PRINT" ? (
               event.status === "CANCELLED" ? (
-                <span aria-disabled="true" title="This event is cancelled. Cards can no longer be produced." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
-                  Download Invitee Cards
-                </span>
+                <span aria-disabled="true" title={cmsText("thisEventIsCancelledCardsCanNoLonger", "This event is cancelled. Cards can no longer be produced.")} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">{cmsText("downloadInviteeCards", "Download Invitee Cards")}</span>
               ) : (
                 <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></svg>
-                  Download Invitee Cards
-                </Link>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></svg>{cmsText("downloadInviteeCards", "Download Invitee Cards")}</Link>
               )
             ) : (
               <>
             {/* Faded once invitations have gone out (Figma 426:2); resends happen per guest on the Invitees tab */}
             {event.status === "CANCELLED" ? (
-              <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
-                Send Invitation
-              </span>
+              <span aria-disabled="true" title={cmsText("thisEventIsCancelledInvitationsCanNoLonger", "This event is cancelled. Invitations can no longer be sent.")} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">{cmsText("sendInvitation", "Send Invitation")}</span>
             ) : invitationLifecycleStarted ? (
-              <span aria-disabled="true" title="Invitations have been sent. Resend to guests from the Invitees tab." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-              Send Invitation
-            </span>
+              <span aria-disabled="true" title={cmsText("invitationsHaveBeenSentResendToGuestsFrom", "Invitations have been sent. Resend to guests from the Invitees tab.")} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>{cmsText("sendInvitation", "Send Invitation")}</span>
             ) : (
             <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-              Send Invitation
-            </Link>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>{cmsText("sendInvitation", "Send Invitation")}</Link>
             )}
               </>
             )}
@@ -464,10 +457,10 @@ export default function EventDetailsPage() {
 
         <section className={`${card} p-4 sm:p-5 space-y-5`} aria-labelledby="analysis-title">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 id="analysis-title" className="text-xl font-medium text-gray-900">Analysis</h3>
+            <h3 id="analysis-title" className="text-xl font-medium text-gray-900">{cmsText("analysis", "Analysis")}</h3>
             {sessions.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-[#4B4F52]">Session:</span>
+                <span className="text-sm text-[#4B4F52]">{cmsText("session", "Session:")}</span>
                 <div className="w-48">
                   <CustomDropdown value={analysisSession} onChange={chooseAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
                 </div>
@@ -476,27 +469,27 @@ export default function EventDetailsPage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div className="border border-[#E0E0E0] rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-4">Session Health Overview Panel</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-4">{cmsText("sessionHealthOverviewPanel", "Session Health Overview Panel")}</h4>
               {selected ? (
                 <div className="grid grid-cols-3 gap-2">
-                  <Ring value={attended} max={invited} center={<>{attended}<span className="text-[10px] text-[#6B6B6B]">/{invited}</span></>} label="Current Logged" />
-                  <Ring value={selected.checkInsToday ?? 0} max={Math.max(invited, 1)} center={selected.checkInsToday ?? 0} label="Check-ins Today" />
-                  <Ring value={attended} max={invited} center={`${invited > 0 ? Math.round((attended / invited) * 100) : 0}%`} label="Occupancy" />
+                  <Ring value={attended} max={invited} center={<>{attended}<span className="text-[10px] text-[#6B6B6B]">/{invited}</span></>} label={cmsText("currentLogged", "Current Logged")} />
+                  <Ring value={selected.checkInsToday ?? 0} max={Math.max(invited, 1)} center={selected.checkInsToday ?? 0} label={cmsText("checkInsToday", "Check-ins Today")} />
+                  <Ring value={attended} max={invited} center={`${invited > 0 ? Math.round((attended / invited) * 100) : 0}%`} label={cmsText("occupancy", "Occupancy")} />
                 </div>
               ) : (
-                <p className="text-sm text-[#6B6B6B] py-6 text-center">{sessions.length ? "No data for this session yet." : "Add a session to see its health."}</p>
+                <p className="text-sm text-[#6B6B6B] py-6 text-center">{sessions.length ? cmsText("noDataForThisSessionYet", "No data for this session yet.") : cmsText("addASessionToSeeItsHealth", "Add a session to see its health.")}</p>
               )}
             </div>
             <div className="border border-[#E0E0E0] rounded-lg p-4 min-w-0">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Access Logs</h4>
-              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">{cmsText("accessLogs", "Access Logs")}</h4>
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={cmsText("scrollableTable", "Scrollable table")}>
                 <table className="w-full text-left text-sm min-w-[440px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
-                    <tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">Mobile</th><th className="py-2 pr-3 font-medium">Entry Time</th><th className="py-2 font-medium">Staff</th></tr>
+                    <tr><th className="py-2 pr-3 font-medium">{cmsText("guest", "Guest")}</th><th className="py-2 pr-3 font-medium">{cmsText("mobile", "Mobile")}</th><th className="py-2 pr-3 font-medium">{cmsText("entryTime", "Entry Time")}</th><th className="py-2 font-medium">{cmsText("staff", "Staff")}</th></tr>
                   </thead>
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {accessLogs.length === 0 ? (
-                      <tr><td colSpan={4} className="py-6 text-center text-[#6B6B6B]">No guests have entered this session yet.</td></tr>
+                      <tr><td colSpan={4} className="py-6 text-center text-[#6B6B6B]">{cmsText("noGuestsHaveEnteredThisSessionYet", "No guests have entered this session yet.")}</td></tr>
                     ) : (
                       accessLogs.map((log) => (
                         <tr key={log.id}>

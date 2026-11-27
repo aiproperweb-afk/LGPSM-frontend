@@ -1,4 +1,5 @@
 import { homeContent, type HomeContent } from "./homeContent";
+import { dashboardCatalog } from "./dashboardCatalog";
 import { contactCopy } from "./contactContent";
 import type { CmsPageData, CmsSlug } from "./types";
 
@@ -25,11 +26,21 @@ export const initialHomeData: CmsPageData = {
 
 export const initialPageData: Record<CmsSlug, CmsPageData> = {
   home: initialHomeData,
+  ...Object.fromEntries(dashboardCatalog.map(({ slug, labels }) => [slug, {
+    root: { props: {} },
+    content: [{ type: "DashboardCopy", props: { id: slug, labels } }],
+  }])),
   contact: {
     root: { props: {} },
     content: [{ type: "ContactContent", props: { ...contactCopy, id: "ContactContent" } }],
   },
 };
+
+export const cmsPageDescriptors = [
+  { name: "Homepage", slug: "home", route: "/" },
+  { name: "Contact", slug: "contact", route: "/contact" },
+  ...dashboardCatalog.map(({ name, slug, route }) => ({ name, slug, route })),
+];
 
 export function isCmsSlug(value: string): value is CmsSlug {
   return Object.hasOwn(initialPageData, value);

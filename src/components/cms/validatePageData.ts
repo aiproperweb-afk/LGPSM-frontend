@@ -28,7 +28,7 @@ function matchesFields(value: unknown, seed: unknown, field = "", allowEmptyImag
   if (!isObject(seed) || !isObject(value)) return false;
   return Object.keys(value).length === Object.keys(seed).length
     && Object.entries(seed).every(([key, entry]) =>
-      matchesFields(value[key], entry, key, allowEmptyImage)
+      matchesFields(value[key], entry, field === "labels" ? "" : key, allowEmptyImage)
     );
 }
 

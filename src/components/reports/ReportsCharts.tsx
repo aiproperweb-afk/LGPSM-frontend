@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import { Skeleton, SkeletonRegion, TableSkeleton } from "@/components/common/Skeleton";
 
@@ -33,6 +35,7 @@ function niceMax(value: number): number {
 }
 
 export default function ReportsCharts({ delivery, sessions = [], loading = false }: ReportsChartsProps) {
+  const cmsText = useDashboardCopy();
   const sent = delivery?.SENT ?? 0;
   const pending = delivery?.PENDING ?? 0;
   const failed = delivery?.FAILED ?? 0;
@@ -60,7 +63,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
       {/* Left Donut Chart Card: Invitation delivery */}
       <div className="lg:col-span-4 bg-white border border-gray-200/80 rounded-md p-6 relative space-y-4 flex flex-col justify-between min-w-0">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-gray-800">Guest Logs</h3>
+          <h3 className="text-sm font-bold text-gray-800">{cmsText("guestLogs", "Guest Logs")}</h3>
         </div>
 
         {/* Chart Legend */}
@@ -83,7 +86,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
               <svg className="w-full h-full absolute inset-0" viewBox="0 0 42 42">
                 <circle cx="21" cy="21" r={DONUT_RADIUS} fill="none" stroke="#F3F4F6" strokeWidth="5" />
               </svg>
-              <span className="relative text-xs text-gray-500 font-medium">No invitations yet</span>
+              <span className="relative text-xs text-gray-500 font-medium">{cmsText("noInvitationsYet", "No invitations yet")}</span>
             </div>
           ) : (
             <>
@@ -130,32 +133,30 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
       {/* Right Bar Chart Card: Invited vs. Attendees */}
       <div className="lg:col-span-8 bg-white border border-gray-200/80 rounded-md p-6 relative space-y-4 flex flex-col justify-between min-w-0">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-gray-800">Invited vs. Attendees</h3>
+          <h3 className="text-sm font-bold text-gray-800">{cmsText("invitedVsAttendees", "Invited vs. Attendees")}</h3>
         </div>
 
         {/* Chart Legend */}
         <div className="flex items-center gap-4 text-[11px] font-medium text-gray-600">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#1F65FF] inline-block" />
-            <span>Invitees</span>
+            <span>{cmsText("invitees", "Invitees")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#2D3139] inline-block" />
-            <span>Attendees</span>
+            <span>{cmsText("attendees", "Attendees")}</span>
           </div>
         </div>
 
         {loading ? (
-          <SkeletonRegion label="Loading chart" className="h-64 flex items-end gap-6 px-6 pb-2 border-l border-b border-gray-200">
+          <SkeletonRegion label={cmsText("loadingChart", "Loading chart")} className="h-64 flex items-end gap-6 px-6 pb-2 border-l border-b border-gray-200">
             {[60, 90, 45, 75].map((h, i) => <Skeleton key={i} className="flex-1" style={{ height: `${h}%` }} />)}
           </SkeletonRegion>
         ) : sessions.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-xs text-gray-500 font-medium border-l border-b border-gray-200">
-            No sessions for this event yet
-          </div>
+          <div className="h-64 flex items-center justify-center text-xs text-gray-500 font-medium border-l border-b border-gray-200">{cmsText("noSessionsForThisEventYet", "No sessions for this event yet")}</div>
         ) : (
           <div className="relative h-64 w-full pt-7 pb-2 border-l border-b border-gray-200 pl-8">
-            <span className="absolute left-8 top-1 whitespace-nowrap bg-white px-0.5 text-[10px] font-semibold text-gray-500">Head Count</span>
+            <span className="absolute left-8 top-1 whitespace-nowrap bg-white px-0.5 text-[10px] font-semibold text-gray-500">{cmsText("headCount", "Head Count")}</span>
             <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] text-gray-500 font-medium">
               {ticks.map((t, i) => (
                 <span key={i}>{t}</span>

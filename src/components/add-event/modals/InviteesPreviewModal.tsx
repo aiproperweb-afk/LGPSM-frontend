@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState } from "react";
 import { InviteeSheetRow, sheetIssues } from "@/utils/inviteeSheet";
 
@@ -22,6 +24,7 @@ const inputClass = "w-full px-2.5 py-1.5 text-sm border border-[#E0E0E0] rounded
 // "Invitees List Quick Preview": what an uploaded sheet (or the current list) contains, row by row.
 // Mounted only while open, so its local edits start from the rows passed in.
 export default function InviteesPreviewModal({ title = "Invitees List Preview", subtitle, rows, showCompany = true, showIdentity = false, identityLabel, identity2Label, onSave, onClose }: InviteesPreviewModalProps) {
+  const cmsText = useDashboardCopy();
   const [list, setList] = useState<InviteeSheetRow[]>(rows);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<InviteeSheetRow | null>(null);
@@ -47,11 +50,11 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-[#E5E5E5]">
           <div className="min-w-0">
             <h2 id="invitee-preview-title" className="text-base font-medium text-gray-900">
-              {title} <span className="text-sm font-normal text-[#6B6B6B]">({list.length} invitees)</span>
+              {title} <span className="text-sm font-normal text-[#6B6B6B]">({list.length}{" " + cmsText("invitees3", "invitees)")}</span>
             </h2>
             {subtitle && <p className="text-xs text-[#6B6B6B] mt-0.5 break-words">{subtitle}</p>}
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer shrink-0">
+          <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer shrink-0">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -59,20 +62,20 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
         </div>
 
         <div className="px-6 pt-4 space-y-2">
-          <label htmlFor="invitee-preview-search" className="block text-sm font-medium text-gray-900">Search</label>
+          <label htmlFor="invitee-preview-search" className="block text-sm font-medium text-gray-900">{cmsText("search", "Search")}</label>
           <input
             id="invitee-preview-search"
             type="search"
-            placeholder="Search by name, email or mobile"
+            placeholder={cmsText("searchByNameEmailOrMobile", "Search by name, email or mobile")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
           />
           {(invalidCount > 0 || repeatedCount > 0) && (
             <p className="text-xs font-medium text-amber-700" role="status">
-              {issues.importable} of {list.length} row{list.length === 1 ? "" : "s"} can be imported.{" "}
-              {invalidCount > 0 && <>{invalidCount} row{invalidCount === 1 ? " has" : "s have"} a problem and will be skipped{editable ? " unless fixed" : ""}. </>}
-              {repeatedCount > 0 && <>{repeatedCount} row{repeatedCount === 1 ? " repeats" : "s repeat"} a person already in this file and will be skipped. </>}
+              {issues.importable}{" " + cmsText("of", "of") + " "}{list.length}{" " + cmsText("row2", "row")}{list.length === 1 ? "" : "s"}{" " + cmsText("canBeImported", "can be imported.")}{" "}
+              {invalidCount > 0 && <>{invalidCount}{" " + cmsText("row2", "row")}{invalidCount === 1 ? cmsText("has", "has") : cmsText("sHave", "s have")}{" " + cmsText("aProblemAndWillBeSkipped", "a problem and will be skipped")}{editable ? cmsText("unlessFixed", "unless fixed") : ""}. </>}
+              {repeatedCount > 0 && <>{repeatedCount}{" " + cmsText("row2", "row")}{repeatedCount === 1 ? cmsText("repeats", "repeats") : cmsText("sRepeat", "s repeat")}{" " + cmsText("aPersonAlreadyInThisFileAndWill", "a person already in this file and will be skipped.") + " "}</>}
               {editable && "Guests who are already on this event are checked in the next step."}
             </p>
           )}
@@ -80,19 +83,19 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
 
         <div className="flex-1 overflow-auto px-6 py-3 min-h-[200px]">
           {list.length === 0 ? (
-            <p className="py-10 text-center text-sm text-[#6B6B6B]">No invitees in this list.</p>
+            <p className="py-10 text-center text-sm text-[#6B6B6B]">{cmsText("noInviteesInThisList", "No invitees in this list.")}</p>
           ) : (
             <table className="w-full text-left text-sm min-w-[560px]">
               <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                 <tr>
                   <th className="py-2.5 pr-3 font-medium w-12">#</th>
-                  <th className="py-2.5 pr-3 font-medium">Name</th>
-                  <th className="py-2.5 pr-3 font-medium">Email</th>
-                  <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("name", "Name")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("email", "Email")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("mobileNumber", "Mobile Number")}</th>
                   {showIdentity && <th className="py-2.5 pr-3 font-medium">{identityLabel || "Professional Identity"}</th>}
                   {identity2Label && <th className="py-2.5 pr-3 font-medium">{identity2Label}</th>}
-                  {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
-                  {editable && <th className="py-2.5 font-medium text-right">Action</th>}
+                  {showCompany && <th className="py-2.5 pr-3 font-medium">{cmsText("companyName", "Company Name")}</th>}
+                  {editable && <th className="py-2.5 font-medium text-right">{cmsText("action", "Action")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
@@ -104,15 +107,15 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                       <td className="py-2.5 pr-3 text-[#6B6B6B]">{row.id}</td>
                       {isEditing ? (
                         <>
-                          <td className="py-2 pr-2"><input aria-label="Name" className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></td>
-                          <td className="py-2 pr-2"><input aria-label="Email" className={inputClass} value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></td>
-                          <td className="py-2 pr-2"><input aria-label="Mobile" className={inputClass} value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></td>
+                          <td className="py-2 pr-2"><input aria-label={cmsText("name", "Name")} className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></td>
+                          <td className="py-2 pr-2"><input aria-label={cmsText("email", "Email")} className={inputClass} value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></td>
+                          <td className="py-2 pr-2"><input aria-label={cmsText("mobile", "Mobile")} className={inputClass} value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></td>
                           {showIdentity && <td className="py-2 pr-2"><input aria-label={identityLabel || "Professional identity"} className={inputClass} value={editing.identity || ""} onChange={(e) => setEditing({ ...editing, identity: e.target.value })} /></td>}
                           {identity2Label && <td className="py-2 pr-2"><input aria-label={identity2Label} className={inputClass} value={editing.identity2 || ""} onChange={(e) => setEditing({ ...editing, identity2: e.target.value })} /></td>}
-                          {showCompany && <td className="py-2 pr-2"><input aria-label="Company" className={inputClass} value={editing.company} onChange={(e) => setEditing({ ...editing, company: e.target.value })} /></td>}
+                          {showCompany && <td className="py-2 pr-2"><input aria-label={cmsText("company", "Company")} className={inputClass} value={editing.company} onChange={(e) => setEditing({ ...editing, company: e.target.value })} /></td>}
                           <td className="py-2 text-right whitespace-nowrap">
-                            <button type="button" onClick={commitEdit} className="text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer mr-2">Done</button>
-                            <button type="button" onClick={() => setEditing(null)} className="text-sm text-gray-600 hover:underline cursor-pointer">Cancel</button>
+                            <button type="button" onClick={commitEdit} className="text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer mr-2">{cmsText("done", "Done")}</button>
+                            <button type="button" onClick={() => setEditing(null)} className="text-sm text-gray-600 hover:underline cursor-pointer">{cmsText("cancel2", "Cancel")}</button>
                           </td>
                         </>
                       ) : (
@@ -143,7 +146,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                 })}
                 {visible.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-[#6B6B6B]">No invitees match your search.</td>
+                    <td colSpan={7} className="py-8 text-center text-[#6B6B6B]">{cmsText("noInviteesMatchYourSearch", "No invitees match your search.")}</td>
                   </tr>
                 )}
               </tbody>
@@ -153,7 +156,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
 
         <div className="px-6 py-4 border-t border-[#E5E5E5] flex justify-end gap-3">
           <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 cursor-pointer">
-            {editable ? "Cancel" : "Close"}
+            {editable ? cmsText("cancel2", "Cancel") : cmsText("close", "Close")}
           </button>
           {editable && (
             <button
@@ -164,9 +167,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                 onClose();
               }}
               className="px-6 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md disabled:opacity-60 cursor-pointer"
-            >
-              Save
-            </button>
+            >{cmsText("save", "Save")}</button>
           )}
         </div>
       </div>

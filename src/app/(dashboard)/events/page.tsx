@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -126,6 +128,7 @@ function toRow(e: RawEvent): EventRow {
 const STATUS_FILTERS: RowStatus[] = ["Upcoming", "Ongoing", "Past", "Invitation not sent", "Cancelled"];
 
 function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow) => void }) {
+  const cmsText = useDashboardCopy();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -156,12 +159,12 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
       </button>
       {open && position && createPortal(
         <div ref={menuRef} onClick={(e) => e.stopPropagation()} style={{ position: "fixed", ...position }} className="z-[9999] min-w-[150px] rounded-md bg-[#1E232A] text-white py-1 shadow-xl">
-          <Link href={`/events/${row.id}`} className={item}>View Event</Link>
+          <Link href={`/events/${row.id}`} className={item}>{cmsText("viewEvent", "View Event")}</Link>
           {/* always there: once editing is closed (invitations sent, cancelled, or over) it opens the three steps as saved, with nothing to change */}
-          <Link href={`/events/${row.id}/edit`} className={item}>{row.status !== "Cancelled" && !row.ended && row.canEdit ? "Edit Event" : "View Details"}</Link>
+          <Link href={`/events/${row.id}/edit`} className={item}>{row.status !== "Cancelled" && !row.ended && row.canEdit ? cmsText("editEvent", "Edit Event") : cmsText("viewDetails", "View Details")}</Link>
           {/* a past or cancelled event can be deleted; one still to come can be cancelled */}
           <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
-            {row.ended || row.status === "Cancelled" ? "Delete Event" : "Cancel Event"}
+            {row.ended || row.status === "Cancelled" ? cmsText("deleteEvent", "Delete Event") : cmsText("cancelEvent", "Cancel Event")}
           </button>
         </div>, document.body
       )}
@@ -172,6 +175,7 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
 // Organiser card menu (Figma 217:22642): dark rounded panel with a pointer, Edit and Send Invitation. Delete stays
 // available as before; Edit only while no invitations have gone out (the event is locked after sending).
 function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow) => void }) {
+  const cmsText = useDashboardCopy();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -206,31 +210,23 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
           <div className="w-full bg-[#15191C] rounded-xl px-4 py-3 flex flex-col gap-[3px]">
             <Link href={`/events/${row.id}/edit`} className={item}>
               <Icon name="events/edit" width={16} height={16} />
-              {active && row.canEdit ? "Edit" : "View Details"}
+              {active && row.canEdit ? cmsText("edit", "Edit") : cmsText("viewDetails", "View Details")}
             </Link>
             {active && row.phase === "Upcoming" && !row.printOnly && (
               <Link href={`/events/${row.id}/invitees`} className={item}>
-                <Icon name="events/send" width={16} height={16} />
-                Send Invitation
-              </Link>
+                <Icon name="events/send" width={16} height={16} />{cmsText("sendInvitation", "Send Invitation")}</Link>
             )}
             {active && row.phase === "Upcoming" && row.printOnly && (
               <Link href={`/events/${row.id}/invitees`} className={item}>
-                <Icon name="billing/download-active" width={16} height={16} />
-                Download Invitee Cards
-              </Link>
+                <Icon name="billing/download-active" width={16} height={16} />{cmsText("downloadInviteeCards", "Download Invitee Cards")}</Link>
             )}
             {active && (
               <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300`}>
-                <Icon name="events/trash" width={16} height={16} />
-                Cancel Event
-              </button>
+                <Icon name="events/trash" width={16} height={16} />{cmsText("cancelEvent", "Cancel Event")}</button>
             )}
             {(row.ended || row.status === "Cancelled") && (
               <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300`}>
-                <Icon name="events/trash" width={16} height={16} />
-                Delete Event
-              </button>
+                <Icon name="events/trash" width={16} height={16} />{cmsText("deleteEvent", "Delete Event")}</button>
             )}
           </div>
         </div>, document.body
@@ -241,6 +237,7 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
 
 // Organiser event card (Figma 217:22621): 56px card thumbnail, category tag, title, start/end, invite count, sessions
 function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: () => void; onDelete: (row: EventRow) => void }) {
+  const cmsText = useDashboardCopy();
   return (
     <div
       role="link"
@@ -254,20 +251,20 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
       <div className="flex-1 min-w-0 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5 items-start">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2 py-[3px] border border-[#1F65FF] rounded-[3px] text-xs font-medium text-[#1F65FF]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
+            <span className="px-2 py-[3px] border border-[#1F65FF] rounded-[3px] text-xs font-medium text-[#1F65FF]">{row.category === "—" ? cmsText("event", "Event") : `${row.category} Event`}</span>
             <span className={`px-2.5 py-[3px] rounded-full text-xs font-medium ${STATUS_STYLE[row.phase]}`}>{row.phase}</span>
           </div>
           <h2 className="text-base font-medium text-[#15191C] break-words">{row.name}</h2>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-[#6B6B6B]">
-            <span><span className="font-bold text-[#15191C]">Start: </span>{formatCompactDateTime(row.start, "—")}</span>
+            <span><span className="font-bold text-[#15191C]">{cmsText("start", "Start:") + " "}</span>{formatCompactDateTime(row.start, "—")}</span>
             <span aria-hidden className="w-px h-4 bg-[#969696]" />
-            <span><span className="font-bold text-[#15191C]">End: </span>{formatCompactDateTime(row.end, "—")}</span>
+            <span><span className="font-bold text-[#15191C]">{cmsText("end", "End:") + " "}</span>{formatCompactDateTime(row.end, "—")}</span>
           </div>
         </div>
-        <p className="text-xs font-medium text-[#15191C]"># of invites: {row.inviteesCount ?? "—"}</p>
+        <p className="text-xs font-medium text-[#15191C]">{cmsText("ofInvites", "# of invites:") + " "}{row.inviteesCount ?? "—"}</p>
         <p className="flex gap-2 text-xs font-medium min-w-0">
-          <span className="text-[#6B6B6B] shrink-0">Sessions:</span>
-          <span className="text-[#15191C] truncate">{row.sessionNames.length ? row.sessionNames.join(", ") : "None yet"}</span>
+          <span className="text-[#6B6B6B] shrink-0">{cmsText("sessions", "Sessions:")}</span>
+          <span className="text-[#15191C] truncate">{row.sessionNames.length ? row.sessionNames.join(", ") : cmsText("noneYet", "None yet")}</span>
         </p>
       </div>
       <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -278,6 +275,7 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
 }
 
 export default function EventListingPage() {
+  const cmsText = useDashboardCopy();
   const router = useRouter();
   const { user } = useAuth();
   const isOrganizer = user?.role === "ORGANIZER";
@@ -427,17 +425,17 @@ export default function EventListingPage() {
     void applyFilters(next);
   };
   const filterBar = (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Event filters">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={cmsText("eventFilters", "Event filters")}>
       <div><FilterSelect value={filters.category} onChange={(v) => setFilter({ category: v })} options={[{ value: "", label: isOrganizer ? "Event Type" : "Event Category" }, ...categories.categoryOptions]} ariaLabel={isOrganizer ? "Event Type" : "Event Category"} plain /></div>
       {!isOrganizer && (
         <div><FilterSelect value={filters.sessions} onChange={(v) => setFilter({ sessions: v })} options={[{ value: "", label: "No. of Sessions" }, { value: "0", label: "0 sessions" }, { value: "1", label: "1 session" }, { value: "2-5", label: "2–5 sessions" }, { value: "6+", label: "6+ sessions" }]} ariaLabel="No. of Sessions" plain /></div>
       )}
       <div><FilterSelect value={filters.status} onChange={(v) => setFilter({ status: v })} options={[{ value: "", label: "Event Status" }, ...STATUS_FILTERS.map((st) => ({ value: st, label: st }))]} ariaLabel="Event Status" plain /></div>
-      <DateField className="w-[130px] 2xl:w-[150px]" placeholder="From" title="Events starting on or after this day" value={filters.from} max={filters.to || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ from: v })} />
-      <DateField className="w-[130px] 2xl:w-[150px]" placeholder="To" title="Events starting on or before this day" value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
-      {applyingFilters && <span role="status" className="text-xs text-[#6B6B6B]">Loading session totals…</span>}
+      <DateField className="w-[130px] 2xl:w-[150px]" placeholder={cmsText("from", "From")} title={cmsText("eventsStartingOnOrAfterThisDay", "Events starting on or after this day")} value={filters.from} max={filters.to || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ from: v })} />
+      <DateField className="w-[130px] 2xl:w-[150px]" placeholder={cmsText("to", "To")} title={cmsText("eventsStartingOnOrBeforeThisDay", "Events starting on or before this day")} value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
+      {applyingFilters && <span role="status" className="text-xs text-[#6B6B6B]">{cmsText("loadingSessionTotals", "Loading session totals…")}</span>}
       {activeFilterCount > 0 && (
-        <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#1F65FF] hover:bg-[#EAF1FF] rounded-md cursor-pointer whitespace-nowrap">Clear filters</button>
+        <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#1F65FF] hover:bg-[#EAF1FF] rounded-md cursor-pointer whitespace-nowrap">{cmsText("clearFilters", "Clear filters")}</button>
       )}
     </div>
   );
@@ -446,17 +444,17 @@ export default function EventListingPage() {
   if (isOrganizer) {
     return (
       <div className="w-full min-h-full bg-white">
-        <PageHeader title="Event Management" />
+        <PageHeader title={cmsText("eventManagement", "Event Management")} />
         <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-9">
           <div className="flex flex-wrap items-center gap-3 xl:gap-4">
             <div className="flex flex-[1_1_240px] items-center gap-2.5 min-w-0">
-              <label htmlFor="event-search" className="text-[17px] font-medium text-black shrink-0">Search</label>
+              <label htmlFor="event-search" className="text-[17px] font-medium text-black shrink-0">{cmsText("search", "Search")}</label>
               <div className="relative flex-1 min-w-0">
                 <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   id="event-search"
                   type="search"
-                  placeholder="Search events"
+                  placeholder={cmsText("searchEvents", "Search events")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
@@ -466,9 +464,7 @@ export default function EventListingPage() {
             <div className="min-w-0 max-w-full">{filterBar}</div>
             <div className="flex items-center gap-3 shrink-0 w-fit ml-auto">
               <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
-                <Icon name="events/add-white" width={24} height={24} />
-                Add
-              </Link>
+                <Icon name="events/add-white" width={24} height={24} />{cmsText("add", "Add")}</Link>
             </div>
           </div>
 
@@ -476,7 +472,7 @@ export default function EventListingPage() {
           <PopupMessage message={loadError} action={{ label: "Try again", onClick: load }} onClose={() => setLoadError(null)} />
 
           {loading ? (
-            <SkeletonRegion label="Loading events" className="grid grid-cols-1 lg:grid-cols-2 min-[1500px]:grid-cols-3 gap-4">
+            <SkeletonRegion label={cmsText("loadingEvents", "Loading events")} className="grid grid-cols-1 lg:grid-cols-2 min-[1500px]:grid-cols-3 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} aria-hidden className="border border-[#E0E0E0] rounded-lg p-4 flex gap-4">
                   <Skeleton className="w-[60px] h-[104px] shrink-0" />
@@ -488,7 +484,7 @@ export default function EventListingPage() {
             // a failed load is not "no events": the error banner above says what happened
             loadError && rows.length === 0 ? null : <p className="py-12 text-center text-sm text-[#6B6B6B]">
               {rows.length === 0 ? (
-                <>No events yet. <Link href="/events/add" className="text-[#1F65FF] font-medium underline">Create your first event</Link></>
+                <>{cmsText("noEventsYet", "No events yet.") + " "}<Link href="/events/add" className="text-[#1F65FF] font-medium underline">{cmsText("createYourFirstEvent", "Create your first event")}</Link></>
               ) : (
                 "No events match your search or filters."
               )}
@@ -510,10 +506,10 @@ export default function EventListingPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+      <PageHeader title={cmsText("event", "Event")} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
       <div className="p-4 sm:p-6 lg:px-9 lg:py-6 w-full space-y-4 pb-24">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <label htmlFor="event-search" className="text-base font-medium text-black shrink-0">Search</label>
+          <label htmlFor="event-search" className="text-base font-medium text-black shrink-0">{cmsText("search", "Search")}</label>
           <div className="relative flex-1">
             <svg className="w-5 h-5 text-[#6B6B6B] absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -521,7 +517,7 @@ export default function EventListingPage() {
             <input
               id="event-search"
               type="search"
-              placeholder="Search event.."
+              placeholder={cmsText("searchEvent", "Search event..")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-[47px] pl-11 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
@@ -534,13 +530,11 @@ export default function EventListingPage() {
                 onChange={selectOrganizer}
                 options={[{ value: "", label: "All Events" }, ...organizerOptions]}
                 ariaLabel="Filter events by organizer"
-                placeholder="All Events"
+                placeholder={cmsText("allEvents", "All Events")}
               />
             </div>
             <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-              Add Event
-            </Link>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>{cmsText("addEvent", "Add Event")}</Link>
           </div>
         </div>
 
@@ -556,7 +550,7 @@ export default function EventListingPage() {
                 {["Event ID", "Event Name", "Organizer", "Created on", "Category", "Event Start Date", "Event End Date", "Status"].map((h) => (
                   <th key={h} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{h}</th>
                 ))}
-                <th className="h-[46px] px-2.5 font-medium text-right">Action</th>
+                <th className="h-[46px] px-2.5 font-medium text-right">{cmsText("action", "Action")}</th>
               </tr>
             </thead>
             <tbody className="text-[#4B4F52]">
@@ -566,7 +560,7 @@ export default function EventListingPage() {
                 loadError && rows.length === 0 ? null : <tr>
                   <td colSpan={9} className="py-12 text-center text-[#6B6B6B]">
                     {rows.length === 0 ? (
-                      <>No events yet. <Link href="/events/add" className="text-[#1F65FF] font-medium underline">Create your first event</Link></>
+                      <>{cmsText("noEventsYet", "No events yet.") + " "}<Link href="/events/add" className="text-[#1F65FF] font-medium underline">{cmsText("createYourFirstEvent", "Create your first event")}</Link></>
                     ) : (
                       "No events match your search or filters."
                     )}

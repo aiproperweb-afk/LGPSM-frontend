@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
 import React, { useCallback, useEffect, useState } from "react";
@@ -21,6 +23,7 @@ const toHistory = (history: PricingSettings["history"]): PriceHistoryRecord[] =>
   }));
 
 export default function PriceRateSettingsPage() {
+  const cmsText = useDashboardCopy();
   const [pricing, setPricing] = useState<PricingSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -55,15 +58,13 @@ export default function PriceRateSettingsPage() {
   return (
     <div className="w-full min-h-full bg-white">
       {/* Header */}
-      <PageHeader title="Price Rate Settings" />
+      <PageHeader title={cmsText("priceRateSettings", "Price Rate Settings")} />
 
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-7 w-full space-y-6 pb-24">
-        <p className="text-xs text-[#4B4F52]">
-          A new rate applies to events created from now on. Each existing event keeps the rate that was in force when it was created.
-        </p>
+        <p className="text-xs text-[#4B4F52]">{cmsText("aNewRateAppliesToEventsCreatedFrom", "A new rate applies to events created from now on. Each existing event keeps the rate that was in force when it was created.")}</p>
         <PopupMessage message={error} onClose={() => setError(null)} />
-        <PopupMessage message={notice} type="success" title="Price rate updated" onClose={() => setNotice(null)} />
+        <PopupMessage message={notice} type="success" title={cmsText("priceRateUpdated", "Price rate updated")} onClose={() => setNotice(null)} />
         {pricing && <PricePerHeadCard key={pricing.ratePerInvitee ?? "unset"} currentRate={pricing.ratePerInvitee} saving={saving} onSaveRate={handleSaveRate} />}
         {pricing && <GstCard key={pricing.gstPercent} current={pricing.gstPercent} saving={saving} onSave={handleSaveGst} />}
         <PriceHistoryTable history={pricing ? toHistory(pricing.history) : []} />

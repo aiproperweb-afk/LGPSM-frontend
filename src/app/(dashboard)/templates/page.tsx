@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { Suspense, useState, useEffect } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -43,14 +45,16 @@ interface TemplateCard {
 
 // Browse templates; organizers see published ones (backend-enforced), admins also see drafts
 export default function TemplatesPage() {
+  const cmsText = useDashboardCopy();
   return (
-    <Suspense fallback={<SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}</SkeletonRegion>}>
+    <Suspense fallback={<SkeletonRegion label={cmsText("loadingTemplates", "Loading templates")} className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}</SkeletonRegion>}>
       <TemplatesPageContent />
     </Suspense>
   );
 }
 
 function TemplatesPageContent() {
+  const cmsText = useDashboardCopy();
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const { showAlert, confirm } = useAlert();
@@ -145,7 +149,7 @@ function TemplatesPageContent() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Templates" actions={
+      <PageHeader title={cmsText("templates", "Templates")} actions={
         // "Design with AI" is switched off for now: the button is commented out, uncomment it to bring it back
         /* <Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#1F65FF] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#1A56DB]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link> */
         undefined
@@ -159,7 +163,7 @@ function TemplatesPageContent() {
       )}
       <div className="p-4 sm:p-6 w-full space-y-6 pb-24">
         <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Template list" className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
+        <div role="tablist" aria-label={cmsText("templateList", "Template list")} className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
           {([["all", "All templates"], ["mine", "My templates"]] as const).map(([key, label]) => (
             <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white font-medium text-gray-900" : "text-gray-600"}`}>
               {label}
@@ -168,15 +172,13 @@ function TemplatesPageContent() {
         </div>
         {view === "mine" && (
           <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#1F65FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1A56DB] cursor-pointer">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
-            Upload your own template
-          </button>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>{cmsText("uploadYourOwnTemplate", "Upload your own template")}</button>
         )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-[18px]">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventCategory", "Event Category")}</label>
             <CustomDropdown
               value={selectedCategory}
               onChange={(v) => {
@@ -187,19 +189,19 @@ function TemplatesPageContent() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Subcategory</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventSubcategory", "Event Subcategory")}</label>
             <CustomDropdown
               value={selectedSubcategory}
               onChange={setSelectedSubcategory}
               disabled={!selectedCategory}
-              placeholder={selectedCategory ? "All Subcategories" : "Select a category first"}
+              placeholder={selectedCategory ? cmsText("allSubcategories2", "All Subcategories") : cmsText("selectACategoryFirst", "Select a category first")}
               options={selectedCategory ? [{ value: "", label: "All Subcategories" }, ...categories.subcategoryOptionsFor(selectedCategory)] : []}
             />
           </div>
         </div>
 
         {loading ? (
-          <SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
+          <SkeletonRegion label={cmsText("loadingTemplates", "Loading templates")} className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
 {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}
 </SkeletonRegion>
         ) : loadError ? (
@@ -208,13 +210,13 @@ function TemplatesPageContent() {
           <p className="py-16 text-center text-sm text-[#6B6B6B]">
             {templates.length === 0
               ? view === "mine"
-                ? "You haven't saved any templates with this account yet. Designs made by an administrator and shared with everyone are listed under All templates, not here."
-                : "No templates are available yet."
-              : "No templates match the selected category."}
+                ? cmsText("youHavenTSavedAnyTemplatesWithThis", "You haven't saved any templates with this account yet. Designs made by an administrator and shared with everyone are listed under All templates, not here.")
+                : cmsText("noTemplatesAreAvailableYet", "No templates are available yet.")
+              : cmsText("noTemplatesMatchTheSelectedCategory", "No templates match the selected category.")}
             {templates.length === 0 && view === "mine" && (
               <>
                 {" "}
-                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#1F65FF] underline cursor-pointer">Upload your own template</button>
+                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#1F65FF] underline cursor-pointer">{cmsText("uploadYourOwnTemplate", "Upload your own template")}</button>
                 {/* "Design with AI" is switched off for now: uncomment to bring the link back
                 {" "}
                 <Link href="/templates/ai" className="text-[#1F65FF] underline">Design one with AI</Link>
@@ -239,9 +241,9 @@ function TemplatesPageContent() {
                 <span aria-hidden className="absolute top-2 right-2 size-6 rounded bg-black/55 text-white flex items-center justify-center">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
                 </span>
-                {t.isDraft && <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-white/95 border border-gray-200 text-xs text-gray-700">Draft</span>}
-                {(t.isCustom || t.kind === "POSTER") && <span className={`absolute left-2 px-2 py-0.5 rounded bg-black/70 text-xs text-white ${t.isDraft ? "top-9" : "top-2"}`}>{t.kind === "POSTER" ? "Poster" : t.isUploaded ? "Own" : "AI"}</span>}
-                <span aria-hidden className="absolute inset-x-2 bottom-2 rounded bg-white px-2 py-1.5 text-center text-xs font-medium text-[#15191C] shadow opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">Use This Template</span>
+                {t.isDraft && <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-white/95 border border-gray-200 text-xs text-gray-700">{cmsText("draft", "Draft")}</span>}
+                {(t.isCustom || t.kind === "POSTER") && <span className={`absolute left-2 px-2 py-0.5 rounded bg-black/70 text-xs text-white ${t.isDraft ? "top-9" : "top-2"}`}>{t.kind === "POSTER" ? cmsText("poster", "Poster") : t.isUploaded ? cmsText("own", "Own") : cmsText("ai", "AI")}</span>}
+                <span aria-hidden className="absolute inset-x-2 bottom-2 rounded bg-white px-2 py-1.5 text-center text-xs font-medium text-[#15191C] shadow opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">{cmsText("useThisTemplate2", "Use This Template")}</span>
               </button>
             ))}
           </div>
@@ -254,8 +256,8 @@ function TemplatesPageContent() {
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-preview-title">
           <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-auto">
             <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-              <h3 id="template-preview-title" className="text-base font-medium text-gray-900">Template Preview</h3>
-              <button type="button" onClick={() => { setLivePreview(null); setPreview(null); }} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
+              <h3 id="template-preview-title" className="text-base font-medium text-gray-900">{cmsText("templatePreview", "Template Preview")}</h3>
+              <button type="button" onClick={() => { setLivePreview(null); setPreview(null); }} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -270,12 +272,12 @@ function TemplatesPageContent() {
                   <TemplateThumb imageKey={preview.imageKey} name={preview.name} className="rounded-md border border-[#E0E0E0]" />
                 )}
                 {livePreview?.loading && (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-white/70" role="status" aria-label="Updating preview">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-white/70" role="status" aria-label={cmsText("updatingPreview", "Updating preview")}>
                     <span className="inline-block h-6 w-6 rounded-full border-2 border-[#1F65FF] border-t-transparent animate-spin" />
                   </div>
                 )}
                 {livePreview?.url && !livePreview.loading && (
-                  <p className="mt-2 text-xs text-[#4B4F52] text-center">Showing &ldquo;{livePreview.eventTitle}&rdquo;</p>
+                  <p className="mt-2 text-xs text-[#4B4F52] text-center">{cmsText("showing2", "Showing “")}{livePreview.eventTitle}&rdquo;</p>
                 )}
               </div>
               <div className="space-y-4 min-w-0">
@@ -284,25 +286,19 @@ function TemplatesPageContent() {
                   <p className="text-sm text-[#4B4F52] mt-1">{labelFor(preview)}</p>
                 </div>
                 {!preview.isCustom && (
-                  <p className="text-sm text-gray-800 bg-[#FEF9C3] border border-[#FEF08A] rounded-md p-3">
-                    Create an event with this template to preview it with your event details.
-                  </p>
+                  <p className="text-sm text-gray-800 bg-[#FEF9C3] border border-[#FEF08A] rounded-md p-3">{cmsText("createAnEventWithThisTemplateToPreview", "Create an event with this template to preview it with your event details.")}</p>
                 )}
                 {preview.isDraft ? (
                   <p className="text-sm text-[#6B6B6B]">
-                    {isPrivateAdminCard(preview) ? "Your own card: you can use it in Add Event exactly as it is (Digital only). Publish it to share it with all organizers." : preview.isMine ? "This template is a draft. Publish it to use it for your events." : "This template is a draft. Publish it from Template Settings before organizers can use it."}
+                    {isPrivateAdminCard(preview) ? cmsText("yourOwnCardYouCanUseItIn", "Your own card: you can use it in Add Event exactly as it is (Digital only). Publish it to share it with all organizers.") : preview.isMine ? cmsText("thisTemplateIsADraftPublishItTo", "This template is a draft. Publish it to use it for your events.") : cmsText("thisTemplateIsADraftPublishItFrom", "This template is a draft. Publish it from Template Settings before organizers can use it.")}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
                   {preview.isMine && preview.isDynamic && (
-                    <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] text-sm font-medium rounded-md cursor-pointer">
-                      Text areas
-                    </button>
+                    <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] text-sm font-medium rounded-md cursor-pointer">{cmsText("textAreas", "Text areas")}</button>
                   )}
                   {!preview.isDraft && preview.kind === "INVITATION" && (
-                    <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">
-                      Create an Event
-                    </Link>
+                    <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">{cmsText("createAnEvent2", "Create an Event")}</Link>
                   )}
                   {/* "Edit with AI" is switched off for now: uncomment to bring it back
                   {preview.isMine && (
@@ -313,18 +309,14 @@ function TemplatesPageContent() {
                   */}
                   {preview.isMine && preview.isCustom && (
                     <button type="button" onClick={() => togglePublish(preview)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">
-                      {preview.isDraft ? "Publish" : "Unpublish"}
+                      {preview.isDraft ? cmsText("publish", "Publish") : cmsText("unpublish", "Unpublish")}
                     </button>
                   )}
                   {preview.isMine && preview.isCustom && (
-                    <button type="button" onClick={() => removeTemplate(preview)} className="px-5 py-2.5 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">
-                      Delete
-                    </button>
+                    <button type="button" onClick={() => removeTemplate(preview)} className="px-5 py-2.5 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">{cmsText("delete", "Delete")}</button>
                   )}
                   {user?.role === "ADMIN" && !preview.isMine && (
-                    <Link href="/settings/template" className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md">
-                      Manage Templates
-                    </Link>
+                    <Link href="/settings/template" className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md">{cmsText("manageTemplates", "Manage Templates")}</Link>
                   )}
                 </div>
                 {preview.isCustom && <EventRenderPanel key={preview.id} template={preview} onLivePreview={setLivePreview} />}
@@ -340,6 +332,7 @@ function TemplatesPageContent() {
 
 // Draws an AI template with a real event's details for download (posters get a registration QR when a link is given)
 function EventRenderPanel({ template, onLivePreview }: { template: TemplateCard; onLivePreview: (p: LivePreview | null) => void }) {
+  const cmsText = useDashboardCopy();
   const [events, setEvents] = useState<EventData[]>([]);
   const [eventsState, setEventsState] = useState<"loading" | "ready" | "error">("loading");
   const [eventId, setEventId] = useState("");
@@ -418,8 +411,8 @@ function EventRenderPanel({ template, onLivePreview }: { template: TemplateCard;
 
   return (
     <div className="border-t border-[#E5E5E5] pt-4 space-y-3">
-      <h5 className="text-sm font-medium text-gray-900">{template.kind === "POSTER" ? "Download a poster for an event" : "Preview with a real event"}</h5>
-      <span className="block text-xs text-[#4B4F52]">Event</span>
+      <h5 className="text-sm font-medium text-gray-900">{template.kind === "POSTER" ? cmsText("downloadAPosterForAnEvent", "Download a poster for an event") : cmsText("previewWithARealEvent", "Preview with a real event")}</h5>
+      <span className="block text-xs text-[#4B4F52]">{cmsText("event", "Event")}</span>
       <CustomDropdown
         ariaLabel="Event"
         value={eventId}
@@ -427,21 +420,21 @@ function EventRenderPanel({ template, onLivePreview }: { template: TemplateCard;
           setEventId(v);
           setMessage(null);
         }}
-        placeholder={eventsState === "loading" ? "Loading events…" : "Choose an event"}
+        placeholder={eventsState === "loading" ? cmsText("loadingEvents2", "Loading events…") : cmsText("chooseAnEvent", "Choose an event")}
         disabled={eventsState === "loading"}
-        emptyMessage={eventsState === "error" ? "Your events could not be loaded" : "You have no events yet"}
+        emptyMessage={eventsState === "error" ? cmsText("yourEventsCouldNotBeLoaded", "Your events could not be loaded") : cmsText("youHaveNoEventsYet", "You have no events yet")}
         options={events.map((ev) => ({ value: ev._id || ev.id, label: ev.title }))}
       />
       {template.kind === "POSTER" && (
         <>
-          <label className="block text-xs text-[#4B4F52]" htmlFor="render-link">Registration link for the QR code (https)</label>
+          <label className="block text-xs text-[#4B4F52]" htmlFor="render-link">{cmsText("registrationLinkForTheQrCodeHttps", "Registration link for the QR code (https)")}</label>
           <input id="render-link" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://…" inputMode="url" className="w-full rounded-md border border-[#D9D9D9] bg-white px-3 py-2 text-sm" />
         </>
       )}
       <div className="flex gap-2">
         {(["png", "jpeg"] as const).map((f) => (
           <button key={f} type="button" disabled={!eventId || busy !== null} onClick={() => download(f)} className="px-4 py-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-sm rounded-md cursor-pointer">
-            {busy === f ? "Preparing…" : f === "png" ? "Download PNG" : "Download JPG"}
+            {busy === f ? cmsText("preparing", "Preparing…") : f === "png" ? cmsText("downloadPng", "Download PNG") : cmsText("downloadJpg", "Download JPG")}
           </button>
         ))}
       </div>

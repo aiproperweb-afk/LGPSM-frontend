@@ -1,6 +1,12 @@
 # EventQRapp Pages CMS
 
-Administrators open Pages, choose Home or Contact, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot.
+Administrators open Pages, choose a public page or a signed-in tab, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot.
+
+## Signed-in tabs
+
+The CMS includes the Dashboard and sidebar, Event workflows, Templates, Pages, Event Organizer, Earnings, Reports and the Settings tabs. These documents contain display text. Use **Edit ? Tab text**, search for a field, then save a draft or publish. Sidebar labels are in the Dashboard document. Event detail, edit, invitee, session and assignment screens share text across events, while their records and form behavior stay in the application.
+
+The signed-in frontend reads published copy through the authenticated workspace CMS endpoint. If copy is unavailable it uses the bundled wording. Route patterns containing [id] apply to real records and do not link to a specific record from the editor.
 
 ## Public route inventory
 

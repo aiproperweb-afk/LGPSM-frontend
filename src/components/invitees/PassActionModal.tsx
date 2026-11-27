@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -18,6 +20,7 @@ interface PassActionModalProps {
 // Confirmation dialog for Revoke / Replace Access Pass, modelled on the "Deactivate Organizer" popup (Figma 708:5446):
 // title + close, Reason* select, a message box, Cancel / orange action. Replacing always tells the guest; there is no silent option.
 export default function PassActionModal({ action, invitee, needsReview, onClose, onDone }: PassActionModalProps) {
+  const cmsText = useDashboardCopy();
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
   const [reviewed, setReviewed] = useState(false);
@@ -49,33 +52,33 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pass-action-title">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-[490px] overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E5E5E5]">
-          <h2 id="pass-action-title" className="text-base font-medium text-[#15191C]">{revoke ? "Revoke Access Pass" : "Replace Access Pass"}</h2>
-          <button type="button" onClick={onClose} disabled={busy} aria-label="Close" title="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer disabled:opacity-40"><svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+          <h2 id="pass-action-title" className="text-base font-medium text-[#15191C]">{revoke ? cmsText("revokeAccessPass", "Revoke Access Pass") : cmsText("replaceAccessPass", "Replace Access Pass")}</h2>
+          <button type="button" onClick={onClose} disabled={busy} aria-label={cmsText("close", "Close")} title={cmsText("close", "Close")} className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer disabled:opacity-40"><svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
         <div className="p-6 space-y-4">
           <p className="text-sm text-[#4B4F52]">
             {revoke
-              ? <><strong className="font-medium text-[#15191C]">{invitee.name}</strong>&rsquo;s QR pass stops working immediately. They will be told through the same channel(s) their invitation was sent on. Their RSVP is not changed.</>
-              : <>A new QR pass is issued to <strong className="font-medium text-[#15191C]">{invitee.name}</strong> and sent to them. Their current pass stops working immediately. Their RSVP is not changed.</>}
+              ? <><strong className="font-medium text-[#15191C]">{invitee.name}</strong>{cmsText("sQrPassStopsWorkingImmediatelyTheyWill", "’s QR pass stops working immediately. They will be told through the same channel(s) their invitation was sent on. Their RSVP is not changed.")}</>
+              : <>{cmsText("aNewQrPassIsIssuedTo", "A new QR pass is issued to") + " "}<strong className="font-medium text-[#15191C]">{invitee.name}</strong>{" " + cmsText("andSentToThemTheirCurrentPassStops", "and sent to them. Their current pass stops working immediately. Their RSVP is not changed.")}</>}
           </p>
 
           {needsReview && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
-              <p>This pass was revoked for <strong className="font-medium">{reasonLabel(invitee.credentialRevocation?.category)}</strong>, which needs a review before a new pass is issued.</p>
+              <p>{cmsText("thisPassWasRevokedFor", "This pass was revoked for") + " "}<strong className="font-medium">{reasonLabel(invitee.credentialRevocation?.category)}</strong>{cmsText("whichNeedsAReviewBeforeANewPass", ", which needs a review before a new pass is issued.")}</p>
               <label className="flex items-start gap-2 cursor-pointer">
                 <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-green" />
-                <span>I have reviewed why this pass was revoked and the guest may have a new one.</span>
+                <span>{cmsText("iHaveReviewedWhyThisPassWasRevoked", "I have reviewed why this pass was revoked and the guest may have a new one.")}</span>
               </label>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[#15191C] mb-1.5">Reason<span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-[#15191C] mb-1.5">{cmsText("reason", "Reason")}<span className="text-red-500">*</span></label>
             <CustomDropdown
               value={category}
               onChange={setCategory}
               options={reasonsFor(action).map((r) => ({ value: r.value, label: r.label }))}
-              placeholder="Select a reason"
+              placeholder={cmsText("selectAReason", "Select a reason")}
               ariaLabel="Reason"
               invalid={touched && !!errors.category}
               portal
@@ -84,27 +87,26 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
           </div>
 
           <div>
-            <label htmlFor="pass-note" className="block text-sm font-medium text-[#15191C] mb-1.5">
-              Explanation{category === "OTHER" ? <span className="text-red-500">*</span> : <span className="font-normal text-[#6B6B6B]"> (optional)</span>}
+            <label htmlFor="pass-note" className="block text-sm font-medium text-[#15191C] mb-1.5">{cmsText("explanation", "Explanation")}{category === "OTHER" ? <span className="text-red-500">*</span> : <span className="font-normal text-[#6B6B6B]">{" " + cmsText("optional", "(optional)")}</span>}
             </label>
             <textarea
               id="pass-note"
               value={note}
               onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}
               rows={4}
-              placeholder="Type"
+              placeholder={cmsText("type", "Type")}
               className={`w-full px-3 py-2 bg-[#FAFAFA] border rounded-md text-sm focus:outline-none focus:border-black resize-none ${touched && errors.note ? "!border-rose-500" : "border-[#E0E0E0]"}`}
             />
             <div className="flex justify-between text-xs">
               <span role="alert" className="text-rose-600">{touched ? errors.note : ""}</span>
-              <span className="text-[#6B6B6B]">{note.length}/{NOTE_MAX} · kept in the pass history, not sent to the guest</span>
+              <span className="text-[#6B6B6B]">{note.length}/{NOTE_MAX}{" " + cmsText("keptInThePassHistoryNotSentTo", "· kept in the pass history, not sent to the guest")}</span>
             </div>
           </div>
           <PopupMessage message={error} />
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
           <button type="button" onClick={submit} disabled={busy || (touched && !!blocked)} className={`px-6 py-2.5 ${revoke ? "bg-[#D92D20] hover:bg-[#B42318]" : "bg-[#1F65FF] hover:bg-[#1A56DB]"} rounded-md text-base font-semibold text-white cursor-pointer disabled:opacity-50`}>
-            {busy ? (revoke ? "Revoking…" : "Replacing…") : revoke ? "Revoke" : "Replace"}
+            {busy ? (revoke ? "Revoking…" : "Replacing…") : revoke ? cmsText("revoke", "Revoke") : cmsText("replace", "Replace")}
           </button>
         </div>
       </div>

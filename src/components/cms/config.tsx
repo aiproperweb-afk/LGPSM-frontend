@@ -1,3 +1,4 @@
+import DashboardLabelsField from "./DashboardLabelsField";
 import type { Config, SelectField, TextField, TextareaField } from "@puckeditor/core";
 import ContactContent from "@/components/landing/ContactContent";
 import { contactCopy } from "./contactContent";
@@ -27,6 +28,18 @@ const image = { image: imageReferenceField, imageAlt: { ...text, label: "Image a
 export const cmsConfig: Config<CmsComponents> = {
   root: { fields: {} },
   components: {
+    DashboardCopy: {
+      label: "Tab text",
+      defaultProps: { labels: {} },
+      fields: {
+        labels: { type: "custom", label: "Editable text", render: props => <DashboardLabelsField {...props} /> },
+      },
+      render: ({ labels }) => (
+        <section className="mx-auto grid max-w-2xl gap-3 p-6 text-sm">
+          {Object.entries(labels).map(([key, text]) => <p key={key} className="border-b border-gray-100 pb-2">{text}</p>)}
+        </section>
+      ),
+    },
     ContactContent: {
       label: "Contact page",
       fields: { pageHeading: text, informationHeading: text, formHeading: text, introduction: paragraph, submitLabel: text },

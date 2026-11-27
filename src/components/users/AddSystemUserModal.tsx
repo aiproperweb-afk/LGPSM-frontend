@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import PhoneInput from "@/components/common/PhoneInput";
@@ -25,6 +27,7 @@ const organizerLabel = (o: UserData) => `${(o.profile?.organizationName as strin
 
 /** The "Add User" form, used by the Add User page and by All Users, so a system user can be added from either without leaving the page. */
 export default function AddSystemUserModal({ isAdmin, organizers = [], initialOrganizerId = "", lockOrganizer = false, onClose, onCreated }: Props) {
+  const cmsText = useDashboardCopy();
   const [organizerId, setOrganizerId] = useState(initialOrganizerId);
   const [form, setForm] = useState({ userName: "", contactNo: "", email: "", password: "" });
   const [formError, setFormError] = useState<string | null>(null);
@@ -54,8 +57,8 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="add-user-title">
       <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
         <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-          <h3 id="add-user-title" className="text-base font-medium text-[#15191C]">Add User</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
+          <h3 id="add-user-title" className="text-base font-medium text-[#15191C]">{cmsText("addUser", "Add User")}</h3>
+          <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -66,31 +69,30 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
           {/* Admins: which organizer the new system user belongs to (required) */}
           {isAdmin && (
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#15191C]">Organizer<span className="text-red-500 ml-0.5">*</span></label>
+              <label className="text-sm font-medium text-[#15191C]">{cmsText("organizer", "Organizer")}<span className="text-red-500 ml-0.5">*</span></label>
               <CustomDropdown
                 portal
                 value={organizerId}
                 onChange={(v) => { setOrganizerId(v); setFormError(null); }}
                 options={organizers.map((o) => ({ value: o._id, label: organizerLabel(o) }))}
-                placeholder="Select an organizer"
+                placeholder={cmsText("selectAnOrganizer", "Select an organizer")}
                 ariaLabel="Organizer this user is added for"
                 disabled={lockOrganizer}
                 invalid={!!formError && missingOrganizer}
-                emptyMessage="No organizers yet"
+                emptyMessage={cmsText("noOrganizersYet", "No organizers yet")}
               />
-              <p className="text-xs text-[#6B6B6B]">{lockOrganizer ? "This event's organizer." : "The user is added to this organizer's system users."}</p>
+              <p className="text-xs text-[#6B6B6B]">{lockOrganizer ? cmsText("thisEventSOrganizer", "This event's organizer.") : cmsText("theUserIsAddedToThisOrganizerS", "The user is added to this organizer's system users.")}</p>
             </div>
           )}
 
               {/* User Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("userName", "User Name")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter User Name"
+                  placeholder={cmsText("enterUserName", "Enter User Name")}
                   value={form.userName}
                   onChange={(e) => setForm({ ...form, userName: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -99,12 +101,11 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
 
               {/* Contact No */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("contactNo", "Contact No")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
-                  placeholder="Enter Contact No"
+                  placeholder={cmsText("enterContactNo", "Enter Contact No")}
                   value={form.contactNo}
                   onValueChange={(v) => setForm({ ...form, contactNo: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -113,13 +114,12 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("email", "Email")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
                   required
-                  placeholder="Enter Email"
+                  placeholder={cmsText("enterEmail", "Enter Email")}
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -128,14 +128,13 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
 
               {/* Temporary Password */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Temporary Password<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("temporaryPassword", "Temporary Password")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  placeholder="At least 8 characters"
+                  placeholder={cmsText("atLeast8Characters", "At least 8 characters")}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -145,8 +144,8 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               <PopupMessage message={formError} />
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? "Select an organizer first" : undefined} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                  {isSubmitting ? "Adding..." : "Add"}
+                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? cmsText("selectAnOrganizerFirst", "Select an organizer first") : undefined} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSubmitting ? cmsText("adding", "Adding...") : cmsText("add", "Add")}
                 </button>
               </div>
         </form>

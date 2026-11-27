@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { StatCalendarIcon, StatUsersIcon, StatMoneyIcon, StatReportsIcon } from "@/components/icons/DashboardIcons";
 import PageHeader from "@/components/common/PageHeader";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
@@ -94,7 +96,8 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
 }
 
 function Donut({ invitees, attendees }: { invitees: number; attendees: number }) {
-  if (invitees <= 0) return <p className="py-6 text-center text-xs text-[#6B6B6B]">No guests were invited to this event.</p>;
+  const cmsText = useDashboardCopy();
+  if (invitees <= 0) return <p className="py-6 text-center text-xs text-[#6B6B6B]">{cmsText("noGuestsWereInvitedToThisEvent", "No guests were invited to this event.")}</p>;
   const attended = Math.min(attendees, invitees);
   const pctAttended = Math.round((attended / invitees) * 100);
   const r = 44, c = 2 * Math.PI * r;
@@ -108,8 +111,8 @@ function Donut({ invitees, attendees }: { invitees: number; attendees: number })
         <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#15191C]">{pctAttended}%</span>
       </div>
       <div className="min-w-0 space-y-2.5 text-xs text-[#15191C]">
-        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#1F65FF]" aria-hidden />Invitees <span className="font-semibold">{invitees}</span></p>
-        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#2B2F33]" aria-hidden />Attendees <span className="font-semibold">{attended}</span></p>
+        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#1F65FF]" aria-hidden />{cmsText("invitees", "Invitees") + " "}<span className="font-semibold">{invitees}</span></p>
+        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#2B2F33]" aria-hidden />{cmsText("attendees", "Attendees") + " "}<span className="font-semibold">{attended}</span></p>
       </div>
     </div>
   );
@@ -122,6 +125,7 @@ const sameMonth = (iso?: string) => { if (!iso) return false; const d = new Date
 const shortDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—");
 
 export default function DashboardPage() {
+  const cmsText = useDashboardCopy();
   const { user } = useAuth();
   const router = useRouter();
   const isAdmin = user?.role === "ADMIN";
@@ -288,7 +292,7 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans">
-      <PageHeader title="Dashboard" />
+      <PageHeader title={cmsText("dashboard", "Dashboard")} />
 
       <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1440px] mx-auto space-y-6 pb-24">
         <PopupMessage message={error} onClose={() => setError(null)} />
@@ -299,41 +303,41 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatCard
                 tone="orange"
-                label="Events"
+                label={cmsText("events", "Events")}
                 href="/events"
                 loading={loading}
                 value={rows.length.toLocaleString("en-IN")}
-                caption="Total Events"
+                caption={cmsText("totalEvents", "Total Events")}
                 icon={<StatCalendarIcon className="h-[22px] w-5" />}
                 lines={[
-                  <><span className="font-semibold text-[#1F65FF]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
-                  <>Last Created: {shortDate(lastCreated)}</>,
+                  <><span className="font-semibold text-[#1F65FF]">{counts.upcoming}{" " + cmsText("upcoming", "Upcoming")}</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing}{" " + cmsText("ongoing", "Ongoing")}</span></>,
+                  <>{cmsText("lastCreated", "Last Created:") + " "}{shortDate(lastCreated)}</>,
                 ]}
               />
               <StatCard
                 tone="black"
-                label={isAdmin ? "Event Organizers" : "System Users"}
+                label={isAdmin ? cmsText("eventOrganizers", "Event Organizers") : cmsText("systemUsers", "System Users")}
                 href={isAdmin ? "/event-organizer" : "/user-management"}
                 loading={loading}
                 value={people.total.toLocaleString("en-IN")}
-                caption={isAdmin ? "Total Organizers" : "Total System Users"}
+                caption={isAdmin ? cmsText("totalOrganizers", "Total Organizers") : cmsText("totalSystemUsers", "Total System Users")}
                 icon={<StatUsersIcon className="h-[18px] w-[21px]" />}
                 lines={[
-                  <><span className="font-semibold text-[#15191C]">{people.active.toLocaleString("en-IN")} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")} Inactive</span></>,
-                  <>{people.newThisMonth} New {isAdmin ? (people.newThisMonth === 1 ? "organizer" : "organizers") : people.newThisMonth === 1 ? "user" : "users"} added this month</>,
+                  <><span className="font-semibold text-[#15191C]">{people.active.toLocaleString("en-IN")}{" " + cmsText("active", "Active")}</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")}{" " + cmsText("inactive", "Inactive")}</span></>,
+                  <>{people.newThisMonth}{" " + cmsText("new", "New") + " "}{isAdmin ? (people.newThisMonth === 1 ? "organizer" : "organizers") : people.newThisMonth === 1 ? cmsText("user", "user") : cmsText("users", "users")}{" " + cmsText("addedThisMonth", "added this month")}</>,
                 ]}
               />
               <StatCard
                 tone="green"
-                label={isAdmin ? "Earnings Overview" : "Billing Overview"}
+                label={isAdmin ? cmsText("earningsOverview", "Earnings Overview") : cmsText("billingOverview", "Billing Overview")}
                 href={isAdmin ? "/earnings" : "/billing"}
                 loading={loading}
                 value={moneyShown}
-                caption={isAdmin ? "Total Earnings" : "Total Payments"}
+                caption={isAdmin ? cmsText("totalEarnings", "Total Earnings") : cmsText("totalPayments", "Total Payments")}
                 icon={<StatMoneyIcon className="size-6" />}
                 lines={[
-                  <>This Month: <span className="font-semibold text-[#117A43]">{fullMoney(thisMonth)}</span></>,
-                  lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>{isAdmin ? "No billed events yet" : "No payments yet"}</>,
+                  <>{cmsText("thisMonth", "This Month:") + " "}<span className="font-semibold text-[#117A43]">{fullMoney(thisMonth)}</span></>,
+                  lastBilled ? <>{cmsText("lastBilled", "Last billed:") + " "}<span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>{isAdmin ? cmsText("noBilledEventsYet", "No billed events yet") : cmsText("noPaymentsYet", "No payments yet")}</>,
                 ]}
               />
             </div>
@@ -341,26 +345,22 @@ export default function DashboardPage() {
             {/* Events Overview: tabs, a date range and the events of the chosen kind */}
             <section className={`${card} p-5`} aria-labelledby="events-overview-title">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h2>
+                <h2 id="events-overview-title" className="text-base font-medium text-[#15191C]">{cmsText("eventsOverview", "Events Overview")}</h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <DateField compact className="w-[150px]" placeholder="From" title="Events starting on or after this day" value={from} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from: v, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} />
-                  <span className="text-xs text-[#6B6B6B]">To</span>
-                  <DateField compact className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={to} min={from || undefined} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from, to: v }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} />
+                  <DateField compact className="w-[150px]" placeholder={cmsText("from", "From")} title={cmsText("eventsStartingOnOrAfterThisDay", "Events starting on or after this day")} value={from} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from: v, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} />
+                  <span className="text-xs text-[#6B6B6B]">{cmsText("to", "To")}</span>
+                  <DateField compact className="w-[150px]" placeholder={cmsText("to", "To")} title={cmsText("eventsStartingOnOrBeforeThisDay", "Events starting on or before this day")} value={to} min={from || undefined} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from, to: v }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   {(from || to) && (
-                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#1A56DB] cursor-pointer">
-                      Clear dates
-                    </button>
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#1A56DB] cursor-pointer">{cmsText("clearDates", "Clear dates")}</button>
                   )}
                   <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md">
-                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-                    Add Event
-                  </Link>
+                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>{cmsText("addEvent", "Add Event")}</Link>
                 </div>
               </div>
-              <div role="tablist" aria-label="Which events" className="mt-4 flex gap-6 border-b border-[#E0E0E0]">
+              <div role="tablist" aria-label={cmsText("whichEvents", "Which events")} className="mt-4 flex gap-6 border-b border-[#E0E0E0]">
                 {(["All", "Upcoming", "Ongoing", "Past"] as Tab[]).map((p) => (
                   <button key={p} type="button" role="tab" aria-selected={tab === p} onClick={() => { setTab(p); setPage(1); }} className={`-mb-px pb-2.5 text-sm cursor-pointer ${tab === p ? "border-b-2 border-[#15191C] text-[#15191C] font-medium" : "text-[#4B4F52] hover:text-[#15191C]"}`}>
-                    {p === "All" ? "All Events" : `${p} Events`}
+                    {p === "All" ? cmsText("allEvents", "All Events") : `${p} Events`}
                   </button>
                 ))}
               </div>
@@ -368,20 +368,20 @@ export default function DashboardPage() {
                 <table className="w-full min-w-[860px] table-fixed text-left text-sm">
                   <thead>
                     <tr className="text-[#6B6B6B] text-[13px] border-b border-[#E0E0E0]">
-                      <th className={`${showStatus ? (isAdmin ? "w-[20%]" : "w-[27%]") : isAdmin ? "w-[26%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>Event Name</th>
-                      {isAdmin && <th className={`${showStatus ? "w-[14%]" : "w-[17%]"} py-3 px-2.5 font-normal`}>Organizer</th>}
-                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>Start Date &amp; Time</th>
-                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>End Date &amp; Time</th>
-                      <th className="w-[11%] py-3 px-2.5 font-normal">Total Invitee</th>
-                      {showStatus && <th className="w-[11%] py-3 px-2.5 font-normal">Status</th>}
-                      <th className="relative w-[4%] py-3"><span className="sr-only">Open</span></th>
+                      <th className={`${showStatus ? (isAdmin ? "w-[20%]" : "w-[27%]") : isAdmin ? "w-[26%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>{cmsText("eventName", "Event Name")}</th>
+                      {isAdmin && <th className={`${showStatus ? "w-[14%]" : "w-[17%]"} py-3 px-2.5 font-normal`}>{cmsText("organizer", "Organizer")}</th>}
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>{cmsText("startDateTime", "Start Date & Time")}</th>
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>{cmsText("endDateTime", "End Date & Time")}</th>
+                      <th className="w-[11%] py-3 px-2.5 font-normal">{cmsText("totalInvitee", "Total Invitee")}</th>
+                      {showStatus && <th className="w-[11%] py-3 px-2.5 font-normal">{cmsText("status", "Status")}</th>}
+                      <th className="relative w-[4%] py-3"><span className="sr-only">{cmsText("open", "Open")}</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E0E0E0] text-[#15191C] [&>tr]:h-12">
                     {loading ? (
                       <TableSkeletonRows rows={4} cols={cols} />
                     ) : overview.length === 0 ? (
-                      <tr><td colSpan={cols} className="py-3 text-center text-sm text-[#6B6B6B]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
+                      <tr><td colSpan={cols} className="py-3 text-center text-sm text-[#6B6B6B]">{cmsText("no", "No") + " "}{tab.toLowerCase()}{" " + cmsText("events2", "events")}{from || to ? cmsText("inTheseDates", "in these dates") : ""}.</td></tr>
                     ) : (
                       pageRows.map((r) => (
                         <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} className="cursor-pointer hover:bg-gray-50/80">
@@ -411,11 +411,11 @@ export default function DashboardPage() {
               {!loading && (overview.length > PAGE_SIZE || reservePager) && (
                 // kept (invisible) on a tab that fits one page when another tab needs it, so the height stays the same
                 <div aria-hidden={overview.length > PAGE_SIZE ? undefined : true} className={`mt-3 flex items-center justify-between gap-3 text-xs text-[#4B4F52] ${overview.length > PAGE_SIZE ? "" : "invisible"}`}>
-                  <span>Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, overview.length)} of {overview.length}</span>
+                  <span>{cmsText("showing", "Showing") + " "}{(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, overview.length)}{" " + cmsText("of", "of") + " "}{overview.length}</span>
                   <span className="inline-flex items-center gap-2">
-                    <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1} className="px-3 py-1.5 border border-[#E0E0E0] rounded-md disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Previous</button>
-                    <span>Page {currentPage} of {pageCount}</span>
-                    <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount} className="px-3 py-1.5 border border-[#E0E0E0] rounded-md disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Next</button>
+                    <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1} className="px-3 py-1.5 border border-[#E0E0E0] rounded-md disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">{cmsText("previous", "Previous")}</button>
+                    <span>{cmsText("page", "Page") + " "}{currentPage}{" " + cmsText("of", "of") + " "}{pageCount}</span>
+                    <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount} className="px-3 py-1.5 border border-[#E0E0E0] rounded-md disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">{cmsText("next", "Next")}</button>
                   </span>
                 </div>
               )}
@@ -427,14 +427,14 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-6 min-w-0">
             <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="recent-notes-title">
               <div className="flex items-center justify-between gap-2">
-                <h2 id="recent-notes-title" className="text-base font-medium text-[#15191C]">Recent Notification</h2>
-                <ArrowOut href="/notification" label="Open notifications" />
+                <h2 id="recent-notes-title" className="text-base font-medium text-[#15191C]">{cmsText("recentNotification", "Recent Notification")}</h2>
+                <ArrowOut href="/notification" label={cmsText("openNotifications", "Open notifications")} />
               </div>
               <div className={`mt-3 max-h-[300px] overflow-y-auto pr-1 divide-y divide-[#E0E0E0] xl:flex-1 ${!loading && notes.length === 0 ? "flex flex-col justify-center" : ""}`}>
                 {loading ? (
                   <div className="space-y-3 py-2"><Skeleton className="h-4 w-40" /><Skeleton className="h-8 w-full" /></div>
                 ) : notes.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-[#6B6B6B]">No notifications yet.</p>
+                  <p className="py-6 text-center text-xs text-[#6B6B6B]">{cmsText("noNotificationsYet", "No notifications yet.")}</p>
                 ) : (
                   notes.map((n) => (
                     <div key={n._id} className="py-3">
@@ -454,14 +454,14 @@ export default function DashboardPage() {
                     <StatReportsIcon className="size-6" />
                   </span>
                   <div className="min-w-0">
-                    <h2 id="last-report-title" className="text-sm font-semibold text-[#15191C]">Last Event Report</h2>
+                    <h2 id="last-report-title" className="text-sm font-semibold text-[#15191C]">{cmsText("lastEventReport", "Last Event Report")}</h2>
                     <p className="text-xs text-[#4B4F52] truncate" title={report?.title}>{report?.title || "No finished events yet"}</p>
                   </div>
                 </div>
-                <ArrowOut href="/reports" label="Open reports" stretch tone="orange" />
+                <ArrowOut href="/reports" label={cmsText("openReports", "Open reports")} stretch tone="orange" />
               </div>
               <div className="mt-5 xl:flex-1 flex flex-col justify-center">
-                {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#6B6B6B]">Attendance appears here once an event has taken place.</p>}
+                {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#6B6B6B]">{cmsText("attendanceAppearsHereOnceAnEventHasTaken", "Attendance appears here once an event has taken place.")}</p>}
               </div>
             </section>
 
@@ -503,7 +503,7 @@ export default function DashboardPage() {
         {user?.role === "ADMIN" && (
           <div className="bg-white border border-gray-200 rounded-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900">Top Organizers</h2>
+              <h2 className="text-base font-bold text-gray-900">{cmsText("topOrganizers", "Top Organizers")}</h2>
               <Link
                 href="/event-organizer/add"
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer"
@@ -511,7 +511,7 @@ export default function DashboardPage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Add Organizer</span>
+                <span>{cmsText("addOrganizer", "Add Organizer")}</span>
               </Link>
             </div>
 
@@ -519,14 +519,14 @@ export default function DashboardPage() {
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                    <th className="py-3 px-4 font-medium">Name</th>
-                    <th className="py-3 px-4 font-medium">Email</th>
-                    <th className="py-3 px-4 font-medium">Phone Number</th>
-                    <th className="py-3 px-4 font-medium">Total Events</th>
-                    <th className="py-3 px-4 font-medium">Revenue</th>
-                    <th className="py-3 px-4 font-medium">Ongoing Events</th>
-                    <th className="py-3 px-4 font-medium">Past Events</th>
-                    <th className="relative py-3 px-2 text-right font-medium"><span className="sr-only">Actions</span></th>
+                    <th className="py-3 px-4 font-medium">{cmsText("name", "Name")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("email", "Email")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("phoneNumber", "Phone Number")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("totalEvents", "Total Events")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("revenue", "Revenue")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("ongoingEvents", "Ongoing Events")}</th>
+                    <th className="py-3 px-4 font-medium">{cmsText("pastEvents", "Past Events")}</th>
+                    <th className="relative py-3 px-2 text-right font-medium"><span className="sr-only">{cmsText("actions", "Actions")}</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -534,9 +534,7 @@ export default function DashboardPage() {
                     <TableSkeletonRows rows={5} cols={8} />
                   ) : topOrganizers.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-gray-500 font-medium">
-                        No organizer data available yet
-                      </td>
+                      <td colSpan={8} className="py-8 text-center text-gray-500 font-medium">{cmsText("noOrganizerDataAvailableYet", "No organizer data available yet")}</td>
                     </tr>
                   ) : (
                     topOrganizers.map((org) => (
@@ -549,9 +547,7 @@ export default function DashboardPage() {
                         <td className="py-4 px-4 font-medium">{org.ongoingEvents}</td>
                         <td className="py-4 px-4 font-medium">{org.pastEvents}</td>
                         <td className="py-4 px-2 text-right">
-                          <Link href={`/event-organizer/${org.id}`} className="text-[#1F65FF] font-semibold hover:underline">
-                            View
-                          </Link>
+                          <Link href={`/event-organizer/${org.id}`} className="text-[#1F65FF] font-semibold hover:underline">{cmsText("view", "View")}</Link>
                         </td>
                       </tr>
                     ))

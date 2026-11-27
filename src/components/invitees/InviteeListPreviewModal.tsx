@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useEffect, useRef, useState } from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { inviteeService, type InviteeSetInfo, type InviteeSetMember } from "@/services/inviteeService";
@@ -37,6 +39,7 @@ const PAGE_SIZE = 10;
 const sessionsText = (m: InviteeSetMember) => (!m.sessions || m.sessions.length === 0 ? "—" : (m.sessionCount ?? 0) > 1 && m.sessions.length === m.sessionCount ? "All sessions" : m.sessions.join(", "));
 
 export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false, onAddInvitees, reloadSignal = 0 }: Props) {
+  const cmsText = useDashboardCopy();
   const { showAlert } = useAlert();
   // the guests being deleted: asked for a reason (and where to send it) first
   const [removing, setRemoving] = useState<InviteeSetMember[] | null>(null);
@@ -175,15 +178,15 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 id="list-preview-title" className="text-base font-medium text-gray-900">
-              {title} <span className="text-sm font-normal text-[#6B6B6B]">({total} {total === 1 ? "invitee" : "invitees"})</span>
+              {title} <span className="text-sm font-normal text-[#6B6B6B]">({total} {total === 1 ? cmsText("invitee", "invitee") : cmsText("invitees2", "invitees")})</span>
             </h2>
             {subtitle && <p className="text-xs text-[#6B6B6B] mt-0.5 break-words">{subtitle}</p>}
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {onAddInvitees && !readOnly && (
-              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">{cmsText("addInvitees", "Add Invitees")}</button>
             )}
-            <button type="button" onClick={onClose} aria-label="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
+            <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
               <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -191,33 +194,33 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
         <div className="px-6 pt-4 grid grid-cols-1 sm:grid-cols-[1fr_260px] gap-3">
           <div>
-            <label htmlFor="list-preview-search" className="block text-sm font-medium text-gray-900 mb-1.5">Search</label>
+            <label htmlFor="list-preview-search" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("search", "Search")}</label>
             <input
               id="list-preview-search"
               type="search"
-              placeholder="Search by name, email or mobile"
+              placeholder={cmsText("searchByNameEmailOrMobile", "Search by name, email or mobile")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
             />
           </div>
           <div>
-            <span className="block text-sm font-medium text-gray-900 mb-1.5">Invitees dataset</span>
-            <CustomDropdown portal value={setId ?? ""} onChange={(v) => { setSetId(v); setPage(1); setSelected([]); }} placeholder="Loading lists…" emptyMessage="No lists yet" options={options} ariaLabel="Choose which invitees dataset to preview" />
+            <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("inviteesDataset", "Invitees dataset")}</span>
+            <CustomDropdown portal value={setId ?? ""} onChange={(v) => { setSetId(v); setPage(1); setSelected([]); }} placeholder={cmsText("loadingLists", "Loading lists…")} emptyMessage={cmsText("noListsYet", "No lists yet")} options={options} ariaLabel="Choose which invitees dataset to preview" />
           </div>
         </div>
 
         <div className="flex-1 overflow-auto px-6 py-3 min-h-[200px]" aria-busy={loading}>
           {error ? (
-            <p role="alert" className="py-10 text-center text-sm text-rose-600">{error} <button type="button" onClick={() => setTick((t) => t + 1)} className="underline cursor-pointer">Try again</button></p>
+            <p role="alert" className="py-10 text-center text-sm text-rose-600">{error} <button type="button" onClick={() => setTick((t) => t + 1)} className="underline cursor-pointer">{cmsText("tryAgain", "Try again")}</button></p>
           ) : (
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. A guest who was already invited loses their access pass.</p>
+                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">{cmsText("selectInviteesToDeleteThemTogetherAGuest", "Select invitees to delete them together. A guest who was already invited loses their access pass.")}</p>
                 <button type="button" onClick={() => setRemoving(members.filter((m) => selected.includes(m.id)).concat(selected.filter((id) => !members.some((m) => m.id === id)).map((id) => ({ id, name: "Invitee" } as InviteeSetMember))))} disabled={!selected.length || busy} className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
-                  {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
+                  {busy ? cmsText("deleting", "Deleting…") : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
                 </button>
               </div>
             )}
@@ -226,17 +229,17 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                 <tr>
                   {!readOnly && (
                     <th className="py-2.5 pr-2 w-8">
-                      <input type="checkbox" aria-label="Select all invitees on this page that can be deleted" checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-green cursor-pointer disabled:cursor-not-allowed" />
+                      <input type="checkbox" aria-label={cmsText("selectAllInviteesOnThisPageThatCan", "Select all invitees on this page that can be deleted")} checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-green cursor-pointer disabled:cursor-not-allowed" />
                     </th>
                   )}
                   <th className="py-2.5 pr-3 font-medium w-12">#</th>
-                  <th className="py-2.5 pr-3 font-medium">Name</th>
-                  <th className="py-2.5 pr-3 font-medium">Email</th>
-                  <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
-                  <th className="py-2.5 pr-3 font-medium">Invitee Dataset</th>
-                  <th className="py-2.5 pr-3 font-medium">Session</th>
-                  {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
-                  {!readOnly && <th className="py-2.5 font-medium text-right w-20">Actions</th>}
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("name", "Name")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("email", "Email")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("mobileNumber", "Mobile Number")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("inviteeDataset", "Invitee Dataset")}</th>
+                  <th className="py-2.5 pr-3 font-medium">{cmsText("session2", "Session")}</th>
+                  {showCompany && <th className="py-2.5 pr-3 font-medium">{cmsText("companyName", "Company Name")}</th>}
+                  {!readOnly && <th className="py-2.5 font-medium text-right w-20">{cmsText("actions", "Actions")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
@@ -256,10 +259,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                     {showCompany && <td className="py-2.5 pr-3 break-words">{m.company || "—"}</td>}
                     {!readOnly && (
                       <td className="py-2.5 text-right whitespace-nowrap">
-                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit(m)} title={canEdit(m) ? "Edit" : "Invitations were already sent to this guest, so they can only be deleted"} aria-label={`Edit ${m.name}`} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit(m)} title={canEdit(m) ? cmsText("edit", "Edit") : cmsText("invitationsWereAlreadySentToThisGuestSo", "Invitations were already sent to this guest, so they can only be deleted")} aria-label={`Edit ${m.name}`} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.5 2.5 0 00-3.536-3.536L4.5 16.5V20z" /></svg>
                         </button>
-                        <button type="button" onClick={() => setRemoving([m])} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => setRemoving([m])} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title={cmsText("delete", "Delete")} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                         </button>
                       </td>
@@ -267,10 +270,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   </tr>
                 ))}
                 {!loading && members.length === 0 && (
-                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
+                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">{term ? cmsText("noInviteesMatchYourSearch", "No invitees match your search.") : noLists ? cmsText("noListsYetUploadAnExcelFileWith", "No lists yet. Upload an Excel file with Add Invitees.") : cmsText("noInviteesInThisList", "No invitees in this list.")}</td></tr>
                 )}
                 {loading && members.length === 0 && (
-                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
+                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">{cmsText("loading2", "Loading…")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -280,12 +283,12 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
         <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-xs text-[#4B4F52]">
-            <span>{total === 0 ? "No invitees" : `Showing ${from}–${to} of ${total}`}</span>
+            <span>{total === 0 ? cmsText("noInvitees", "No invitees") : `Showing ${from}–${to} of ${total}`}</span>
             {pageCount > 1 && (
               <span className="inline-flex items-center gap-2">
-                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1 || loading} className="px-2.5 py-1 border border-[#E0E0E0] rounded disabled:opacity-40 cursor-pointer">Previous</button>
-                <span>Page {page} of {pageCount}</span>
-                <button type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={page >= pageCount || loading} className="px-2.5 py-1 border border-[#E0E0E0] rounded disabled:opacity-40 cursor-pointer">Next</button>
+                <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1 || loading} className="px-2.5 py-1 border border-[#E0E0E0] rounded disabled:opacity-40 cursor-pointer">{cmsText("previous", "Previous")}</button>
+                <span>{cmsText("page", "Page") + " "}{page}{" " + cmsText("of", "of") + " "}{pageCount}</span>
+                <button type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))} disabled={page >= pageCount || loading} className="px-2.5 py-1 border border-[#E0E0E0] rounded disabled:opacity-40 cursor-pointer">{cmsText("next", "Next")}</button>
               </span>
             )}
           </div>

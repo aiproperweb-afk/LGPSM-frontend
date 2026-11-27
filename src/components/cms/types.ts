@@ -3,9 +3,9 @@ import type { HomeContent } from "./homeContent";
 
 import type { ContactCopy } from "./contactContent";
 
-export type CmsComponents = HomeContent & { ContactContent: ContactCopy };
+export type CmsComponents = HomeContent & { ContactContent: ContactCopy; DashboardCopy: { labels: Record<string, string> } };
 export type CmsPageData = Data<CmsComponents>;
-export type CmsSlug = "home" | "contact";
+export type CmsSlug = "home" | "contact" | `workspace-${string}`;
 
 export interface CmsPageSummary {
   _id: string;

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import AlertIcon from "@/components/common/AlertIcon";
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -28,6 +30,7 @@ import { SystemUserRow, getAssignedCountText } from "@/utils/systemUserRows";
 import { UserData } from "@/services/tokenStorage";
 
 export default function AssignedSystemUsersPage() {
+  const cmsText = useDashboardCopy();
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   const { showAlert, confirm } = useAlert();
@@ -458,7 +461,7 @@ export default function AssignedSystemUsersPage() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
       {/* Header */}
-      <PageHeader title="Assign System Users" />
+      <PageHeader title={cmsText("assignSystemUsers", "Assign System Users")} />
 
       {/* Page Content */}
       <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
@@ -466,7 +469,7 @@ export default function AssignedSystemUsersPage() {
         <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
 
         <div className="max-w-sm space-y-1.5">
-          <label className="block text-sm font-medium text-[#15191C]">Organizer</label>
+          <label className="block text-sm font-medium text-[#15191C]">{cmsText("organizer", "Organizer")}</label>
           <CustomDropdown
             value={selectedOrganizerId}
             onChange={(value) => {
@@ -484,10 +487,10 @@ export default function AssignedSystemUsersPage() {
           />
         </div>
 
-        <ListControls label="System Users" searchId="assign-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
+        <ListControls label={cmsText("systemUsers", "System Users")} searchId="assign-user-search" placeholder={cmsText("findSystemUsersByNameOrPhoneNumber", "Find system users by name or phone number...")} value={searchQuery} onChange={setSearchQuery}>
           {/* the same borderless pickers as the Invitees page: event, then session */}
-          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
-          <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder="Select Session" options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
+          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder={cmsText("selectEvent", "Select Event")} />
+          <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder={cmsText("selectSession", "Select Session")} options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
           <button
             type="button"
             onClick={() => {
@@ -499,9 +502,7 @@ export default function AssignedSystemUsersPage() {
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add User
-          </button>
+            </svg>{cmsText("addUser", "Add User")}</button>
         </ListControls>
 
         {/* Custom Green/White Tick Select All Checkbox */}
@@ -511,7 +512,7 @@ export default function AssignedSystemUsersPage() {
             onClick={toggleSelectAll}
 role="checkbox"
 aria-checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
-aria-label="Select all"
+aria-label={cmsText("selectAll3", "Select all")}
             className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
 <span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
               selectedIds.length === filteredUsers.length && filteredUsers.length > 0
@@ -525,14 +526,12 @@ aria-label="Select all"
             )}
           </span>
 </button>
-          <span onClick={toggleSelectAll} className="cursor-pointer">
-            Select All
-          </span>
+          <span onClick={toggleSelectAll} className="cursor-pointer">{cmsText("selectAll", "Select All")}</span>
         </div>
 
         {/* Loading state — outside the scrollable table so it always centers on screen */}
         {isLoading && (
-          <TableSkeleton rows={5} cols={5} label="Loading system users" />
+          <TableSkeleton rows={5} cols={5} label={cmsText("loadingSystemUsers", "Loading system users")} />
         )}
 
         {/* Table Container */}
@@ -541,12 +540,12 @@ aria-label="Select all"
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm">
-                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
-                <th className="py-3 px-4 font-medium">User Name</th>
-                <th className="py-3 px-4 font-medium">Assigned Events & Sessions</th>
-                <th className="py-3 px-4 font-medium">Email</th>
-                <th className="py-3 px-4 font-medium">Phone Number</th>
-                <th className="py-3 px-4 text-right font-medium">Action</th>
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">{cmsText("select", "Select")}</span></th>
+                <th className="py-3 px-4 font-medium">{cmsText("userName", "User Name")}</th>
+                <th className="py-3 px-4 font-medium">{cmsText("assignedEventsSessions", "Assigned Events & Sessions")}</th>
+                <th className="py-3 px-4 font-medium">{cmsText("email", "Email")}</th>
+                <th className="py-3 px-4 font-medium">{cmsText("phoneNumber", "Phone Number")}</th>
+                <th className="py-3 px-4 text-right font-medium">{cmsText("action", "Action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
@@ -556,9 +555,9 @@ aria-label="Select all"
                     {/* nobody to assign: said in the middle of the page, with the way forward (adding a user, then assigning them) */}
                     <div className="flex flex-col items-center justify-center gap-3 text-center">
                       <AlertIcon kind="userAdded" />
-                      <p className="text-base font-medium text-[#15191C]">{searchQuery.trim() || filterEvent ? "No system users match" : "No system users to assign yet"}</p>
+                      <p className="text-base font-medium text-[#15191C]">{searchQuery.trim() || filterEvent ? cmsText("noSystemUsersMatch", "No system users match") : cmsText("noSystemUsersToAssignYet", "No system users to assign yet")}</p>
                       <p className="text-sm text-gray-500 max-w-sm whitespace-normal">
-                        {searchQuery.trim() || filterEvent ? "Try another name, phone number or event." : "Add a system user now and you can assign them to an event's sessions straight away."}
+                        {searchQuery.trim() || filterEvent ? cmsText("tryAnotherNamePhoneNumberOrEvent", "Try another name, phone number or event.") : cmsText("addASystemUserNowAndYouCan", "Add a system user now and you can assign them to an event's sessions straight away.")}
                       </p>
                       {!searchQuery.trim() && !filterEvent ? (
                         <button
@@ -566,9 +565,7 @@ aria-label="Select all"
                           onClick={() => { setAddUserOrganizerId(selectedOrganizerId === "all" ? "" : selectedOrganizerId); setAddUserFormError(null); setIsAddUserModalOpen(true); }}
                           className={`${addButtonClass} cursor-pointer`}
                         >
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                          Add User
-                        </button>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>{cmsText("addUser", "Add User")}</button>
                       ) : null}
                     </div>
                   </td>
@@ -642,14 +639,11 @@ aria-label={`Select ${u.name}`}
                                     type="button"
                                     onClick={() => handleUnassignAssignment(asn.assignmentId)}
                                     className="text-rose-600 underline text-xs font-semibold hover:text-rose-800 cursor-pointer"
-                                  >
-                                    Unassign
-                                  </button>
+                                  >{cmsText("unassign", "Unassign")}</button>
                                 </div>
 
                                 {asn.assignedBy && (
-                                  <div className="text-[10px] text-gray-500">
-                                    Assigned by: <span className="font-medium text-gray-700">{asn.assignedBy}</span>
+                                  <div className="text-[10px] text-gray-500">{cmsText("assignedBy", "Assigned by:") + " "}<span className="font-medium text-gray-700">{asn.assignedBy}</span>
                                     {asn.assignedAt ? ` on ${asn.assignedAt}` : ""}
                                   </div>
                                 )}
@@ -697,7 +691,7 @@ aria-label={`Select ${u.name}`}
             onClick={handleBulkDelete}
             disabled={selectedIds.length === 0}
             className="p-2.5 text-[#D92D20] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
-            title="Delete Selected Users"
+            title={cmsText("deleteSelectedUsers", "Delete Selected Users")}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -709,7 +703,7 @@ aria-label={`Select ${u.name}`}
             disabled={selectedIds.length === 0}
             className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#1A56DB]"
           >
-            <span>Assign {selectedIds.length} users</span>
+            <span>{cmsText("assign", "Assign") + " "}{selectedIds.length}{" " + cmsText("users", "users")}</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
@@ -722,7 +716,7 @@ aria-label={`Select ${u.name}`}
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">Edit System User</h3>
+              <h3 className="text-base font-medium text-[#15191C]">{cmsText("editSystemUser", "Edit System User")}</h3>
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
@@ -736,8 +730,7 @@ aria-label={`Select ${u.name}`}
 
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-red-500">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("userName", "User Name")}<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -749,8 +742,7 @@ aria-label={`Select ${u.name}`}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-red-500">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("email", "Email")}<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -762,7 +754,7 @@ aria-label={`Select ${u.name}`}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">Contact No</label>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("contactNo", "Contact No")}</label>
                 <PhoneInput
                   value={editFormData.phone}
                   onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
@@ -776,7 +768,7 @@ aria-label={`Select ${u.name}`}
                   disabled={submittingEdit}
                   className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submittingEdit ? "Saving..." : "Save Changes"}
+                  {submittingEdit ? cmsText("saving", "Saving...") : cmsText("saveChanges", "Save Changes")}
                 </button>
               </div>
             </form>
@@ -789,7 +781,7 @@ aria-label={`Select ${u.name}`}
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">Add System User</h3>
+              <h3 className="text-base font-medium text-[#15191C]">{cmsText("addSystemUser", "Add System User")}</h3>
               <button
                 type="button"
                 onClick={() => setIsAddUserModalOpen(false)}
@@ -804,8 +796,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleAddUserSubmit} className="px-6 space-y-4">
               {isAdmin && (
                 <div className="space-y-1.5 pt-4">
-                  <label className="text-sm font-medium text-[#15191C]">
-                    Organizer<span className="text-red-500 ml-0.5">*</span>
+                  <label className="text-sm font-medium text-[#15191C]">{cmsText("organizer", "Organizer")}<span className="text-red-500 ml-0.5">*</span>
                   </label>
                   <CustomDropdown
                     portal
@@ -818,8 +809,8 @@ aria-label={`Select ${u.name}`}
                       value: organizer._id,
                       label: `${organizer.profile?.organizationName || organizer.fullName || organizer.email}${organizer.profile?.organizationName && organizer.fullName ? ` · ${organizer.fullName}` : ""}`,
                     }))}
-                    placeholder="Select an organizer"
-                    emptyMessage="No organizers available"
+                    placeholder={cmsText("selectAnOrganizer", "Select an organizer")}
+                    emptyMessage={cmsText("noOrganizersAvailable", "No organizers available")}
                     ariaLabel="Organizer for the new system user"
                     disabled={organizers.length === 0}
                   />
@@ -827,13 +818,12 @@ aria-label={`Select ${u.name}`}
               )}
               <PopupMessage message={addUserFormError} />
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("userName", "User Name")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter Full Name"
+                  placeholder={cmsText("enterFullName", "Enter Full Name")}
                   value={addUserData.userName}
                   onChange={(e) => setAddUserData({ ...addUserData, userName: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -841,12 +831,11 @@ aria-label={`Select ${u.name}`}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("contactNo", "Contact No")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
-                  placeholder="Enter Contact No"
+                  placeholder={cmsText("enterContactNo", "Enter Contact No")}
                   value={addUserData.contactNo}
                   onValueChange={(v) => setAddUserData({ ...addUserData, contactNo: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -854,13 +843,12 @@ aria-label={`Select ${u.name}`}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("email", "Email")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
                   required
-                  placeholder="Enter Email"
+                  placeholder={cmsText("enterEmail", "Enter Email")}
                   value={addUserData.email}
                   onChange={(e) => setAddUserData({ ...addUserData, email: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -868,12 +856,11 @@ aria-label={`Select ${u.name}`}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Password<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("password", "Password")}<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
-                  placeholder="Enter Initial Password"
+                  placeholder={cmsText("enterInitialPassword", "Enter Initial Password")}
                   value={addUserData.password}
                   onChange={(e) => setAddUserData({ ...addUserData, password: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
@@ -886,7 +873,7 @@ aria-label={`Select ${u.name}`}
                   disabled={submittingUser}
                   className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submittingUser ? "Creating..." : "Add System User"}
+                  {submittingUser ? cmsText("creating", "Creating...") : cmsText("addSystemUser", "Add System User")}
                 </button>
               </div>
             </form>
@@ -899,7 +886,7 @@ aria-label={`Select ${u.name}`}
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">Assign System Users to Event</h3>
+              <h3 className="text-base font-medium text-[#15191C]">{cmsText("assignSystemUsersToEvent", "Assign System Users to Event")}</h3>
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
@@ -913,8 +900,7 @@ aria-label={`Select ${u.name}`}
 
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-red-500">*</span>
+                <label className="text-sm font-medium text-[#15191C]">{cmsText("event", "Event")}<span className="text-red-500">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
@@ -923,20 +909,20 @@ aria-label={`Select ${u.name}`}
                     setSessionScope(null);
                   }}
                   options={assignableEvents.map((evt) => ({ value: evt.id, label: evt.title }))}
-                  placeholder="Select an event"
-                  emptyMessage="No open events. Staff cannot be assigned to a closed or cancelled event."
+                  placeholder={cmsText("selectAnEvent", "Select an event")}
+                  emptyMessage={cmsText("noOpenEventsStaffCannotBeAssignedTo", "No open events. Staff cannot be assigned to a closed or cancelled event.")}
                   ariaLabel="Event"
                 />
               </div>
 
               {outsiders.length > 0 && (
                 <div role="alert" className="rounded-md border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#854D0E] space-y-1.5">
-                  <p className="break-words"><b>{outsiders.map((u) => u.name).join(", ")}</b> {outsiders.length === 1 ? "does" : "do"} not belong to this event&apos;s organizer, so cannot be assigned to it. Choose another event, or leave {outsiders.length === 1 ? "this user" : "these users"} out.</p>
-                  <button type="button" onClick={() => setSelectedIds((ids) => ids.filter((id) => !outsiders.some((u) => u.id === id)))} className="font-semibold text-[#1F65FF] underline cursor-pointer">Leave out</button>
+                  <p className="break-words"><b>{outsiders.map((u) => u.name).join(", ")}</b> {outsiders.length === 1 ? cmsText("does", "does") : cmsText("do", "do")}{" " + cmsText("notBelongToThisEventSOrganizerSo", "not belong to this event's organizer, so cannot be assigned to it. Choose another event, or leave") + " "}{outsiders.length === 1 ? cmsText("thisUser", "this user") : cmsText("theseUsers", "these users")}{" " + cmsText("out", "out.")}</p>
+                  <button type="button" onClick={() => setSelectedIds((ids) => ids.filter((id) => !outsiders.some((u) => u.id === id)))} className="font-semibold text-[#1F65FF] underline cursor-pointer">{cmsText("leaveOut", "Leave out")}</button>
                 </div>
               )}
               {outsiders.length === 0 && selectedIds.length === 0 && (
-                <p role="status" className="text-sm text-[#6B6B6B]">No users left to assign. Close this window and tick the organizer&apos;s own system users.</p>
+                <p role="status" className="text-sm text-[#6B6B6B]">{cmsText("noUsersLeftToAssignCloseThisWindow", "No users left to assign. Close this window and tick the organizer's own system users.")}</p>
               )}
 
               <SessionScopePicker
@@ -953,7 +939,7 @@ aria-label={`Select ${u.name}`}
                   disabled={submittingAssign || !selectedEventId || selectedIds.length === 0 || checkingStaff || outsiders.length > 0}
                   className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submittingAssign ? "Saving..." : "Assign"}
+                  {submittingAssign ? cmsText("saving", "Saving...") : cmsText("assign", "Assign")}
                 </button>
               </div>
             </form>
@@ -966,23 +952,19 @@ aria-label={`Select ${u.name}`}
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="user-added-title">
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-5 animate-modal">
             <AlertIcon kind="userAdded" />
-            <h3 id="user-added-title" className="text-lg font-bold text-gray-900">User added</h3>
-            <p className="text-sm text-[#4B4F52]">{addedUser.name} was added and can sign in with the email and the password you set. Share the password with them and ask them to change it after signing in.</p>
+            <h3 id="user-added-title" className="text-lg font-bold text-gray-900">{cmsText("userAdded", "User added")}</h3>
+            <p className="text-sm text-[#4B4F52]">{addedUser.name}{" " + cmsText("wasAddedAndCanSignInWithThe", "was added and can sign in with the email and the password you set. Share the password with them and ask them to change it after signing in.")}</p>
             <div className="flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={() => { setSelectedIds([addedUser.id]); setSessionScope(null); setErrorFeedback(null); setAddedUser(null); setIsAssignModalOpen(true); }}
                 className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
-              >
-                Assign User
-              </button>
+              >{cmsText("assignUser", "Assign User")}</button>
               <button
                 type="button"
                 onClick={() => { setAddedUser(null); setAddUserFormError(null); setIsAddUserModalOpen(true); }}
                 className="w-full py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] font-bold text-xs rounded-md transition-colors cursor-pointer"
-              >
-                Add another user
-              </button>
+              >{cmsText("addAnotherUser", "Add another user")}</button>
             </div>
           </div>
         </div>
@@ -994,14 +976,12 @@ aria-label={`Select ${u.name}`}
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <AlertIcon kind="success" />
 
-            <h3 className="text-lg font-bold text-gray-900">Assigned Successfully!</h3>
+            <h3 className="text-lg font-bold text-gray-900">{cmsText("assignedSuccessfully", "Assigned Successfully!")}</h3>
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
               className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
-            >
-              Okay
-            </button>
+            >{cmsText("okay", "Okay")}</button>
           </div>
         </div>
       )}

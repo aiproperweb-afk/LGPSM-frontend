@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { csvCell, csvBlob } from "@/utils/csv";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -36,6 +38,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function ReportsPage() {
+  const cmsText = useDashboardCopy();
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   const [selectedOrganizer, setSelectedOrganizer] = useState("");
@@ -406,7 +409,7 @@ export default function ReportsPage() {
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
       {/* Admin frame 713:5982 is titled "Reports", the Organiser frame 217:23715 "Report" */}
-      <PageHeader title={isAdmin ? "Reports" : "Report"} />
+      <PageHeader title={isAdmin ? cmsText("reports", "Reports") : cmsText("report", "Report")} />
 
       <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
         <ReportsHeaderControls
@@ -430,9 +433,7 @@ export default function ReportsPage() {
           <>
           {!loadingEvents && allEventsList.length === 0 && !pageError ? (
             <div className="relative rounded-md py-16 text-center text-sm font-medium text-gray-500">
-            <DashedBorder width={1} className="text-gray-200" />
-              No events found{selectedOrganizer ? " for this organizer" : ""}. Reports appear once an event exists.
-            </div>
+            <DashedBorder width={1} className="text-gray-200" />{cmsText("noEventsFound", "No events found")}{selectedOrganizer ? cmsText("forThisOrganizer", "for this organizer") : ""}{cmsText("reportsAppearOnceAnEventExists", ". Reports appear once an event exists.")}</div>
           ) : (
             <>
               <div className="space-y-1 min-w-0">
@@ -447,11 +448,11 @@ export default function ReportsPage() {
                       {selectedEvent.categoryId.name}
                     </span>
                   )}
-                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#1F65FF] underline underline-offset-2">Open event</Link>}
+                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#1F65FF] underline underline-offset-2">{cmsText("openEvent", "Open event")}</Link>}
                 </div>
                 {selectedEvent && (
                   <p className="text-xs text-gray-500 font-medium">
-                    <span className="font-semibold text-gray-700">Start:</span> {formatDate(selectedEvent.schedule?.start)} | <span className="font-semibold text-gray-700">End:</span> {formatDate(selectedEvent.schedule?.end)}
+                    <span className="font-semibold text-gray-700">{cmsText("start", "Start:")}</span> {formatDate(selectedEvent.schedule?.start)} | <span className="font-semibold text-gray-700">{cmsText("end", "End:")}</span> {formatDate(selectedEvent.schedule?.end)}
                   </p>
                 )}
               </div>
@@ -459,9 +460,7 @@ export default function ReportsPage() {
               {detailsError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium flex items-center justify-between gap-3">
                   <span className="break-words min-w-0">{detailsError}</span>
-                  <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="font-semibold shrink-0 cursor-pointer underline">
-                    Retry
-                  </button>
+                  <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="font-semibold shrink-0 cursor-pointer underline">{cmsText("retry", "Retry")}</button>
                 </div>
               )}
 
@@ -520,8 +519,9 @@ export default function ReportsPage() {
 
 // Placeholder for the whole report body: event title, four tiles, the two charts and the logs card
 function ReportSkeleton() {
+  const cmsText = useDashboardCopy();
   return (
-    <SkeletonRegion label="Loading report" className="space-y-6">
+    <SkeletonRegion label={cmsText("loadingReport", "Loading report")} className="space-y-6">
       <div className="space-y-2"><Skeleton className="h-9 w-72 max-w-full" /><Skeleton className="h-4 w-64 max-w-full" /></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[158px] rounded-lg!" />)}

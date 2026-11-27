@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useCallback, useState } from "react";
 import ModalClose from "@/components/common/ModalClose";
 import CodeEntry from "@/components/auth/CodeEntry";
@@ -8,6 +10,7 @@ import { userService } from "@/services/userService";
 
 /** Changing the sign-in email: the current password, then the code sent to the new address. Nothing changes until that code is entered. */
 export default function ChangeEmailModal({ currentEmail, onClose, onChanged }: { currentEmail: string; onClose: () => void; onChanged: (email: string) => void | Promise<void> }) {
+  const cmsText = useDashboardCopy();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sentTo, setSentTo] = useState("");
@@ -43,9 +46,9 @@ export default function ChangeEmailModal({ currentEmail, onClose, onChanged }: {
       <div className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-5 overflow-y-auto rounded-xl bg-white p-6 text-[#000B2C] shadow-2xl">
         <ModalClose onClick={onClose} disabled={busy} />
         <div>
-          <h2 id="change-email-title" className="pr-8 text-lg font-semibold">Change email address</h2>
+          <h2 id="change-email-title" className="pr-8 text-lg font-semibold">{cmsText("changeEmailAddress", "Change email address")}</h2>
           <p className="mt-1 text-sm text-[#666D80]">
-            {sentTo ? <>Enter the 6-digit code sent to <span className="break-all font-semibold text-[#000B2C]">{sentTo}</span>.</> : <>You sign in with <span className="break-all font-semibold text-[#000B2C]">{currentEmail}</span> now.</>}
+            {sentTo ? <>{cmsText("enterThe6DigitCodeSentTo", "Enter the 6-digit code sent to") + " "}<span className="break-all font-semibold text-[#000B2C]">{sentTo}</span>.</> : <>{cmsText("youSignInWith", "You sign in with") + " "}<span className="break-all font-semibold text-[#000B2C]">{currentEmail}</span>{" " + cmsText("now", "now.")}</>}
           </p>
         </div>
         {error && <AuthAlert tone="error">{error}</AuthAlert>}
@@ -54,14 +57,14 @@ export default function ChangeEmailModal({ currentEmail, onClose, onChanged }: {
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="new-account-email" className={authLabelClass}>New email address</label>
-              <input id="new-account-email" type="email" required autoFocus autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} placeholder="hello@example.com" className={authInputClass} />
+              <label htmlFor="new-account-email" className={authLabelClass}>{cmsText("newEmailAddress", "New email address")}</label>
+              <input id="new-account-email" type="email" required autoFocus autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} placeholder={cmsText("helloExampleCom", "hello@example.com")} className={authInputClass} />
             </div>
             <div>
-              <label htmlFor="new-account-email-password" className={authLabelClass}>Current password</label>
-              <PasswordInput id="new-account-email-password" value={password} onChange={setPassword} placeholder="Enter your password" autoComplete="current-password" disabled={busy} />
+              <label htmlFor="new-account-email-password" className={authLabelClass}>{cmsText("currentPassword", "Current password")}</label>
+              <PasswordInput id="new-account-email-password" value={password} onChange={setPassword} placeholder={cmsText("enterYourPassword", "Enter your password")} autoComplete="current-password" disabled={busy} />
             </div>
-            <button type="submit" disabled={busy || !email.trim() || !password} className={authPrimaryButtonClass}>{busy ? <><Spinner /> Sending…</> : "Send code to the new address"}</button>
+            <button type="submit" disabled={busy || !email.trim() || !password} className={authPrimaryButtonClass}>{busy ? <><Spinner />{" " + cmsText("sending2", "Sending…")}</> : cmsText("sendCodeToTheNewAddress", "Send code to the new address")}</button>
           </form>
         )}
       </div>

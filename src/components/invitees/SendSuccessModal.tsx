@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import SuccessAnimation from "./SuccessAnimation";
 
@@ -12,6 +14,7 @@ interface Props {
 
 /** Confirms that invitations went out (shown after Send / Resend when at least one guest was reached). */
 export default function SendSuccessModal({ title, message, details = [], onClose }: Props) {
+  const cmsText = useDashboardCopy();
   return (
     <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="send-success-title">
       <div className="w-full max-w-sm bg-white rounded-lg shadow-2xl px-6 pt-4 pb-7 text-center">
@@ -23,7 +26,7 @@ export default function SendSuccessModal({ title, message, details = [], onClose
             {details.map((d) => <li key={d}>{d}</li>)}
           </ul>
         )}
-        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-lg cursor-pointer">Okay</button>
+        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-lg cursor-pointer">{cmsText("okay", "Okay")}</button>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import { EarningsRecord } from "@/types/earnings";
 import { TableSkeletonRows } from "@/components/common/Skeleton";
@@ -45,20 +47,19 @@ export default function EarningsTable({
   onHideRow,
   onExportCSV,
 }: EarningsTableProps) {
+  const cmsText = useDashboardCopy();
   const router = useRouter();
   return (
     <div className="bg-white border border-gray-200 rounded-md p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-[#15191C]">Earnings</h2>
+        <h2 className="text-xl font-medium text-[#15191C]">{cmsText("earnings", "Earnings")}</h2>
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-500">68 Records:</span>
+          <span className="text-gray-500">{cmsText("text68Records", "68 Records:")}</span>
           <button
             type="button"
             onClick={onExportCSV}
             className="font-bold text-[#1F65FF] hover:underline cursor-pointer"
-          >
-            Export CSV
-          </button>
+          >{cmsText("exportCsv", "Export CSV")}</button>
         </div>
       </div>
 
@@ -70,9 +71,7 @@ export default function EarningsTable({
               ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
-        >
-          By Organizer
-        </button>
+        >{cmsText("byOrganizer", "By Organizer")}</button>
         <button
           type="button"
           onClick={() => setActiveTab("event")}
@@ -80,9 +79,7 @@ export default function EarningsTable({
               ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
-        >
-          By Event
-        </button>
+        >{cmsText("byEvent", "By Event")}</button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -102,8 +99,8 @@ export default function EarningsTable({
           </svg>
           <input
             type="text"
-            placeholder="Search..."
-            aria-label="Search earnings"
+            placeholder={cmsText("search2", "Search...")}
+            aria-label={cmsText("searchEarnings", "Search earnings")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -116,8 +113,8 @@ export default function EarningsTable({
               type="text"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              placeholder="DD/MM/YYYY"
-              aria-label="From date"
+              placeholder={cmsText("ddMmYyyy", "DD/MM/YYYY")}
+              aria-label={cmsText("fromDate", "From date")}
               className="w-20 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
             />
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,15 +122,15 @@ export default function EarningsTable({
             </svg>
           </div>
 
-          <span className="text-gray-500 font-normal">To</span>
+          <span className="text-gray-500 font-normal">{cmsText("to", "To")}</span>
 
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-md px-3 py-1.5">
             <input
               type="text"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              placeholder="DD/MM/YYYY"
-              aria-label="To date"
+              placeholder={cmsText("ddMmYyyy", "DD/MM/YYYY")}
+              aria-label={cmsText("toDate", "To date")}
               className="w-20 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
             />
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,16 +149,14 @@ export default function EarningsTable({
             onChange={toggleSelectAll}
             className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
           />
-          <label htmlFor="selectAllEarnings" className="cursor-pointer">
-            Select All
-          </label>
+          <label htmlFor="selectAllEarnings" className="cursor-pointer">{cmsText("selectAll", "Select All")}</label>
         </div>
 
         {selectedIds.length > 0 && (
           <button
             type="button"
             onClick={onDeleteSelected}
-            title="Delete Selected Records"
+            title={cmsText("deleteSelectedRecords", "Delete Selected Records")}
             className="p-1.5 text-[#D92D20] hover:bg-[#FEF3F2] rounded-md transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5 text-[#D92D20]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,18 +170,18 @@ export default function EarningsTable({
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead>
             <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm">
-              <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
+              <th className="relative py-3 px-4 w-10"><span className="sr-only">{cmsText("select", "Select")}</span></th>
               <th className="py-3 px-4 font-medium">
-                {activeTab === "organizer" ? "Organizer" : "Event Name"}
+                {activeTab === "organizer" ? cmsText("organizer", "Organizer") : cmsText("eventName", "Event Name")}
               </th>
               <th className="py-3 px-4 font-medium">
-                {activeTab === "organizer" ? "Event Name" : "Organizer"}
+                {activeTab === "organizer" ? cmsText("eventName", "Event Name") : cmsText("organizer", "Organizer")}
               </th>
-              <th className="py-3 px-4 font-medium">Date of Payment</th>
-              <th className="py-3 px-4 font-medium">Invites</th>
-              <th className="py-3 px-4 font-medium">Rate</th>
-              <th className="py-3 px-4 font-medium">Amount</th>
-              <th className="py-3 px-4 text-right font-medium">Action</th>
+              <th className="py-3 px-4 font-medium">{cmsText("dateOfPayment", "Date of Payment")}</th>
+              <th className="py-3 px-4 font-medium">{cmsText("invites", "Invites")}</th>
+              <th className="py-3 px-4 font-medium">{cmsText("rate", "Rate")}</th>
+              <th className="py-3 px-4 font-medium">{cmsText("amount", "Amount")}</th>
+              <th className="py-3 px-4 text-right font-medium">{cmsText("action", "Action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
@@ -198,7 +193,7 @@ export default function EarningsTable({
                     type="checkbox"
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
-                    aria-label="Select this row"
+                    aria-label={cmsText("selectThisRow", "Select this row")}
                     className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
                   />
                 </td>
@@ -210,7 +205,7 @@ export default function EarningsTable({
                 </td>
                 <td className="py-4 px-4 text-gray-600">{r.dateOfPayment}</td>
                 <td className="py-4 px-4 text-gray-900 font-semibold">{r.invites}</td>
-                <td className="py-4 px-4 text-gray-600">{r.rate === null ? "Not set" : formatMoney(r.rate)}</td>
+                <td className="py-4 px-4 text-gray-600">{r.rate === null ? cmsText("notSet", "Not set") : formatMoney(r.rate)}</td>
                 <td className="py-4 px-4 text-emerald-700 font-bold">{formatMoney(r.amount)}</td>
                 <td className="py-4 px-4 text-right">
                   {/* was an inert "⋯"; event rows can open their event, and any row can be hidden from this view */}

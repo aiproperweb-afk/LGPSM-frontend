@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React from "react";
 import { PriceHistoryRecord } from "@/types/priceRate";
 import { formatMoney } from "@/utils/money";
@@ -10,6 +12,7 @@ interface PriceHistoryTableProps {
 }
 
 export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
+  const cmsText = useDashboardCopy();
   const handleExportCSV = () => {
     const headers = "Date & Time,Previous Rate (INR),New Rate (INR),Change Type,Status\n";
     const rows = history
@@ -30,13 +33,11 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
     <div className="bg-white rounded-lg border border-[#E0E0E0] p-6 space-y-4">
       {/* Table Header Row */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-medium text-[#15191C]">Price Change History</h2>
+        <h2 className="text-xl font-medium text-[#15191C]">{cmsText("priceChangeHistory", "Price Change History")}</h2>
         <button
           onClick={handleExportCSV}
           className="text-xs font-semibold text-[#1F65FF] hover:underline transition-all"
-        >
-          Export CSV
-        </button>
+        >{cmsText("exportCsv", "Export CSV")}</button>
       </div>
 
       {/* History Table */}
@@ -44,19 +45,17 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
         <table className="w-full text-left text-sm border-collapse">
           <thead>
             <tr className="border-b border-[#D3D3D3] text-[#6B6B6B] font-medium">
-              <th className="py-3 px-4 font-normal">Date & Time</th>
-              <th className="py-3 px-4 font-normal">Previous Rate</th>
-              <th className="py-3 px-4 font-normal">New Rate</th>
-              <th className="py-3 px-4 font-normal">Change Type</th>
-              <th className="py-3 px-4 font-normal">Status</th>
+              <th className="py-3 px-4 font-normal">{cmsText("dateTime", "Date & Time")}</th>
+              <th className="py-3 px-4 font-normal">{cmsText("previousRate", "Previous Rate")}</th>
+              <th className="py-3 px-4 font-normal">{cmsText("newRate", "New Rate")}</th>
+              <th className="py-3 px-4 font-normal">{cmsText("changeType", "Change Type")}</th>
+              <th className="py-3 px-4 font-normal">{cmsText("status", "Status")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D3D3D3] text-[#4B4F52]">
             {history.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-10 text-center text-gray-500 font-medium">
-                  No rate changes recorded in this session.
-                </td>
+                <td colSpan={5} className="py-10 text-center text-gray-500 font-medium">{cmsText("noRateChangesRecordedInThisSession", "No rate changes recorded in this session.")}</td>
               </tr>
             )}
             {history.map((item) => {
@@ -68,7 +67,7 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
                   <td className="py-3.5 px-4 font-medium text-gray-800">
                     {item.dateTime}
                   </td>
-                  <td className="py-3.5 px-4 text-gray-600">{item.previousRate === null ? "Not set" : formatMoney(item.previousRate)}</td>
+                  <td className="py-3.5 px-4 text-gray-600">{item.previousRate === null ? cmsText("notSet", "Not set") : formatMoney(item.previousRate)}</td>
                   <td className="py-3.5 px-4 font-semibold text-gray-800">
                     {formatMoney(item.newRate)}
                   </td>

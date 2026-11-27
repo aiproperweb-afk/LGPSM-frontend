@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import { csvRow, csvBlob } from "@/utils/csv";
 import PopupMessage from "@/components/common/PopupMessage";
 import PageHeader from "@/components/common/PageHeader";
@@ -13,6 +15,7 @@ import { EarningsData, platformSettingsService } from "@/services/platformSettin
 import { parseEventDate } from "@/utils/eventUtils";
 
 export default function EarningsPage() {
+  const cmsText = useDashboardCopy();
   const [activeTab, setActiveTab] = useState<"organizer" | "event">("organizer");
   // The rate in force for new events. Each row below uses the rate locked on that event when it was created.
   const [rate, setRate] = useState<number | null>(null);
@@ -158,7 +161,7 @@ export default function EarningsPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Earnings" />
+      <PageHeader title={cmsText("earnings", "Earnings")} />
 
       <div className="px-4 sm:px-6 pt-7 w-full space-y-6 bg-white pb-24">
         <EarningsOverviewCard
@@ -170,10 +173,7 @@ export default function EarningsPage() {
           isSavedNotice={isSavedNotice}
         />
 
-        <p className="text-[11px] text-gray-500 font-medium -mt-2">
-          Invite counts are the invitations actually sent for each event, at the rate locked on that event when it was created.
-          These are amounts due, not payments: online payments are not configured.
-        </p>
+        <p className="text-[11px] text-gray-500 font-medium -mt-2">{cmsText("inviteCountsAreTheInvitationsActuallySentFor", "Invite counts are the invitations actually sent for each event, at the rate locked on that event when it was created. These are amounts due, not payments: online payments are not configured.")}</p>
 
         <PopupMessage message={loadError} onClose={() => setLoadError(null)} />
 

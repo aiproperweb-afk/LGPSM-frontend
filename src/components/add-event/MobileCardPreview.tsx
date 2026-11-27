@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SelectedTemplate, cardDisplayForServer } from "./eventDraft";
@@ -51,6 +53,7 @@ export default function MobileCardPreview({
   onOpenAdditionalInfo,
   awaitingTemplate = false,
 }: MobileCardPreviewProps) {
+  const cmsText = useDashboardCopy();
   const [zoomLevel, setZoomLevel] = useState("100%");
   const zoom = ZOOM_SCALE[zoomLevel] ?? 1;
   // An uploaded design is the card exactly as it is: no data is drawn on it, so there is nothing to render. Its own picture is shown.
@@ -137,7 +140,7 @@ export default function MobileCardPreview({
   return (
     <div className="h-full bg-[#EEF4FF] p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
-        <h2 className="text-base font-medium text-gray-900">Card Preview</h2>
+        <h2 className="text-base font-medium text-gray-900">{cmsText("cardPreview", "Card Preview")}</h2>
         <div className="w-28">
           <CustomDropdown
             value={zoomLevel}
@@ -152,7 +155,7 @@ export default function MobileCardPreview({
         <div
           className="relative max-w-full aspect-[1/2] bg-[#1E2A33] shadow-xl transition-[width,border-radius,padding] duration-200"
           style={{ width: PHONE.width * zoom, borderRadius: PHONE.radius * zoom, padding: PHONE.bezel * zoom }}
-          aria-label="Invitation card preview"
+          aria-label={cmsText("invitationCardPreview", "Invitation card preview")}
         >
           <div className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center" style={{ borderRadius: (PHONE.radius - PHONE.bezel) * zoom }}>
             {hasCard && (
@@ -161,7 +164,7 @@ export default function MobileCardPreview({
               <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-full w-full object-contain" />
             )}
             {!awaitingTemplate && loading && (
-              <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
+              <div role="status" aria-label={cmsText("updatingPreview", "Updating preview")} className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
                 <svg className="h-4 w-4 animate-spin text-[#1F65FF]" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                   <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
@@ -174,17 +177,15 @@ export default function MobileCardPreview({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                   <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
                 </svg>
-                <p className="text-xs font-medium text-[#4B4F52]">Selecting template…</p>
-                <p className="text-[11px] text-[#6B6B6B]">Your card appears here once you choose one.</p>
+                <p className="text-xs font-medium text-[#4B4F52]">{cmsText("selectingTemplate", "Selecting template…")}</p>
+                <p className="text-[11px] text-[#6B6B6B]">{cmsText("yourCardAppearsHereOnceYouChooseOne", "Your card appears here once you choose one.")}</p>
               </div>
             )}
             {!awaitingTemplate && !staticUrl && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
             {!awaitingTemplate && !staticUrl && !showLive && failed && (
               <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center">
-                <p className="text-xs text-[#4B4F52]">The card preview could not be loaded.</p>
-                <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">
-                  Try again
-                </button>
+                <p className="text-xs text-[#4B4F52]">{cmsText("theCardPreviewCouldNotBeLoaded", "The card preview could not be loaded.")}</p>
+                <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">{cmsText("tryAgain", "Try again")}</button>
               </div>
             )}
           </div>
@@ -192,9 +193,7 @@ export default function MobileCardPreview({
 
         {/* said in words, or the unchanged picture looks like a preview that is not updating */}
         {staticUrl && !awaitingTemplate && (
-          <p role="status" className="mt-3 max-w-[300px] rounded-md border border-[#C7D7FE] bg-white px-3 py-2 text-center text-xs text-[#1D3A8A]">
-            This is an uploaded card. It is sent exactly as it is, so changes to the event details do not appear on it.
-          </p>
+          <p role="status" className="mt-3 max-w-[300px] rounded-md border border-[#C7D7FE] bg-white px-3 py-2 text-center text-xs text-[#1D3A8A]">{cmsText("thisIsAnUploadedCardItIsSent", "This is an uploaded card. It is sent exactly as it is, so changes to the event details do not appear on it.")}</p>
         )}
 
         {/* Figma Event_Add event-1: "Change Template" and "Additional Info" side by side ("Edit Additional Info" once set) */}
@@ -205,7 +204,7 @@ export default function MobileCardPreview({
             onClick={onOpenTemplateModal}
             className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
           >
-            {template ? "Change Template" : "Select Template"}
+            {template ? cmsText("changeTemplate", "Change Template") : cmsText("selectTemplate", "Select Template")}
           </button>
           )}
           {onOpenAdditionalInfo && (
@@ -214,15 +213,12 @@ export default function MobileCardPreview({
               onClick={() => onOpenAdditionalInfo(payload)}
               className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
             >
-              {cardInfo ? "Edit Additional Info" : "Additional Info"}
+              {cardInfo ? cmsText("editAdditionalInfo", "Edit Additional Info") : cmsText("additionalInfo", "Additional Info")}
             </button>
           )}
         </div>
-        <p className="text-xs text-[#4B4F52] mt-3 text-center">
-          Looking for custom card design?{" "}
-          <Link href="/contact" className="text-[#15803D] font-medium underline">
-            Contact us
-          </Link>
+        <p className="text-xs text-[#4B4F52] mt-3 text-center">{cmsText("lookingForCustomCardDesign", "Looking for custom card design?")}{" "}
+          <Link href="/contact" className="text-[#15803D] font-medium underline">{cmsText("contactUs", "Contact us")}</Link>
         </p>
       </div>
     </div>

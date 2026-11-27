@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
+
 import React, { useEffect, useRef, useState } from "react";
 import { invitationService } from "@/services/invitationService";
 import InvitationCardImage from "@/components/events/InvitationCardImage";
@@ -17,6 +19,7 @@ interface EventCardPreviewProps {
 // The event's own invitation card, rendered by the server exactly as guests receive it (its template, or the design that
 // suits its type), so the event pages never show a stand-in picture.
 export default function EventCardPreview({ eventId, refreshKey, label, heightClassName = "h-52 sm:h-60" }: EventCardPreviewProps) {
+  const cmsText = useDashboardCopy();
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -55,10 +58,8 @@ export default function EventCardPreview({ eventId, refreshKey, label, heightCla
         <InvitationCardImage src={url} alt={`${label} invitation card`} />
       ) : failed ? (
         <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <p className="text-xs text-[#4B4F52]">The card preview could not be loaded.</p>
-          <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">
-            Try again
-          </button>
+          <p className="text-xs text-[#4B4F52]">{cmsText("theCardPreviewCouldNotBeLoaded", "The card preview could not be loaded.")}</p>
+          <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">{cmsText("tryAgain", "Try again")}</button>
         </div>
       ) : (
         <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />
