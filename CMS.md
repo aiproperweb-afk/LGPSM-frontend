@@ -14,7 +14,7 @@ Open **Navbar** or **Footer** in Pages to edit shared public text. The Navbar en
 | `/contact` | `ContactPage` renders information and contact links from `constants/site.ts`, section headings, introductory copy, and a validated contact form with a live submission. | Managed through ContactContent. Page heading, information heading, form heading, introduction and submit label are editable. Contact destinations and form behavior remain application-owned. |
 | `/features` | Dedicated Features page. | Edit the hero, platform overview, feature stages, screenshots, security and pricing copy. |
 | `/how-it-works` | Tutorial and step-by-step guide. | Edit headings, tutorial poster and copy, steps, instructions and screenshots. |
-| `/clients/[slug]` | Seven public client-category pages. | Edit each page?s hero, use cases, screenshots, enquiry copy, and calls to action. Shared FAQs, stats, and testimonials come from Home. |
+| Client category pages | The seven public routes stay available with their published copy. | Category pages are read-only. Edit shared client menu labels in Navbar. |
 | `/pricing` | Redirects to `/#pricing`. The legacy route source composes `TopBanner`, `PricingSection` and `PricingFaqSection`. | Edit the canonical homepage `PricingLanding` section. |
 | `/signin`, `/signup`, `/forgot-password`, `/verify-email` | Account and credential flows under the auth route group. | Application-owned. |
 | `/invitation/[token]` | Token-based invitation page, invitation artwork, guest and session details, and RSVP. | Application-owned. |

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isCmsSlug } from "@/components/cms/initialData";
+import { isEditableCmsSlug } from "@/components/cms/initialData";
 import { cmsService } from "@/services/cmsService";
 import type { CmsPageSummary } from "@/components/cms/types";
 
@@ -14,7 +14,7 @@ export default function PagesListing() {
     let active = true;
     void cmsService.listPages().then(result => {
       if (!active) return;
-      if (result.success && result.data) setPages(result.data.filter(item => isCmsSlug(item.slug)));
+      if (result.success && result.data) setPages(result.data.filter(item => isEditableCmsSlug(item.slug)));
       else setError(result.message || "Could not load pages.");
     });
     return () => { active = false; };
