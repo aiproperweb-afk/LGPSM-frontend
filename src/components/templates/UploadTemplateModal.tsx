@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import CategoryFields from "@/components/categories/CategoryFields";
@@ -22,7 +20,6 @@ interface Props {
 // "Upload your own template": a finished invitation design becomes the card, sent exactly as it is. The one exception is an administrator
 // publishing from the Templates page: that design is shared, and each event's own details are written over its wording.
 export default function UploadTemplateModal({ onClose, onCreated, publish = false }: Props) {
-  const cmsText = useDashboardCopy();
   const categories = useCategories();
   const shared = publish && !categories.isOrganizer;
   const [name, setName] = useState("");
@@ -65,8 +62,8 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upload-template-title" {...overlayClose}>
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-          <h2 id="upload-template-title" className="text-base font-medium text-gray-900">{cmsText("uploadYourOwnTemplate", "Upload your own template")}</h2>
-          <button type="button" onClick={onClose} disabled={saving} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer disabled:opacity-50">
+          <h2 id="upload-template-title" className="text-base font-medium text-gray-900">Upload your own template</h2>
+          <button type="button" onClick={onClose} disabled={saving} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer disabled:opacity-50">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -74,17 +71,17 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
           <p className="text-sm text-[#4B4F52]">
             {!shared
               ? `Upload your finished invitation design. It is the card, sent exactly as it is: nothing is written or added on it, and it works with Digital only. Only you can use it${categories.isOrganizer ? "." : "; to share it with all organizers, publish it from the Templates page."}`
-              : cmsText("uploadABackgroundPictureLikeTheOtherTemplates", "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and each guest's QR code is added. After saving you check where that wording is, and can mark where the event's logo goes. Pick the event category and subcategory it is for: every organizer can then use it for those events.")}
+              : "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and each guest's QR code is added. After saving you check where that wording is, and can mark where the event's logo goes. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
           </p>
           <div>
-            <label htmlFor="own-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("templateName", "Template name") + " "}<span className="font-normal text-[#6B6B6B]">{cmsText("optional", "(optional)")}</span></label>
+            <label htmlFor="own-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">Template name <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
             <input
               id="own-template-name"
               type="text"
               maxLength={100}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={cmsText("eGAnnualGala2026Optional", "e.g. Annual Gala 2026 (optional)")}
+              placeholder="e.g. Annual Gala 2026 (optional)"
               aria-invalid={!!shown.name}
               className="w-full h-[44px] px-3.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black text-gray-900"
             />
@@ -122,13 +119,15 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
             </div>
             {shown.image && <p className="mt-1 text-xs font-medium text-rose-600">{shown.image}</p>}
             {!shared && imageKey && (
-              <p role="status" className="mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">{cmsText("yourUploadedCardIsUsedExactlyAsIt", "Your uploaded card is used exactly as it is, so the event logo is not added to it. The Event Logo option in Event Details is turned off for this card.")}</p>
+              <p role="status" className="mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">
+                Your uploaded card is used exactly as it is, so the event logo is not added to it. The Event Logo option in Event Details is turned off for this card.
+              </p>
             )}
           </div>
           <PopupMessage message={error} />
           <div className="flex justify-end gap-3 pt-1">
             <button type="submit" disabled={saving || uploading} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60">
-              {saving ? cmsText("saving2", "Saving…") : uploading ? cmsText("uploading", "Uploading…") : cmsText("saveTemplate", "Save template")}
+              {saving ? "Saving…" : uploading ? "Uploading…" : "Save template"}
             </button>
           </div>
         </form>

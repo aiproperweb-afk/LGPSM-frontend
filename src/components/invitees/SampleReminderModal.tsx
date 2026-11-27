@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React from "react";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
 import ModalClose from "@/components/common/ModalClose";
@@ -17,21 +15,22 @@ interface Props {
 
 // Asked before a file is chosen: the columns are specific to this event, so the sample should be the starting point.
 export default function SampleReminderModal({ columns, onDownload, onContinue, onCancel }: Props) {
-  const cmsText = useDashboardCopy();
   const overlayClose = useOverlayClose(onCancel);
   return (
     <div className="fixed inset-0 z-[65] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="sample-reminder-title" {...overlayClose}>
       <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative">
         <ModalClose onClick={onCancel} />
-        <h2 id="sample-reminder-title" className="pr-8 text-lg font-semibold text-[#15191C]" >{cmsText("useThisEventSExcelSample", "Use this event's Excel sample")}</h2>
-        <p className="text-sm text-[#4B4F52]">{cmsText("theColumnsDependOnThisEventSSettings", "The columns depend on this event's settings, so the file must use exactly these headings. Download the sample, fill it in, then upload it. A file with different columns will be refused.")}</p>
-        <div className="flex flex-wrap gap-1.5" aria-label={cmsText("columnsThisEventExpects", "Columns this event expects")}>
+        <h2 id="sample-reminder-title" className="pr-8 text-lg font-semibold text-[#15191C]" >Use this event&apos;s Excel sample</h2>
+        <p className="text-sm text-[#4B4F52]">
+          The columns depend on this event&apos;s settings, so the file must use exactly these headings. Download the sample, fill it in, then upload it. A file with different columns will be refused.
+        </p>
+        <div className="flex flex-wrap gap-1.5" aria-label="Columns this event expects">
           {columns.map((c) => <span key={c} className="px-2.5 py-1 rounded-full bg-[#F4F5F8] border border-[#E0E0E0] text-xs font-medium text-[#15191C]">{c}</span>)}
         </div>
         {/* the three buttons always in one row */}
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <button type="button" onClick={onDownload} className="px-2 py-2 whitespace-nowrap text-center border border-[#1F65FF] rounded-md text-[13px] font-medium text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] cursor-pointer">{cmsText("downloadSample", "Download sample")}</button>
-          <button type="button" onClick={onContinue} className="px-2 py-2 whitespace-nowrap text-center bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-[13px] font-medium text-white cursor-pointer">{cmsText("iHaveItChooseFile", "I have it, choose file")}</button>
+          <button type="button" onClick={onDownload} className="px-2 py-2 whitespace-nowrap text-center border border-[#1F65FF] rounded-md text-[13px] font-medium text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] cursor-pointer">Download sample</button>
+          <button type="button" onClick={onContinue} className="px-2 py-2 whitespace-nowrap text-center bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-[13px] font-medium text-white cursor-pointer">I have it, choose file</button>
         </div>
       </div>
     </div>

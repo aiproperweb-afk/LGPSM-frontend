@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -35,7 +33,6 @@ interface Props {
  * background around it and the event's own text is written there, so the design keeps its background exactly.
  */
 export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
-  const cmsText = useDashboardCopy();
   const [zones, setZones] = useState<TextZone[]>([]);
   const [canvas, setCanvas] = useState<{ width: number; height: number } | null>(null);
   const [imageKey, setImageKey] = useState<string | null>(null);
@@ -121,8 +118,8 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
       <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-5xl max-h-[94vh] overflow-y-auto">
         <ModalClose onClick={() => onClose(changed)} />
         <div className="px-6 pt-5 pb-3 pr-14">
-          <h2 id="areas-title" className="text-base font-medium text-gray-900">{cmsText("whereTheEventSDetailsGoOnYour", "Where the event's details go on your design")}</h2>
-          <p className="mt-1 text-sm text-[#4B4F52]">{cmsText("dragABoxOverTheEventNameThe", "Drag a box over the event name, the date and time, the venue and the logo in your picture. Each event's own details and logo appear there in the same place, and the picture around them stays as it is.")}</p>
+          <h2 id="areas-title" className="text-base font-medium text-gray-900">Where the event&apos;s details go on your design</h2>
+          <p className="mt-1 text-sm text-[#4B4F52]">Drag a box over the event name, the date and time, the venue and the logo in your picture. Each event&apos;s own details and logo appear there in the same place, and the picture around them stays as it is.</p>
         </div>
         {notice && <p role="status" className="mx-6 mb-2 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] px-3 py-2 text-sm text-[#0F3A99]">{notice}</p>}
         <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-[minmax(0,320px)_1fr] gap-6 items-start">
@@ -151,29 +148,34 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
               {ROLES.filter((r) => dynamic || !r.wording).map((r) => (
                 <button key={r.value} type="button" disabled={zones.some((z) => z.role === r.value) || loading} onClick={() => add(r.value)} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#DDD] hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+ {r.label}</button>
               ))}
-              <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] cursor-pointer disabled:opacity-60">{busy === "detect" ? cmsText("looking", "Looking…") : cmsText("findTheWordingAgain", "Find the wording again")}</button>
+              <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] cursor-pointer disabled:opacity-60">{busy === "detect" ? "Looking…" : "Find the wording again"}</button>
             </div>
 
-            {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">{cmsText("noAreasYet", "No areas yet.") + " "}{dynamic ? cmsText("addTheEventNameTheDateAndTime", "Add the event name, the date and time and the venue, then drag each box over the wording in your picture.") : cmsText("addTheQrCodeThenDragItTo", "Add the QR code, then drag it to the place your design has for it.")}</p>}
-            <p className="text-xs text-[#6B6B6B]">{dynamic ? cmsText("eachGuestSAdditionalInformationIsOnlyAdded", "Each guest's additional information is only added if you mark a place for it: nothing else is put on top of your artwork.") : cmsText("nothingIsPutOnTopOfYourArtwork", "Nothing is put on top of your artwork except the QR code (and each guest's additional information only where you mark a place for it).")}</p>
+            {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. {dynamic ? "Add the event name, the date and time and the venue, then drag each box over the wording in your picture." : "Add the QR code, then drag it to the place your design has for it."}</p>}
+            <p className="text-xs text-[#6B6B6B]">{dynamic ? "Each guest's additional information is only added if you mark a place for it: nothing else is put on top of your artwork." : "Nothing is put on top of your artwork except the QR code (and each guest's additional information only where you mark a place for it)."}</p>
 
             {sel && selected !== null && (
               <div className="rounded-md border border-[#E0E0E0] p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-[#15191C]">{labelOf(sel.role)}</h3>
-                  <button type="button" onClick={() => remove(selected)} className="text-xs font-semibold text-[#D92D20] hover:underline cursor-pointer">{cmsText("removeThisArea", "Remove this area")}</button>
+                  <button type="button" onClick={() => remove(selected)} className="text-xs font-semibold text-[#D92D20] hover:underline cursor-pointer">Remove this area</button>
                 </div>
-                {sel.role === "logo" ? <p className="text-xs text-[#6B6B6B]">{cmsText("theEventSLogoIsShownWholeInside", "The event's logo is shown whole inside this box, in place of what the picture has there. An event with no logo keeps your picture as it is.")}</p> : sel.role === "qr" ? <p className="text-xs text-[#6B6B6B]">{sel.frame ? cmsText("theCodeSitsInYourDesignSOwn", "The code sits in your design's own QR box.") : cmsText("theCodeIsPrintedStraightOnThePicture", "The code is printed straight on the picture at this spot.")}{" " + cmsText("dragItToMoveItDragTheCorner", "Drag it to move it; drag the corner to resize it (it stays square).")}</p> : (
+                {sel.role === "logo" ? <p className="text-xs text-[#6B6B6B]">The event&apos;s logo is shown whole inside this box, in place of what the picture has there. An event with no logo keeps your picture as it is.</p> : sel.role === "qr" ? <p className="text-xs text-[#6B6B6B]">{sel.frame ? "The code sits in your design's own QR box." : "The code is printed straight on the picture at this spot."} Drag it to move it; drag the corner to resize it (it stays square).</p> : (
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="text-xs font-medium text-[#4B4F52]">{cmsText("font", "Font")}<CustomDropdown value={sel.fontFamily} onChange={(v) => update(selected, { fontFamily: v })} options={FONTS.map((f) => ({ value: f, label: f }))} ariaLabel="Font" compact />
+                  <label className="text-xs font-medium text-[#4B4F52]">Font
+                    <CustomDropdown value={sel.fontFamily} onChange={(v) => update(selected, { fontFamily: v })} options={FONTS.map((f) => ({ value: f, label: f }))} ariaLabel="Font" compact />
                   </label>
-                  <label className="text-xs font-medium text-[#4B4F52]">{cmsText("weight", "Weight")}<CustomDropdown value={String(sel.fontWeight)} onChange={(v) => update(selected, { fontWeight: Number(v) as TextZone["fontWeight"] })} options={[{ value: "400", label: "Regular" }, { value: "500", label: "Medium" }, { value: "600", label: "Semibold" }, { value: "700", label: "Bold" }]} ariaLabel="Weight" compact />
+                  <label className="text-xs font-medium text-[#4B4F52]">Weight
+                    <CustomDropdown value={String(sel.fontWeight)} onChange={(v) => update(selected, { fontWeight: Number(v) as TextZone["fontWeight"] })} options={[{ value: "400", label: "Regular" }, { value: "500", label: "Medium" }, { value: "600", label: "Semibold" }, { value: "700", label: "Bold" }]} ariaLabel="Weight" compact />
                   </label>
-                  <label className="text-xs font-medium text-[#4B4F52]">{cmsText("alignment", "Alignment")}<CustomDropdown value={sel.align} onChange={(v) => update(selected, { align: v as TextZone["align"] })} options={[{ value: "left", label: "Left" }, { value: "center", label: "Centre" }, { value: "right", label: "Right" }]} ariaLabel="Alignment" compact />
+                  <label className="text-xs font-medium text-[#4B4F52]">Alignment
+                    <CustomDropdown value={sel.align} onChange={(v) => update(selected, { align: v as TextZone["align"] })} options={[{ value: "left", label: "Left" }, { value: "center", label: "Centre" }, { value: "right", label: "Right" }]} ariaLabel="Alignment" compact />
                   </label>
-                  <label className="text-xs font-medium text-[#4B4F52]">{cmsText("linesItCanUse", "Lines it can use")}<input type="number" min={1} max={4} value={sel.lines} onChange={(e) => update(selected, { lines: Math.max(1, Math.min(4, Number(e.target.value) || 1)) })} className="mt-1 w-full h-[40px] px-3 border border-[#E0E0E0] rounded-md text-sm" />
+                  <label className="text-xs font-medium text-[#4B4F52]">Lines it can use
+                    <input type="number" min={1} max={4} value={sel.lines} onChange={(e) => update(selected, { lines: Math.max(1, Math.min(4, Number(e.target.value) || 1)) })} className="mt-1 w-full h-[40px] px-3 border border-[#E0E0E0] rounded-md text-sm" />
                   </label>
-                  <label className="text-xs font-medium text-[#4B4F52] col-span-2 flex items-center gap-3">{cmsText("textColour", "Text colour")}<input type="color" value={sel.color} onChange={(e) => update(selected, { color: e.target.value })} className="h-9 w-14 p-0.5 border border-[#E0E0E0] rounded-md cursor-pointer" aria-label={cmsText("textColour", "Text colour")} />
+                  <label className="text-xs font-medium text-[#4B4F52] col-span-2 flex items-center gap-3">Text colour
+                    <input type="color" value={sel.color} onChange={(e) => update(selected, { color: e.target.value })} className="h-9 w-14 p-0.5 border border-[#E0E0E0] rounded-md cursor-pointer" aria-label="Text colour" />
                     <span className="text-xs text-[#6B6B6B]">{sel.color.toUpperCase()}</span>
                   </label>
                 </div>)}
@@ -182,8 +184,8 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
 
             <PopupMessage message={error} onClose={() => setError(null)} />
             <div className="flex justify-end gap-3 pt-1">
-              <button type="button" onClick={() => onClose(changed)} disabled={busy !== null} className="px-5 py-2.5 border border-[#DDD] rounded-md text-sm font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-60">{cmsText("close", "Close")}</button>
-              <button type="button" onClick={save} disabled={busy !== null || loading} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60">{busy === "save" ? cmsText("saving2", "Saving…") : cmsText("saveAreas", "Save areas")}</button>
+              <button type="button" onClick={() => onClose(changed)} disabled={busy !== null} className="px-5 py-2.5 border border-[#DDD] rounded-md text-sm font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-60">Close</button>
+              <button type="button" onClick={save} disabled={busy !== null || loading} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60">{busy === "save" ? "Saving…" : "Save areas"}</button>
             </div>
           </div>
         </div>

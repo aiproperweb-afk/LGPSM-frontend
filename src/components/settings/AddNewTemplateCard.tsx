@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import CustomDropdown from "@/components/common/CustomDropdown";
 import React, { useState } from "react";
 import CategoryFields from "@/components/categories/CategoryFields";
@@ -25,7 +23,6 @@ interface AddNewTemplateCardProps {
 }
 
 export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNewTemplateCardProps) {
-  const cmsText = useDashboardCopy();
   const [name, setName] = useState("");
   const [cat, setCat] = useState({ categoryId: "", subcategoryId: "" });
   const [imageKey, setImageKey] = useState<string | null>(null);
@@ -66,17 +63,18 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
   return (
     // Figma 2029:1828: name, category and subcategory share one row; the upload box sits under them, then Publish and the button
     <section className="bg-white rounded-lg border border-[#E0E0E0] p-5 sm:p-7">
-      <h2 className="text-[22px] font-medium text-[#15191C] mb-5">{cmsText("addNewTemplate", "Add New Template")}</h2>
+      <h2 className="text-[22px] font-medium text-[#15191C] mb-5">Add New Template</h2>
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-5">
           <div className="min-w-0">
-            <label htmlFor="new-template-name" className={labelCls}>{cmsText("templateName2", "Template Name")}<span className="text-red-500 ml-0.5">*</span>
+            <label htmlFor="new-template-name" className={labelCls}>
+              Template Name<span className="text-red-500 ml-0.5">*</span>
             </label>
             <input
               id="new-template-name"
               type="text"
               maxLength={100}
-              placeholder={cmsText("type", "Type")}
+              placeholder="Type"
               value={name}
               onChange={(e) => setName(e.target.value)}
               aria-invalid={!!shown.name}
@@ -111,14 +109,15 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           </div>
           {/* Not in the Figma frame, but every template needs one: it fills the empty space beside the upload box */}
           <div className="min-w-0">
-            <span className={labelCls}>{cmsText("invitationCardDesign", "Invitation Card Design")}<span className="text-red-500 ml-0.5">*</span>
+            <span className={labelCls}>
+              Invitation Card Design<span className="text-red-500 ml-0.5">*</span>
             </span>
             <CustomDropdown ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
-            <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("theLayoutGeneratedForEachInviteeSPdf", "The layout generated for each invitee's PDF/QR card — separate from the preview image.")}</p>
+            <p className="mt-1 text-xs text-[#6B6B6B]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span id="new-template-publish" className="text-sm font-medium text-gray-900">{cmsText("publish", "Publish")}</span>
+          <span id="new-template-publish" className="text-sm font-medium text-gray-900">Publish</span>
           <button
             type="button"
             role="switch"
@@ -129,14 +128,14 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           >
             <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${isPublished ? "translate-x-[26px]" : "translate-x-0"}`} />
           </button>
-          <span className="text-xs text-[#6B6B6B]">{isPublished ? cmsText("organizersCanPickIt", "Organizers can pick it") : cmsText("savedAsDraftHiddenWhenChoosingATemplate", "Saved as draft: hidden when choosing a template")}</span>
+          <span className="text-xs text-[#6B6B6B]">{isPublished ? "Organizers can pick it" : "Saved as draft: hidden when choosing a template"}</span>
         </div>
         <button
           type="submit"
           disabled={submitting || uploading}
           className="px-6 py-[11px] bg-[#1F65FF] text-white text-base font-semibold rounded-lg hover:bg-[#1A56DB] disabled:opacity-60 cursor-pointer"
         >
-          {submitting ? cmsText("adding", "Adding...") : cmsText("addTemplate", "Add Template")}
+          {submitting ? "Adding..." : "Add Template"}
         </button>
       </form>
     </section>

@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import Image from "next/image";
 import PopupMessage from "@/components/common/PopupMessage";
 import React, { useEffect, useRef, useState } from "react";
@@ -24,7 +22,6 @@ interface LogoCropDialogProps {
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCropDialogProps) {
-  const cmsText = useDashboardCopy();
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
@@ -140,8 +137,8 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logo-crop-title" onClick={processing ? undefined : onClose}>
       <div className="bg-white rounded-lg p-5 sm:p-6 w-full max-w-xl space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
         <div>
-          <h3 id="logo-crop-title" className="text-base font-medium text-[#15191C]">{cmsText("editAndCropLogo", "Edit and crop logo")}</h3>
-          <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("dragToRepositionThenZoomToFitThe", "Drag to reposition, then zoom to fit the 240 × 50 logo area.")}</p>
+          <h3 id="logo-crop-title" className="text-base font-medium text-[#15191C]">Edit and crop logo</h3>
+          <p className="mt-1 text-xs text-[#6B6B6B]">Drag to reposition, then zoom to fit the 240 × 50 logo area.</p>
         </div>
 
         <div
@@ -184,7 +181,9 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
           )}
         </div>
 
-        <label className="block text-xs font-medium text-[#15191C]" htmlFor="logo-crop-zoom">{cmsText("zoom", "Zoom")}</label>
+        <label className="block text-xs font-medium text-[#15191C]" htmlFor="logo-crop-zoom">
+          Zoom
+        </label>
         <input
           id="logo-crop-zoom"
           type="range"
@@ -199,9 +198,11 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
         <PopupMessage message={error} />
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={processing} className="px-4 py-2 border border-[#D2D2D2] rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50">{cmsText("cancel2", "Cancel")}</button>
+          <button type="button" onClick={onClose} disabled={processing} className="px-4 py-2 border border-[#D2D2D2] rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50">
+            Cancel
+          </button>
           <button type="button" onClick={handleCrop} disabled={!ready || processing} className="px-4 py-2 rounded-md bg-[#1F65FF] hover:bg-[#1A56DB] text-sm font-semibold text-white disabled:opacity-50">
-            {processing ? cmsText("uploading", "Uploading…") : cmsText("cropAndUpload", "Crop and upload")}
+            {processing ? "Uploading…" : "Crop and upload"}
           </button>
         </div>
       </div>

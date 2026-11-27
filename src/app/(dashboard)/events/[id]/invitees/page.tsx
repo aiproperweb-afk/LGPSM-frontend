@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import ModalClose from "@/components/common/ModalClose";
 import { eventCanIssuePasses, isEventOver } from "@/utils/eventUtils";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
@@ -108,7 +106,6 @@ function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus:
 
 // "⋯" row menu (Figma 217:20587: dark panel with a pointer). Edit and Resend as designed; card preview and remove kept.
 function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; onEdit?: () => void; onResend?: () => void; onRemove?: () => void }) {
-  const cmsText = useDashboardCopy();
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -141,9 +138,9 @@ function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; on
         <div ref={menuRef} style={{ position: "fixed", ...position, width: MENU_WIDTH }} className="z-[9999] flex flex-col items-center">
           <Icon name="events/menu-arrow" width={16} height={8} />
           <div className="w-full bg-[#15191C] rounded-xl px-4 py-3 flex flex-col gap-[3px]" role="menu">
-            {onEdit && <button type="button" role="menuitem" onClick={run(onEdit)} className={item}><Icon name="events/edit" width={16} height={16} />{cmsText("edit", "Edit")}</button>}
-            {onResend && <button type="button" role="menuitem" onClick={run(onResend)} className={item}><Icon name="events/send" width={16} height={16} />{cmsText("resendInvitation", "Resend Invitation")}</button>}
-            {onRemove && <button type="button" role="menuitem" onClick={run(onRemove)} className={`${base} text-rose-300 hover:text-rose-200`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>{cmsText("remove", "Remove")}</button>}
+            {onEdit && <button type="button" role="menuitem" onClick={run(onEdit)} className={item}><Icon name="events/edit" width={16} height={16} />Edit</button>}
+            {onResend && <button type="button" role="menuitem" onClick={run(onResend)} className={item}><Icon name="events/send" width={16} height={16} />Resend Invitation</button>}
+            {onRemove && <button type="button" role="menuitem" onClick={run(onRemove)} className={`${base} text-rose-300 hover:text-rose-200`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>Remove</button>}
           </div>
         </div>,
         document.body
@@ -158,7 +155,6 @@ function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disable
 }
 
 export default function InviteesManagementPage() {
-  const cmsText = useDashboardCopy();
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -835,7 +831,7 @@ export default function InviteesManagementPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title={user?.role === "ORGANIZER" ? cmsText("inviteesManagement", "Invitees Management") : sidebarFlow ? cmsText("addInvitees", "Add Invitees") : cmsText("event", "Event")} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} />
+      <PageHeader title={user?.role === "ORGANIZER" ? "Invitees Management" : sidebarFlow ? "Add Invitees" : "Event"} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} />
       <div className="px-4 sm:px-6 py-4 sm:py-6 w-full space-y-5 pb-24">
         {!sidebarFlow && eventId && <EventHeader eventId={eventId} />}
         {!sidebarFlow && eventId && <EventSubNav eventId={eventId} activeTab="invitees" inviteesCount={loading ? undefined : invitees.length} />}
@@ -847,48 +843,52 @@ export default function InviteesManagementPage() {
           <>
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex flex-[1_1_300px] items-center gap-2.5 min-w-0">
-                <label htmlFor="invitee-search-empty" className="text-[17px] font-medium text-black shrink-0">{cmsText("invitees", "Invitees")}</label>
+                <label htmlFor="invitee-search-empty" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
                   <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
-                  <input id="invitee-search-empty" type="search" value="" readOnly disabled placeholder={cmsText("searchInvitees", "Search invitees")} className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium placeholder:text-[#6B6B6B] cursor-not-allowed" />
+                  <input id="invitee-search-empty" type="search" value="" readOnly disabled placeholder="Search invitees" className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium placeholder:text-[#6B6B6B] cursor-not-allowed" />
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2 min-w-0 max-w-full ml-auto">
                 <PlainSelect
                   ariaLabel="Select event"
                   value=""
-                  placeholder={cmsText("selectEvent", "Select Event")}
+                  placeholder="Select Event"
                   onChange={(v) => router.replace(`/events/select/invitees?from=sidebar${v ? `&event=${v}` : ""}`)}
                   options={eventsOptions}
                 />
-                <PlainSelect className="!w-[170px] 2xl:!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder={cmsText("selectSession", "Select Session")} onChange={() => {}} options={[]} disabled />
+                <PlainSelect className="!w-[170px] 2xl:!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
                 <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer">
-                  <Icon name="events/add-white" width={24} height={24} />{cmsText("addInvitees", "Add Invitees")}</button>
+                  <Icon name="events/add-white" width={24} height={24} />
+                  Add Invitees
+                </button>
                 <button type="button" disabled className={primaryOutline}>
-                  <ButtonIcon name="send" />{cmsText("sendInvitation", "Send Invitation")}</button>
+                  <ButtonIcon name="send" />
+                  Send Invitation
+                </button>
               </div>
             </div>
             <div className="py-[110px] flex flex-col items-center text-center gap-4">
               <svg className="w-20 h-20 text-[#BDBDBD]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
-              <p className="max-w-[300px] text-base text-[#4B4F52]">{cmsText("selectAnEventToCheckItsInviteeList", "Select an event to check its invitee list.")}</p>
-              <button type="button" onClick={() => setPickerOpen(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer">{cmsText("selectEvent", "Select Event")}</button>
+              <p className="max-w-[300px] text-base text-[#4B4F52]">Select an event to check its invitee list.</p>
+              <button type="button" onClick={() => setPickerOpen(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer">Select Event</button>
             </div>
             {pickerOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPickerOpen(false)}>
-                <div role="dialog" aria-modal="true" aria-label={cmsText("selectAnEvent", "Select an event")} className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div role="dialog" aria-modal="true" aria-label="Select an event" className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
                   <ModalClose onClick={() => setPickerOpen(false)} />
-                  <h2 className="pr-8 text-base font-semibold text-[#15191C]">{cmsText("selectAnEvent", "Select an event")}</h2>
-                  <p className="mt-1 text-xs text-[#6B6B6B]">{isAdmin ? cmsText("everyEventOnThePlatform", "Every event on the platform.") : cmsText("yourEvents", "Your events.")}{" " + cmsText("pickOneToSeeItsInviteesOrAdd", "Pick one to see its invitees or add some.")}</p>
-                  <input type="search" autoFocus value={pickerSearch} onChange={(e) => setPickerSearch(e.target.value)} placeholder={cmsText("searchEvents", "Search events")} className="mt-4 w-full h-[42px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs focus:outline-none focus:border-black" />
+                  <h2 className="pr-8 text-base font-semibold text-[#15191C]">Select an event</h2>
+                  <p className="mt-1 text-xs text-[#6B6B6B]">{isAdmin ? "Every event on the platform." : "Your events."} Pick one to see its invitees or add some.</p>
+                  <input type="search" autoFocus value={pickerSearch} onChange={(e) => setPickerSearch(e.target.value)} placeholder="Search events" className="mt-4 w-full h-[42px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs focus:outline-none focus:border-black" />
                   <ul className="mt-3 max-h-[50vh] overflow-y-auto divide-y divide-[#EEE] border border-[#EEE] rounded-md">
                     {eventsOptions.filter((o) => o.label.toLowerCase().includes(pickerSearch.trim().toLowerCase())).map((o) => (
                       <li key={o.value}>
                         <button type="button" onClick={() => { setPickerOpen(false); router.replace(`/events/select/invitees?from=sidebar&event=${o.value}`); }} className="w-full text-left px-4 py-3 text-sm text-[#15191C] hover:bg-[#EAF1FF] cursor-pointer break-words">{o.label}</button>
                       </li>
                     ))}
-                    {eventsOptions.length === 0 && <li className="px-4 py-6 text-center text-xs text-[#6B6B6B]">{cmsText("noEventsYetCreateOneFirst", "No events yet. Create one first.")}</li>}
+                    {eventsOptions.length === 0 && <li className="px-4 py-6 text-center text-xs text-[#6B6B6B]">No events yet. Create one first.</li>}
                   </ul>
                 </div>
               </div>
@@ -897,7 +897,7 @@ export default function InviteesManagementPage() {
         ) : loadError ? (
           <div role="alert" className="py-12 text-center space-y-3">
             <p className="text-sm text-rose-600 break-words">{loadError}</p>
-            <button type="button" onClick={load} className="text-sm font-medium underline cursor-pointer">{cmsText("retry", "Retry")}</button>
+            <button type="button" onClick={load} className="text-sm font-medium underline cursor-pointer">Retry</button>
           </div>
         ) : (
           <>
@@ -906,7 +906,7 @@ export default function InviteesManagementPage() {
                 once everyone has been invited */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex flex-[1_1_300px] items-center gap-2.5 min-w-0">
-                <label htmlFor="invitee-search" className="text-[17px] font-medium text-black shrink-0">{cmsText("invitees", "Invitees")}</label>
+                <label htmlFor="invitee-search" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
                   <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                   <input
@@ -914,7 +914,7 @@ export default function InviteesManagementPage() {
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder={cmsText("searchInvitees", "Search invitees")}
+                    placeholder="Search invitees"
                     className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
                   />
                 </div>
@@ -941,11 +941,15 @@ export default function InviteesManagementPage() {
                 )}
                 <PlainSelect className="!w-[170px] 2xl:!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <button type="button" onClick={() => setFiltersOpen(true)} aria-label={`Filter and sorting${activeFilterCount(filtersInForce) ? ` (${activeFilterCount(filtersInForce)} active)` : ""}`} className="relative inline-flex items-center justify-center gap-2 h-[46px] px-4 2xl:px-6 bg-white border border-[#1F65FF] rounded-lg text-base font-semibold text-[#1F65FF] hover:bg-[#EEF3FF] cursor-pointer">
-                  <Icon name="events/inv-filter-button" width={22} height={13} />{cmsText("filter", "Filter")}{activeFilterCount(filtersInForce) > 0 && <span className="absolute -top-2 -right-2 size-5 rounded-full bg-[#1F65FF] text-white text-[11px] flex items-center justify-center">{activeFilterCount(filtersInForce)}</span>}
+                  <Icon name="events/inv-filter-button" width={22} height={13} />
+                  Filter
+                  {activeFilterCount(filtersInForce) > 0 && <span className="absolute -top-2 -right-2 size-5 rounded-full bg-[#1F65FF] text-white text-[11px] flex items-center justify-center">{activeFilterCount(filtersInForce)}</span>}
                 </button>
                 {!historical && (
                 <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-4 2xl:px-6 py-[11px] whitespace-nowrap bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
-                  <Icon name="events/add-white" width={24} height={24} />{cmsText("addInvitees", "Add Invitees")}</button>
+                  <Icon name="events/add-white" width={24} height={24} />
+                  Add Invitees
+                </button>
                 )}
               </div>
             </div>
@@ -953,82 +957,88 @@ export default function InviteesManagementPage() {
             {owed?.owed && (
               <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm ${owed.payBy && new Date(owed.payBy).getTime() < pageOpenedAt ? "border-[#FECDCA] bg-[#FEF3F2] text-[#B42318]" : "border-[#FDE68A] bg-[#FFFBEB] text-[#854D0E]"}`}>
                 <span className="min-w-0 break-words">
-                  <b>{owed.organizerName || "The organizer"}</b>{" " + cmsText("owes", "owes") + " "}{formatMoney(owed.owed.total)}{" " + cmsText("for", "for") + " "}{owed.owed.invitees}{" " + cmsText("whatsappInvitation", "WhatsApp invitation")}{owed.owed.invitees === 1 ? "" : "s"}{" " + cmsText("payLater", "(Pay Later).")}{owed.payBy ? ` ${new Date(owed.payBy).getTime() < pageOpenedAt ? "Overdue since" : "Due by"} ${formatDeadline(owed.payBy)}.` : ""}
+                  <b>{owed.organizerName || "The organizer"}</b> owes {formatMoney(owed.owed.total)} for {owed.owed.invitees} WhatsApp invitation{owed.owed.invitees === 1 ? "" : "s"} (Pay Later).
+                  {owed.payBy ? ` ${new Date(owed.payBy).getTime() < pageOpenedAt ? "Overdue since" : "Due by"} ${formatDeadline(owed.payBy)}.` : ""}
                 </span>
-                <button type="button" onClick={() => { setBillError(null); setRecordOpen(true); }} className="shrink-0 rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#1F65FF] border border-[#1F65FF] hover:bg-[#EEF4FF] cursor-pointer">{cmsText("markSettled", "Mark settled")}</button>
+                <button type="button" onClick={() => { setBillError(null); setRecordOpen(true); }} className="shrink-0 rounded-md bg-white px-4 py-2 text-sm font-semibold text-[#1F65FF] border border-[#1F65FF] hover:bg-[#EEF4FF] cursor-pointer">Mark settled</button>
               </div>
             )}
 
             {/* The list's tools (Figma 195:1154): Select All and Delete on the left; Action menu, the main button for this event's invitation
                 type and the guest count on the right */}
-            <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label={cmsText("uploadInviteeExcelFile", "Upload invitee Excel file")} className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
+            <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label="Upload invitee Excel file" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#4B4F52]">
               <div className="flex flex-wrap items-center gap-4">
                 {invitees.length > 0 && (
                   <label className="inline-flex items-center gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
-                      aria-label={cmsText("selectAllVisibleInvitees", "Select all visible invitees")}
+                      aria-label="Select all visible invitees"
                       checked={allVisibleSelected}
                       onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
                       className="size-4 cursor-pointer check-green"
-                    />{cmsText("selectAll", "Select All")}</label>
+                    />
+                    Select All
+                  </label>
                 )}
                 {!historical && selectedIds.length > 0 && (
                   <button type="button" onClick={() => setBulkOpen(true)} disabled={bulkDeleting || busy !== null} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 cursor-pointer disabled:opacity-50">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
-                    {bulkDeleting ? cmsText("deleting", "Deleting…") : `Delete selected (${selectedIds.length})`}
+                    {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.length})`}
                   </button>
                 )}
               </div>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <InviteeActionMenu items={actionItems} />
                 {digitalInvites && (notInvited.length > 0 || !lifecycleStarted ? (
-                  <button type="button" onClick={() => startAction(printableCards ? "both" : "send")} disabled={!canIssue || busy !== null || sendTargets.length === 0} title={!canIssue ? cmsText("thisEventIsOverSoInvitationsCanNo", "This event is over, so invitations can no longer be sent") : sendTargets.length ? undefined : cmsText("tickTheGuestsToInviteOrFilterBy", "Tick the guests to invite, or filter by Not Sent")} className={primaryFilled}>
+                  <button type="button" onClick={() => startAction(printableCards ? "both" : "send")} disabled={!canIssue || busy !== null || sendTargets.length === 0} title={!canIssue ? "This event is over, so invitations can no longer be sent" : sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={primaryFilled}>
                     {busy === "send" ? <ButtonIcon name="spinner" /> : <Icon name="events/inv-send-white" width={16} height={16} />}
-                    {busy === "send" ? cmsText("sending", "Sending...") : `Send Invitation${sendTargets.length ? ` (${sendTargets.length})` : ""}`}
+                    {busy === "send" ? "Sending..." : `Send Invitation${sendTargets.length ? ` (${sendTargets.length})` : ""}`}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => askResend()}
                     disabled={!canIssue || busy !== null || resendTargets.length === 0}
-                    title={!canIssue ? cmsText("thisEventIsOverSoInvitationsCanNo", "This event is over, so invitations can no longer be sent") : resendTargets.length ? undefined : cmsText("onlyGuestsWhoseInvitationFailedToSendCan", "Only guests whose invitation failed to send can be resent. Select one of them.")}
+                    title={!canIssue ? "This event is over, so invitations can no longer be sent" : resendTargets.length ? undefined : "Only guests whose invitation failed to send can be resent. Select one of them."}
                     className={primaryFilled}
                   >
                     <ButtonIcon name={busy === "resend" ? "spinner" : "resend"} />
-                    {busy === "resend" ? cmsText("resending", "Resending...") : `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`}
+                    {busy === "resend" ? "Resending..." : `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`}
                   </button>
                 ))}
                 {printableCards && (
-                  <button type="button" onClick={() => startAction("download")} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? cmsText("thisEventIsOverSoCardsCanNo", "This event is over, so cards can no longer be produced") : selectedIds.length === 0 ? cmsText("tickTheGuestsToMakeCardsFor", "Tick the guests to make cards for") : invitationType === "BOTH" ? cmsText("downloadThePrintableCardsOfTheTickedGuests", "Download the printable cards of the ticked guests (their invitations are sent first)") : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={primaryFilled}>
-                    <Icon name="events/inv-download-white" width={16} height={16} />{cmsText("downloadCards", "Download Cards")}</button>
+                  <button type="button" onClick={() => startAction("download")} disabled={!canIssue || busy !== null || selectedIds.length === 0} title={!canIssue ? "This event is over, so cards can no longer be produced" : selectedIds.length === 0 ? "Tick the guests to make cards for" : invitationType === "BOTH" ? "Download the printable cards of the ticked guests (their invitations are sent first)" : `Download printable cards for the ${selectedIds.length} ticked guest(s)`} className={primaryFilled}>
+                    <Icon name="events/inv-download-white" width={16} height={16} />
+                    Download Cards
+                  </button>
                 )}
                 {invitees.length > 0 && (
                   <span>
-                    {invitees.length}{" " + cmsText("invitee", "invitee")}{invitees.length === 1 ? "" : "s"}
-                    {lifecycleStarted && <> · {invitees.length - notInvited.length}{" " + cmsText("invited", "invited ·") + " "}{notInvited.length}{" " + cmsText("notYetInvited", "not yet invited")}</>}
-                    {selectedIds.length > 0 && <> · {selectedIds.length}{" " + cmsText("selected", "selected")}</>}
+                    {invitees.length} invitee{invitees.length === 1 ? "" : "s"}
+                    {lifecycleStarted && <> · {invitees.length - notInvited.length} invited · {notInvited.length} not yet invited</>}
+                    {selectedIds.length > 0 && <> · {selectedIds.length} selected</>}
                   </span>
                 )}
               </div>
             </div>
 
             {filterSession && selectedIds.length > 0 && ownLists.some((s) => s._id === filterSession._id) && (
-              <button type="button" onClick={handleGrantAccess} disabled={busy !== null} className={`${btn} bg-[#262A2D] text-white hover:bg-black`}>{cmsText("giveSelectedAccessTo", "Give selected access to") + " "}{filterSession.name}
+              <button type="button" onClick={handleGrantAccess} disabled={busy !== null} className={`${btn} bg-[#262A2D] text-white hover:bg-black`}>
+                Give selected access to {filterSession.name}
               </button>
             )}
 
             {loading ? (
-              <TableSkeleton rows={6} cols={7} label={cmsText("loadingInvitees", "Loading invitees")} />
+              <TableSkeleton rows={6} cols={7} label="Loading invitees" />
             ) : invitees.length === 0 ? (
               // Figma 217:17674: grey people mark, 16px message and a light "Add Invitees" button, centred in the page
               <div className="py-[120px] flex flex-col items-center text-center gap-4">
                 <svg className="w-20 h-20 text-[#BDBDBD]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
-                <p className="max-w-[300px] text-base text-[#4B4F52]">{cmsText("noInviteesYetAddInviteesManuallyOrUpload", "No invitees yet. Add invitees manually or upload an Excel sheet to get started.")}</p>
-                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">{cmsText("addInvitees", "Add Invitees")}</button>
+                <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -1038,17 +1048,17 @@ export default function InviteesManagementPage() {
                 <table className="w-full text-left text-sm min-w-[760px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="relative h-[46px] px-2.5 w-10"><span className="sr-only">{cmsText("select", "Select")}</span></th>
-                      <th className="h-[46px] px-2.5 font-medium">{cmsText("name", "Name")}</th>
-                      <th className="h-[46px] px-2.5 font-medium">{cmsText("email", "Email")}</th>
-                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">{cmsText("phoneNumber", "Phone Number")}</th>
-                      {showCompany && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">{cmsText("companyName", "Company Name")}</th>}
-                      <th className="h-[46px] px-2.5 font-medium">{cmsText("status", "Status")}</th>
-                      {isAdmin && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">{cmsText("rsvpStatus", "RSVP Status")}</th>}
-                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">{cmsText("accessPass", "Access Pass")}</th>
+                      <th className="relative h-[46px] px-2.5 w-10"><span className="sr-only">Select</span></th>
+                      <th className="h-[46px] px-2.5 font-medium">Name</th>
+                      <th className="h-[46px] px-2.5 font-medium">Email</th>
+                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Phone Number</th>
+                      {showCompany && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Company Name</th>}
+                      <th className="h-[46px] px-2.5 font-medium">Status</th>
+                      {isAdmin && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">RSVP Status</th>}
+                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Access Pass</th>
                       {dietaryTitles.map((title) => <th key={title} className="h-[46px] px-2.5 font-medium text-center min-w-[96px] max-w-[130px] leading-tight break-words">{title}</th>)}
                       {shownSessions.map((sess) => <th key={sess._id} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{sess.name.replace(/\s+session$/i, "")}</th>)}
-                      <th className="h-[46px] px-2.5 font-medium text-right sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">{cmsText("action", "Action")}</th>
+                      <th className="h-[46px] px-2.5 font-medium text-right sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#D3D3D3] text-[#15191C] border-b border-[#D3D3D3]">
@@ -1082,7 +1092,7 @@ export default function InviteesManagementPage() {
                           </td>
                           {isAdmin && (
                             <td className="py-3 px-2.5">
-                              {!rsvpEnabled ? <span className="text-[#6B6B6B]" aria-label={cmsText("rsvpNotRequested", "RSVP not requested")}>--</span>
+                              {!rsvpEnabled ? <span className="text-[#6B6B6B]" aria-label="RSVP not requested">--</span>
                                 : i.rsvpStatus === "ACCEPTED" ? pill("bg-[#15803D] text-white", "Accepted")
                                 : i.rsvpStatus === "DECLINED" ? pill("bg-[#FFE9C0] text-[#6F5600]", "Declined")
                                 : pill("bg-[#FFF3C4] text-[#B38A00]", "Pending")}
@@ -1120,19 +1130,19 @@ export default function InviteesManagementPage() {
                       );
                     })}
                     {visible.length === 0 && (
-                      <tr><td colSpan={10 + shownSessions.length + dietaryTitles.length} className="py-10 text-center text-[#6B6B6B]">{cmsText("noInviteesMatchTheCurrentFilters", "No invitees match the current filters.")}</td></tr>
+                      <tr><td colSpan={10 + shownSessions.length + dietaryTitles.length} className="py-10 text-center text-[#6B6B6B]">No invitees match the current filters.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E0E0E0] px-3 py-2.5 text-xs text-[#4B4F52]">
                   <span>
-                    {filteredInvitees.length === 0 ? cmsText("noMatchingInvitees", "No matching invitees") : `Showing ${(inviteePage - 1) * INVITEE_PAGE_SIZE + 1}–${Math.min(inviteePage * INVITEE_PAGE_SIZE, filteredInvitees.length)} of ${filteredInvitees.length}`}
+                    {filteredInvitees.length === 0 ? "No matching invitees" : `Showing ${(inviteePage - 1) * INVITEE_PAGE_SIZE + 1}–${Math.min(inviteePage * INVITEE_PAGE_SIZE, filteredInvitees.length)} of ${filteredInvitees.length}`}
                   </span>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setInviteePage((page) => Math.max(1, page - 1))} disabled={inviteePage <= 1} className="rounded border border-[#E0E0E0] px-2.5 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">{cmsText("previous", "Previous")}</button>
-                    <span>{cmsText("page", "Page") + " "}{inviteePage}{" " + cmsText("of", "of") + " "}{inviteePageCount}</span>
-                    <button type="button" onClick={() => setInviteePage((page) => Math.min(inviteePageCount, page + 1))} disabled={inviteePage >= inviteePageCount} className="rounded border border-[#E0E0E0] px-2.5 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">{cmsText("next", "Next")}</button>
+                    <button type="button" onClick={() => setInviteePage((page) => Math.max(1, page - 1))} disabled={inviteePage <= 1} className="rounded border border-[#E0E0E0] px-2.5 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                    <span>Page {inviteePage} of {inviteePageCount}</span>
+                    <button type="button" onClick={() => setInviteePage((page) => Math.min(inviteePageCount, page + 1))} disabled={inviteePage >= inviteePageCount} className="rounded border border-[#E0E0E0] px-2.5 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
                   </div>
                 </div>
               </div>
@@ -1162,7 +1172,7 @@ export default function InviteesManagementPage() {
       )}
       {upload && (
         <InviteesPreviewModal
-          title={cmsText("inviteesListPreview", "Invitees List Preview")}
+          title="Invitees List Preview"
           subtitle={`${upload.file.name} · Invitees who are already on the list or already invited are never imported twice.`}
           rows={upload.rows}
           showCompany={fieldConfig.company || upload.rows.some((r) => r.company)}
@@ -1206,17 +1216,18 @@ export default function InviteesManagementPage() {
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="send-first-title">
           <div className="w-full max-w-[460px] bg-white border border-[#E5E5E5] rounded-lg overflow-hidden">
             <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
-              <h2 id="send-first-title" className="flex-1 text-base font-medium text-[#15191C]">{cmsText("sendTheInvitationsFirst", "Send the invitations first")}</h2>
-              <button type="button" onClick={() => setNeedSendFirst(0)} aria-label={cmsText("close", "Close")} className="shrink-0 cursor-pointer"><Icon name="events/inv-panel-close" width={16} height={16} /></button>
+              <h2 id="send-first-title" className="flex-1 text-base font-medium text-[#15191C]">Send the invitations first</h2>
+              <button type="button" onClick={() => setNeedSendFirst(0)} aria-label="Close" className="shrink-0 cursor-pointer"><Icon name="events/inv-panel-close" width={16} height={16} /></button>
             </div>
             <div className="flex flex-col items-center gap-4 px-6 py-8 text-center">
               <Icon name="events/warning" width={34} height={32} />
               <p className="text-sm text-[#15191C]/80 max-w-[360px]">
-                {needSendFirst === 1 ? cmsText("text1OfTheSelectedGuestsHas", "1 of the selected guests has") : `${needSendFirst} of the selected guests have`}{" " + cmsText("notBeenSentAnInvitationYetOnThis", "not been sent an invitation yet. On this event the invitation goes out first, then the card is made. Send the invitations to the selected guests, then download their cards.")}</p>
+                {needSendFirst === 1 ? "1 of the selected guests has" : `${needSendFirst} of the selected guests have`} not been sent an invitation yet. On this event the invitation goes out first, then the card is made. Send the invitations to the selected guests, then download their cards.
+              </p>
             </div>
             <div className="flex items-center justify-end gap-3 p-4 border-t border-[#E5E5E5]">
-              <button type="button" onClick={() => setNeedSendFirst(0)} className="px-6 py-[11px] bg-white border border-[#DDD] rounded-lg text-base font-semibold text-black cursor-pointer">{cmsText("close", "Close")}</button>
-              <button type="button" onClick={() => { setNeedSendFirst(0); startAction("send"); }} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">{cmsText("sendInvitations", "Send invitations")}</button>
+              <button type="button" onClick={() => setNeedSendFirst(0)} className="px-6 py-[11px] bg-white border border-[#DDD] rounded-lg text-base font-semibold text-black cursor-pointer">Close</button>
+              <button type="button" onClick={() => { setNeedSendFirst(0); startAction("send"); }} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Send invitations</button>
             </div>
           </div>
         </div>
@@ -1301,7 +1312,7 @@ export default function InviteesManagementPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="history-title">
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
             <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-              <h2 id="history-title" className="text-base font-medium text-gray-900">{cmsText("deliveryHistory", "Delivery History")}</h2>
+              <h2 id="history-title" className="text-base font-medium text-gray-900">Delivery History</h2>
               <div className="flex items-center gap-3">
                 <button
                   type="button"
@@ -1310,15 +1321,15 @@ export default function InviteesManagementPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ButtonIcon name={busy === "clear" ? "spinner" : "trash"} className="w-3.5 h-3.5" />
-                  {busy === "clear" ? cmsText("clearing", "Clearing...") : cmsText("clearHistory", "Clear history")}
+                  {busy === "clear" ? "Clearing..." : "Clear history"}
                 </button>
-                <button type="button" onClick={() => setShowHistory(false)} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 cursor-pointer">✕</button>
+                <button type="button" onClick={() => setShowHistory(false)} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">✕</button>
               </div>
             </div>
             <div className="p-6 overflow-auto flex-1">
               <table className="w-full text-left text-sm min-w-[560px]">
                 <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
-                  <tr><th className="py-2 pr-3 font-medium">{cmsText("invitee2", "Invitee")}</th><th className="py-2 pr-3 font-medium">{cmsText("channel", "Channel")}</th><th className="py-2 pr-3 font-medium">{cmsText("status", "Status")}</th><th className="py-2 pr-3 font-medium">{cmsText("reason", "Reason")}</th><th className="py-2 font-medium">{cmsText("when", "When")}</th></tr>
+                  <tr><th className="py-2 pr-3 font-medium">Invitee</th><th className="py-2 pr-3 font-medium">Channel</th><th className="py-2 pr-3 font-medium">Status</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 font-medium">When</th></tr>
                 </thead>
                 <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                   {visibleHistory.map((h) => (
@@ -1335,21 +1346,21 @@ export default function InviteesManagementPage() {
 
               {/* Access Pass History: credential events only. Message delivery states above and pass states here are never mixed. */}
               <section aria-labelledby="pass-history-title" className="mt-8 pt-6 border-t border-[#E5E5E5]">
-                <h3 id="pass-history-title" className="text-base font-medium text-gray-900">{cmsText("accessPassHistory", "Access Pass History")}</h3>
-                <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("passesIssuedReplacedAndRevokedWithTheReason", "Passes issued, replaced and revoked, with the reason and what happened to the message sent to the guest. “Accepted by the provider” is not proof of delivery.")}</p>
+                <h3 id="pass-history-title" className="text-base font-medium text-gray-900">Access Pass History</h3>
+                <p className="mt-1 text-xs text-[#6B6B6B]">Passes issued, replaced and revoked, with the reason and what happened to the message sent to the guest. “Accepted by the provider” is not proof of delivery.</p>
                 <PopupMessage message={passHistoryError} />
-                {!passHistory && !passHistoryError && <p className="mt-3 text-sm text-[#6B6B6B]">{cmsText("loading2", "Loading…")}</p>}
-                {passHistory && passHistory.length === 0 && <p className="mt-3 text-sm text-[#6B6B6B]">{cmsText("noAccessPassHasBeenIssuedReplacedOr", "No access pass has been issued, replaced or revoked yet.")}</p>}
+                {!passHistory && !passHistoryError && <p className="mt-3 text-sm text-[#6B6B6B]">Loading…</p>}
+                {passHistory && passHistory.length === 0 && <p className="mt-3 text-sm text-[#6B6B6B]">No access pass has been issued, replaced or revoked yet.</p>}
                 {passHistory && passHistory.length > 0 && (
                   <>
                     <table className="mt-3 w-full text-left text-sm min-w-[560px]">
-                      <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-2 pr-3 font-medium">{cmsText("guest", "Guest")}</th><th className="py-2 pr-3 font-medium">{cmsText("whatHappened", "What happened")}</th><th className="py-2 pr-3 font-medium">{cmsText("reason", "Reason")}</th><th className="py-2 pr-3 font-medium">{cmsText("messageToTheGuest", "Message to the guest")}</th><th className="py-2 font-medium">{cmsText("when", "When")}</th></tr></thead>
+                      <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">What happened</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 pr-3 font-medium">Message to the guest</th><th className="py-2 font-medium">When</th></tr></thead>
                       <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                         {passHistory.map((r) => (
                           <tr key={r._id} className="align-top">
                             <td className="py-2.5 pr-3 text-gray-900">{r.inviteeName}</td>
-                            <td className="py-2.5 pr-3">{historyTitle(r)}{passRef(r.credentialId) ? <span className="block text-xs text-[#6B6B6B]" title={cmsText("referenceOfThisPassNotItsCode", "Reference of this pass (not its code)")}>{cmsText("pass", "pass") + " "}{passRef(r.credentialId)}{r.previousCredentialId ? ` replaced ${passRef(r.previousCredentialId)}` : ""}</span> : null}{r.derived ? <span className="block text-xs text-[#6B6B6B]">{cmsText("followsFromTheEventNotAnAction", "follows from the event, not an action")}</span> : null}{r.actor ? <span className="block text-xs text-[#6B6B6B]">{cmsText("by", "by") + " "}{r.actor}</span> : null}</td>
-                            <td className="py-2.5 pr-3 text-xs break-words max-w-[200px]">{historyReason(r)}{r.note ? <span className="block text-[#6B6B6B]">{r.note}</span> : null}{r.reviewConfirmed ? <span className="block text-[#6B6B6B]">{cmsText("reviewedBeforeReplacing", "Reviewed before replacing")}</span> : null}</td>
+                            <td className="py-2.5 pr-3">{historyTitle(r)}{passRef(r.credentialId) ? <span className="block text-xs text-[#6B6B6B]" title="Reference of this pass (not its code)">pass {passRef(r.credentialId)}{r.previousCredentialId ? ` replaced ${passRef(r.previousCredentialId)}` : ""}</span> : null}{r.derived ? <span className="block text-xs text-[#6B6B6B]">follows from the event, not an action</span> : null}{r.actor ? <span className="block text-xs text-[#6B6B6B]">by {r.actor}</span> : null}</td>
+                            <td className="py-2.5 pr-3 text-xs break-words max-w-[200px]">{historyReason(r)}{r.note ? <span className="block text-[#6B6B6B]">{r.note}</span> : null}{r.reviewConfirmed ? <span className="block text-[#6B6B6B]">Reviewed before replacing</span> : null}</td>
                             <td className="py-2.5 pr-3 text-xs">
                               {[noticeText("Email", r.notice?.email), noticeText("WhatsApp", r.notice?.whatsapp)].filter(Boolean).map((t) => <span key={t} className="block">{t}</span>) }
                               {!r.notice && "—"}
@@ -1361,13 +1372,13 @@ export default function InviteesManagementPage() {
                     </table>
                     <div className="mt-4 flex flex-wrap items-start gap-4">
                       {hasUnsent(passHistory) && (
-                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? cmsText("retrying", "Retrying…") : cmsText("retryUnsentMessages", "Retry unsent messages")}</button>
+                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
                       )}
                       {hasUnknown(passHistory) && (
-                        <div role="group" aria-label={cmsText("messagesWithAnUnknownOutcome", "Messages with an unknown outcome")} className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 space-y-2 max-w-md">
-                          <p>{cmsText("forSomeMessagesTheAppDoesNotKnow", "For some messages the app does not know whether they were sent. The guest may already have received them; retrying can send a second one.")}</p>
-                          <label className="flex items-start gap-2 cursor-pointer"><input type="checkbox" checked={ackDuplicate} onChange={(e) => setAckDuplicate(e.target.checked)} className="mt-0.5 size-4 accent-rose-600" /><span>{cmsText("iUnderstandAGuestMayReceiveAMessage", "I understand a guest may receive a message twice.")}</span></label>
-                          <button type="button" onClick={() => retryPassNotices(true)} disabled={retryingNotices || !ackDuplicate} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-100 rounded-md text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">{cmsText("retryTheseAnyway", "Retry these anyway")}</button>
+                        <div role="group" aria-label="Messages with an unknown outcome" className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 space-y-2 max-w-md">
+                          <p>For some messages the app does not know whether they were sent. The guest may already have received them; retrying can send a second one.</p>
+                          <label className="flex items-start gap-2 cursor-pointer"><input type="checkbox" checked={ackDuplicate} onChange={(e) => setAckDuplicate(e.target.checked)} className="mt-0.5 size-4 accent-rose-600" /><span>I understand a guest may receive a message twice.</span></label>
+                          <button type="button" onClick={() => retryPassNotices(true)} disabled={retryingNotices || !ackDuplicate} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-100 rounded-md text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Retry these anyway</button>
                         </div>
                       )}
                     </div>

@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { eventService } from "@/services/eventService";
@@ -44,7 +42,6 @@ export default function EventSubNav({
   inviteesCount: propInviteesCount,
   assignmentsCount: propAssignmentsCount,
 }: EventSubNavProps) {
-  const cmsText = useDashboardCopy();
   const cached = countsCache.get(eventId);
   // null = not known yet: shown as a small placeholder, never as a made-up "00". A count already seen on another tab of this
   // event is shown at once.
@@ -182,7 +179,7 @@ export default function EventSubNav({
 
   const withCount = (name: string, count: number | null) => (
     <>
-      {name} ({count === null ? <span role="status" aria-label={cmsText("loadingCount", "Loading count")} className="inline-block align-middle w-4 h-3 rounded bg-gray-200 animate-pulse" /> : count.toString().padStart(2, "0")})
+      {name} ({count === null ? <span role="status" aria-label="Loading count" className="inline-block align-middle w-4 h-3 rounded bg-gray-200 animate-pulse" /> : count.toString().padStart(2, "0")})
     </>
   );
 

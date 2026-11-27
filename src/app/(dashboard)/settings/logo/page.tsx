@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useEffect, useRef, useState } from "react";
 import ModalClose from "@/components/common/ModalClose";
 import Image from "next/image";
@@ -26,7 +24,6 @@ const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
  * the media service (ORGANIZATION_LOGO), then saved on the organiser's profile with Update.
  */
 export default function LogoSettingsPage() {
-  const cmsText = useDashboardCopy();
   const { user, updateProfile } = useAuth();
   const { showAlert } = useAlert();
   const savedKey = typeof user?.profile?.logoKey === "string" ? (user.profile.logoKey as string) : null;
@@ -117,15 +114,18 @@ export default function LogoSettingsPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title={cmsText("logoSettings", "Logo Settings")} />
+      <PageHeader title="Logo Settings" />
       <div className="px-4 sm:px-6 pt-8 pb-24 w-full space-y-5">
-        <h2 className="text-base font-medium text-[#15191C]">{cmsText("organiserLogo", "Organiser Logo")}</h2>
+        <h2 className="text-base font-medium text-[#15191C]">Organiser Logo</h2>
 
-        <section className="border border-[#D2D2D2] rounded-lg px-5 pt-5 pb-[25px] flex flex-col gap-3.5" aria-label={cmsText("organiserLogo2", "Organiser logo")}>
+        <section className="border border-[#D2D2D2] rounded-lg px-5 pt-5 pb-[25px] flex flex-col gap-3.5" aria-label="Organiser logo">
           <p className="flex items-start gap-1 px-2 text-xs font-medium text-[#6B6B6B]">
             <Icon name="events/alert-grey" width={16} height={14} className="mt-px shrink-0" />
-            <span>{cmsText("thisLogoWillShowUpInTheFooter", "This logo will show up in the footer of your QR Invitation card as organizer logo.")}{" "}
-              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">{cmsText("preview", "Preview")}</button>
+            <span>
+              This logo will show up in the footer of your QR Invitation card as organizer logo.{" "}
+              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                Preview
+              </button>
               .
             </span>
           </p>
@@ -138,35 +138,38 @@ export default function LogoSettingsPage() {
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setDragOver(false); selectFile(e.dataTransfer.files?.[0]); }}
-            aria-label={shownUrl ? cmsText("replaceTheOrganiserLogo", "Replace the organiser logo") : cmsText("uploadAnOrganiserLogo", "Upload an organiser logo")}
+            aria-label={shownUrl ? "Replace the organiser logo" : "Upload an organiser logo"}
             className={`relative w-full max-w-[541px] h-[109px] rounded-lg border p-4 flex items-center justify-center cursor-pointer disabled:cursor-wait ${
               dragOver ? "border-[#1F65FF] bg-blue-50/40" : "border-[#D2D2D2] hover:bg-[#EEF3FF]"
             }`}
           >
             {uploading ? (
-              <span className="text-xs font-medium text-[#15191C]/70">{cmsText("uploading", "Uploading…")}</span>
+              <span className="text-xs font-medium text-[#15191C]/70">Uploading…</span>
             ) : shownUrl ? (
               <>
                 <span className="relative block w-[240px] h-[50px] max-w-full">
                   <Image src={shownUrl} alt="Organiser logo" fill unoptimized sizes="240px" className="object-contain" />
                 </span>
-                <span className="absolute bottom-2 text-[10px] font-medium text-[#6B6B6B]">{cmsText("clickToReplaceAndCrop", "Click to replace and crop")}</span>
+                <span className="absolute bottom-2 text-[10px] font-medium text-[#6B6B6B]">Click to replace and crop</span>
               </>
             ) : (
-              <span className="text-xs font-medium text-[#15191C]/70">{cmsText("chooseAPhotoToEditAndCropOr", "Choose a photo to edit and crop, or drag and drop it here")}</span>
+              <span className="text-xs font-medium text-[#15191C]/70">Choose a photo to edit and crop, or drag and drop it here</span>
             )}
           </button>
 
           <div className="space-y-1 text-xs font-medium">
-            <p className="text-[#6B6B6B]">{cmsText("bestImageDimension240x50OnlyJpgPngAllowed", "Best Image Dimension: 240x50. Only JPG & PNG allowed. Select or drag a photo to crop and reposition before upload.")}</p>
-            <p className="text-[#6B6B6B]">{cmsText("organizerLogo2", "Organizer Logo:")}{" "}
-              <button type="button" onClick={() => { setStaged(null); }} disabled={!shownKey || saving} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">{cmsText("resetToDefault", "Reset to default")}</button>
+            <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed. Select or drag a photo to crop and reposition before upload.</p>
+            <p className="text-[#6B6B6B]">
+              Organizer Logo:{" "}
+              <button type="button" onClick={() => { setStaged(null); }} disabled={!shownKey || saving} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+                Reset to default
+              </button>
             </p>
           </div>
 
           <div className="pt-3">
             <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#1F65FF] hover:bg-[#1A56DB] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-              {saving ? cmsText("updating2", "Updating…") : cmsText("update", "Update")}
+              {saving ? "Updating…" : "Update"}
             </button>
           </div>
         </section>
@@ -178,13 +181,13 @@ export default function LogoSettingsPage() {
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logo-preview-title" onClick={() => setPreviewOpen(false)}>
           <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative" onClick={(e) => e.stopPropagation()}>
             <ModalClose onClick={() => setPreviewOpen(false)} />
-            <h3 id="logo-preview-title" className="pr-8 text-base font-medium text-[#15191C]">{cmsText("organiserLogoPreview", "Organiser logo preview")}</h3>
+            <h3 id="logo-preview-title" className="pr-8 text-base font-medium text-[#15191C]">Organiser logo preview</h3>
             <div className="border border-[#E0E0E0] rounded-md py-6 flex justify-center bg-[#FAFAFA]">
               <span className="relative block w-[240px] h-[50px]">
                 <Image src={shownUrl} alt="Organiser logo at its 240×50 size" fill unoptimized sizes="240px" className="object-contain" />
               </span>
             </div>
-            <p className="text-xs text-[#6B6B6B]">{cmsText("shownAtThe24050SizeItIs", "Shown at the 240×50 size it is meant for.")}{dirty ? cmsText("notSavedYetSelectUpdateToKeepIt", "Not saved yet — select Update to keep it.") : ""}</p>
+            <p className="text-xs text-[#6B6B6B]">Shown at the 240×50 size it is meant for.{dirty ? " Not saved yet — select Update to keep it." : ""}</p>
           </div>
         </div>
       )}

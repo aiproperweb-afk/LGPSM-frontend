@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { useAlert } from "@/context/AlertContext";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -56,7 +54,6 @@ interface EditableSession {
 const ACCESS_LABELS: Record<string, string> = { NO_RESTRICTION: "No Restrictions", ONLY_ONCE: "Only Once" };
 
 export default function EventSessionsPage() {
-  const cmsText = useDashboardCopy();
   const params = useParams();
   const router = useRouter();
   const eventId = (params?.id as string) || "";
@@ -428,7 +425,7 @@ export default function EventSessionsPage() {
         onConfirm={() => { if (repeatAsk) { setUploadedFileName(repeatAsk.file.name); setUploadedFile(repeatAsk.file); } setRepeatAsk(null); }}
       />
       {/* Organiser frame 217:22014 says "Event Sessions"; the Super Admin frame 2114:5996 keeps "Event" */}
-      <PageHeader title={user?.role === "ADMIN" ? cmsText("event", "Event") : cmsText("eventSessions", "Event Sessions")} />
+      <PageHeader title={user?.role === "ADMIN" ? "Event" : "Event Sessions"} />
 
       {/* Page Content - Directly on page background without card container */}
       <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-8 bg-white">
@@ -444,13 +441,13 @@ export default function EventSessionsPage() {
           {/* Controls (Figma 217:22091): "Sessions" label + search, Add Session */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 lg:gap-[139px]">
             <div className="flex flex-1 items-center gap-2.5 min-w-0">
-              <label htmlFor="session-search" className="text-[17px] font-medium text-black shrink-0">{cmsText("sessions2", "Sessions")}</label>
+              <label htmlFor="session-search" className="text-[17px] font-medium text-black shrink-0">Sessions</label>
               <div className="relative flex-1 min-w-0">
                 <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   id="session-search"
                   type="search"
-                  placeholder={cmsText("searchSessions", "Search sessions")}
+                  placeholder="Search sessions"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
@@ -461,10 +458,12 @@ export default function EventSessionsPage() {
               type="button"
               onClick={openAdd}
               disabled={historical}
-              title={historical ? cmsText("thisEventCanNoLongerBeChanged", "This event can no longer be changed") : undefined}
+              title={historical ? "This event can no longer be changed" : undefined}
               className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
             >
-              <Icon name="events/add-white" width={24} height={24} />{cmsText("addSession", "Add Session")}</button>
+              <Icon name="events/add-white" width={24} height={24} />
+              Add Session
+            </button>
           </div>
 
           <ClosedEventNotice status={eventStatus} endsAt={eventEnd} />
@@ -475,12 +474,12 @@ export default function EventSessionsPage() {
               <thead>
                 <tr className="border-b border-[#D3D3D3] text-[#6B6B6B]">
                   <th className="h-[46px] p-2.5 w-[43px] font-medium">#</th>
-                  <th className="h-[46px] p-2.5 w-[270px] font-medium">{cmsText("sessionTitle", "Session Title")}</th>
-                  <th className="h-[46px] p-2.5 w-[348px] font-medium">{cmsText("dateTime", "Date & Time")}</th>
-                  <th className="h-[46px] p-2.5 w-[143px] font-medium">{cmsText("totalInvitees", "Total Invitees")}</th>
-                  <th className="h-[46px] p-2.5 w-[145px] font-medium">{cmsText("systemUsers", "System Users")}</th>
-                  <th className="h-[46px] p-2.5 font-medium">{cmsText("accessControl", "Access Control")}</th>
-                  <th className="h-[46px] p-2.5 font-medium text-right">{cmsText("action", "Action")}</th>
+                  <th className="h-[46px] p-2.5 w-[270px] font-medium">Session Title</th>
+                  <th className="h-[46px] p-2.5 w-[348px] font-medium">Date & Time</th>
+                  <th className="h-[46px] p-2.5 w-[143px] font-medium">Total Invitees</th>
+                  <th className="h-[46px] p-2.5 w-[145px] font-medium">System Users</th>
+                  <th className="h-[46px] p-2.5 font-medium">Access Control</th>
+                  <th className="h-[46px] p-2.5 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D3D3D3] text-[#4B4F52] border-b border-[#D3D3D3]">
@@ -494,7 +493,9 @@ export default function EventSessionsPage() {
                   </tr>
                 ) : filteredSessions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-500">{cmsText("noSessionsFoundAddASessionToGet", "No sessions found. Add a session to get started.")}</td>
+                    <td colSpan={7} className="py-8 text-center text-gray-500">
+                      No sessions found. Add a session to get started.
+                    </td>
                   </tr>
                 ) : (
                   filteredSessions.map((sess, index) => (
@@ -505,7 +506,7 @@ export default function EventSessionsPage() {
                         {sess.startTime} {sess.endTime ? `to ${sess.endTime}` : ''}
                       </td>
                       <td className="h-[46px] p-2.5">
-                        {sess.invitesCount === null ? <span role="status" aria-label={cmsText("loading", "Loading")} className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" /> : sess.invitesCount ?? sess.totalInvitees ?? sess.maxAttendees ?? 0}
+                        {sess.invitesCount === null ? <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" /> : sess.invitesCount ?? sess.totalInvitees ?? sess.maxAttendees ?? 0}
                       </td>
                       <td className="h-[46px] p-2.5">{sess.systemUsers === null || sess.systemUsers === undefined ? "—" : String(sess.systemUsers).padStart(2, "0")}</td>
                       <td className="h-[46px] p-2.5">{sess.accessControl || "No Restriction"}</td>
@@ -537,11 +538,15 @@ export default function EventSessionsPage() {
                                   <button type="button" role="menuitem" onClick={() => openEdit(sess)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#15191C] hover:bg-gray-50 cursor-pointer text-left">
                                     <svg className="w-4 h-4 text-[#1F65FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
-                                    </svg>{cmsText("edit", "Edit")}</button>
+                                    </svg>
+                                    Edit
+                                  </button>
                                   <button type="button" role="menuitem" onClick={() => { setMenuId(null); handleDeleteSession(sess._id || sess.id, sess.name); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer text-left">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.9 12.1A2 2 0 0116.1 21H7.9a2 2 0 01-2-1.9L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
-                                    </svg>{cmsText("delete", "Delete")}</button>
+                                    </svg>
+                                    Delete
+                                  </button>
                                 </div>
                               </>
                             )}
@@ -558,7 +563,7 @@ export default function EventSessionsPage() {
 
       {/* Add Session popup (Figma 217:22172): no title bar; one bordered card holding the fields, then the blue Add Session / Save Session button */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={editingId ? cmsText("editSession", "Edit Session") : cmsText("addSession", "Add Session")}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={editingId ? "Edit Session" : "Add Session"}>
           <div
             className="absolute inset-0 bg-black/60 transition-opacity"
             onClick={closeModal}
@@ -570,7 +575,7 @@ export default function EventSessionsPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                aria-label={cmsText("close", "Close")}
+                aria-label="Close"
                 className="text-gray-500 hover:text-gray-700 p-1 rounded-md cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -583,12 +588,12 @@ export default function EventSessionsPage() {
               <div className="border border-[#E0E0E0] rounded-lg p-5 space-y-5">
                 <div>
                   <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                    <span>{cmsText("sessionName", "Session Name")}<span className="text-red-500 ml-0.5">*</span></span>
-                    <InfoTip label={cmsText("aboutTheSessionName", "About the session name")} text="Guests and system users see this name for the session, for example Entry or Lunch." />
+                    <span>Session Name<span className="text-red-500 ml-0.5">*</span></span>
+                    <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." />
                   </label>
                   <input
                     type="text"
-                    placeholder={cmsText("entrySession", "Entry Session")}
+                    placeholder="Entry Session"
                     value={sessionName}
                     onChange={(e) => setSessionName(e.target.value)}
                     required
@@ -600,7 +605,7 @@ export default function EventSessionsPage() {
                   {(["start", "end"] as const).map((field) => (
                     <div key={field} className="min-w-0">
                       <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                        <span>{field === "start" ? cmsText("startTime", "Start Time") : cmsText("endTime", "End Time")}<span className="text-red-500 ml-0.5">*</span></span>
+                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-red-500 ml-0.5">*</span></span>
                         <InfoTip
                           label={`About the session ${field} time`}
                           text={field === "start" ? "When this session opens for check-in. It must fall within the event's dates." : "When this session closes. It must be after the start time."}
@@ -621,8 +626,8 @@ export default function EventSessionsPage() {
 
                   <div className="min-w-0">
                     <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                      <span>{cmsText("accessControl", "Access Control")}</span>
-                      <InfoTip label={cmsText("aboutAccessControl", "About access control")} text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
+                      <span>Access Control</span>
+                      <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                     </label>
                     <CustomDropdown
                       compact
@@ -632,13 +637,13 @@ export default function EventSessionsPage() {
                         { value: "ONLY_ONCE", label: "Only Once" },
                         { value: "NO_RESTRICTION", label: "No Restrictions" },
                       ]}
-                      placeholder={cmsText("accessControl", "Access Control")}
+                      placeholder="Access Control"
                     />
                   </div>
                 </div>
 
                 {editingId && copiedByOthers.length > 0 && (
-                  <p className="text-xs text-[#6B6B6B]">{copiedByOthers.map((x) => x.name).join(", ")}{" " + cmsText("keep", "keep")}{copiedByOthers.length === 1 ? "s" : ""}{" " + cmsText("thisSessionSGuestListSoItKeeps", "this session's guest list, so it keeps its own list.")}</p>
+                  <p className="text-xs text-[#6B6B6B]">{copiedByOthers.map((x) => x.name).join(", ")} keep{copiedByOthers.length === 1 ? "s" : ""} this session&apos;s guest list, so it keeps its own list.</p>
                 )}
                 {copyOptions.length > 0 && copiedByOthers.length === 0 && (
                   <div className="flex flex-wrap items-center gap-2">
@@ -653,7 +658,9 @@ export default function EventSessionsPage() {
                           if (e.target.checked) { setUploadedFile(null); setUploadedFileName(""); }
                         }}
                         className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
-                      />{cmsText("keepSameInviteesAs", "Keep same invitees as")}</label>
+                      />
+                      Keep same invitees as
+                    </label>
                     <div className="w-48">
                       <CustomDropdown
                         value={copyOn ? copySourceId : ""}
@@ -670,20 +677,24 @@ export default function EventSessionsPage() {
 
                 {!copyOn && (
                 <div>
-                  <label className="block text-sm font-medium text-[#15191C] mb-1.5">{editingId ? cmsText("changeInviteesList", "Change Invitees List") : cmsText("addInviteesList", "Add Invitees List")} <span className="font-normal text-[#6B6B6B]">{cmsText("optional", "(optional)")}</span></label>
+                  <label className="block text-sm font-medium text-[#15191C] mb-1.5">{editingId ? "Change Invitees List" : "Add Invitees List"} <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
                   <div className="border border-[#E0E0E0] rounded-md flex items-center bg-[#FAFAFA] overflow-hidden min-h-[47px]">
-                    <button type="button" onClick={askForFile} className="self-stretch flex items-center px-4 bg-[#EDEDED] hover:bg-[#E3E3E3] text-[#4B4F52] text-xs font-medium cursor-pointer transition-colors border-r border-[#E0E0E0]">{cmsText("chooseFile", "Choose File")}</button>
+                    <button type="button" onClick={askForFile} className="self-stretch flex items-center px-4 bg-[#EDEDED] hover:bg-[#E3E3E3] text-[#4B4F52] text-xs font-medium cursor-pointer transition-colors border-r border-[#E0E0E0]">
+                      Choose File
+                    </button>
                     <input ref={fileInput} type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
                     <span className="px-3 text-xs text-[#6B6B6B] truncate">{uploadedFileName || "No file chosen"}</span>
                   </div>
                   <p className="mt-1.5 text-xs text-[#6B6B6B]">{editingId
-                    ? cmsText("choosingAFileReplacesThisSessionSList", "Choosing a file replaces this session's list: guests who are not in the new file are taken off this session, and new guests are added. People already invited are never removed.")
-                    : cmsText("theInviteesAreAddedToThisEventS", "The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again.")}</p>
+                    ? "Choosing a file replaces this session's list: guests who are not in the new file are taken off this session, and new guests are added. People already invited are never removed."
+                    : "The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again."}</p>
 
                   <div className="flex items-center justify-end gap-2 mt-2 text-sm">
                     <div className="w-4 h-4 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-[9px]">X</div>
-                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#1A56DB] cursor-pointer">{cmsText("downloadExcelSample", "Download Excel Sample")}</button>
-                    <InfoTip label={cmsText("aboutTheExcelSample", "About the Excel sample")} text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
+                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#1A56DB] cursor-pointer">
+                      Download Excel Sample
+                    </button>
+                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
                   </div>
                 </div>
                 )}
@@ -697,7 +708,7 @@ export default function EventSessionsPage() {
                 aria-busy={savingSession}
                 className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center"
               >
-                <span>{savingSession ? (editingId ? "Saving…" : "Adding…") : editingId ? cmsText("saveSession", "Save Session") : cmsText("addSession", "Add Session")}</span>
+                <span>{savingSession ? (editingId ? "Saving…" : "Adding…") : editingId ? "Save Session" : "Add Session"}</span>
               </button>
             </form>
           </div>
@@ -715,7 +726,7 @@ export default function EventSessionsPage() {
 
       {timeConflict && (
         <ChoiceModal
-          title={cmsText("sessionTimeIsOutsideTheEvent", "Session time is outside the event")}
+          title="Session time is outside the event"
           message={timeConflict.message}
           onClose={() => setTimeConflict(null)}
           first={{ label: "Change event time", onClick: () => { setTimeConflict(null); router.push(`/events/${eventId}/edit`); } }}
@@ -729,7 +740,7 @@ export default function EventSessionsPage() {
         onClose={() => setIsDatePickerOpen(false)}
         onSave={handleSaveDatePicker}
         value={activeDateField === "start" ? startTime : endTime}
-        title={activeDateField === "start" ? cmsText("sessionStart", "Session start") : cmsText("sessionEnd", "Session end")}
+        title={activeDateField === "start" ? "Session start" : "Session end"}
       />
     </div>
   );

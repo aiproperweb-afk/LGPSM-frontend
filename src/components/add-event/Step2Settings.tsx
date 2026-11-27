@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { CARD_DISPLAY_DEFAULTS, CARD_DISPLAY_OPTIONS, CARD_INFO_OPTIONS, CUSTOM_DETAIL, EMPLOYEE_ID, EMPLOYEE_ID_LABEL, customFieldFor, customShowKey, customTitleKey, detailKind, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
 import PopupMessage from "@/components/common/PopupMessage";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -29,7 +27,6 @@ interface Step2SettingsProps {
 
 // Controlled step: values live in the wizard draft owned by the page
 export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack, readOnly = false }: Step2SettingsProps) {
-  const cmsText = useDashboardCopy();
   const { showAlert, confirm } = useAlert();
   const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
   // "Invitee Name" is one of the choices for the two lines; nothing is chosen by default (the name is not printed until it is picked)
@@ -102,8 +99,8 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
       {!printOnly && draft.rsvpEnabled && anyRsvpOption && (
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <label className="text-sm font-medium text-gray-900">{cmsText("whoCanCheckIn", "Who can check in")}</label>
-            <InfoTip label={cmsText("aboutWhoCanCheckIn", "About who can check in")} text="Decides how a guest's RSVP answer affects entry. The check-in app enforces this at the door." align="left" />
+            <label className="text-sm font-medium text-gray-900">Who can check in</label>
+            <InfoTip label="About who can check in" text="Decides how a guest's RSVP answer affects entry. The check-in app enforces this at the door." align="left" />
           </div>
           <div className="max-w-lg">
             <CustomDropdown
@@ -122,8 +119,8 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
       {!draft.template?.staticCard && (
       <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{cmsText("selectDataToShowOnCard", "Select data to show on card")}</span>
-          <InfoTip label={cmsText("aboutTheDataOnTheCard", "About the data on the card")} text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
+          <span className="text-sm font-medium text-gray-900">Select data to show on card</span>
+          <InfoTip label="About the data on the card" text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName").map(({ key, label }) => {
@@ -136,15 +133,15 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
             );
           })}
         </div>
-        <PopupMessage message={draft.cardDisplay?.qr === false ? cmsText("cardsWillBePrintedWithoutTheQrCode", "Cards will be printed without the QR code. Guests will need to open their invitation link to show their entry QR at check-in.") : null} type="warning" title={cmsText("noQrCodeOnTheCards", "No QR code on the cards")} />
+        <PopupMessage message={draft.cardDisplay?.qr === false ? "Cards will be printed without the QR code. Guests will need to open their invitation link to show their entry QR at check-in." : null} type="warning" title="No QR code on the cards" />
       </div>
       )}
 
       {!draft.template?.staticCard && (
       <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{cmsText("additionalInformationYouWantToShowOnCard", "Additional Information you want to show on card")}</span>
-          <InfoTip label={cmsText("aboutAdditionalInformation", "About additional information")} text="Choose which guest details are printed under the event name on each guest's card. A guest without that detail gets an empty line. This also decides the extra columns in the invitee Excel sample." />
+          <span className="text-sm font-medium text-gray-900">Additional Information you want to show on card</span>
+          <InfoTip label="About additional information" text="Choose which guest details are printed under the event name on each guest's card. A guest without that detail gets an empty line. This also decides the extra columns in the invitee Excel sample." />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {(["primary", "secondary"] as const).map((slot) => {
@@ -187,14 +184,14 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     options={CARD_INFO_OPTIONS
                       .filter((o) => (o.value === CUSTOM_DETAIL ? true : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : o.value === "INVITEE_NAME" ? otherKind !== "INVITEE_NAME" : otherKind !== "COMPANY_NAME"))
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
-                    placeholder={cmsText("chooseADetail", "Choose a detail")}
+                    placeholder="Choose a detail"
                     ariaLabel={label}
                     optional
                   />
                 </div>
                 {custom && (
                   <div>
-                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("titleForTheCustomDetail", "Title for the custom detail")}<span className="text-red-500 ml-0.5">*</span></label>
+                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-red-500 ml-0.5">*</span></label>
                     <input
                       id={`card-info-title-${slot}`}
                       type="text"
@@ -202,7 +199,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       maxLength={40}
                       onChange={(e) => { agreed.current.clear(); setCardInfo({ ...info, [titleKey]: e.target.value }); }}
                       onBlur={() => { void verifyTitles(); }}
-                      placeholder={cmsText("eGDesignationEmployeeIdBadgeNo", "e.g. Designation, Employee ID, Badge No.")}
+                      placeholder="e.g. Designation, Employee ID, Badge No."
                       aria-invalid={!!errors.cardInfo}
                       className={`w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black ${errors.cardInfo ? "!border-rose-500" : "border-[#E0E0E0]"}`}
                     />
@@ -213,7 +210,9 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                         checked={info[customShowKey(field)] === true}
                         onChange={(e) => setCardInfo({ ...info, [customShowKey(field)]: e.target.checked })}
                         className="size-4 accent-[#1A9242] cursor-pointer"
-                      />{cmsText("showThisTitleOnTheCardEG", "Show this title on the card (e.g. “")}{(info[titleKey] ?? "").trim() || "Designation"}{cmsText("value", ": value”)")}</label>
+                      />
+                      Show this title on the card (e.g. &ldquo;{(info[titleKey] ?? "").trim() || "Designation"}: value&rdquo;)
+                    </label>
                   </div>
                 )}
               </div>
@@ -221,10 +220,10 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
           })}
         </div>
         {(isCustomDetail(cardInfo.primary) || isCustomDetail(cardInfo.secondary)) && (
-          <p className="text-xs text-[#6B6B6B]">{cmsText("theTitleBecomesTheColumnHeadingInThe", "The title becomes the column heading in the Excel sample and the field name when adding an invitee.")}</p>
+          <p className="text-xs text-[#6B6B6B]">The title becomes the column heading in the Excel sample and the field name when adding an invitee.</p>
         )}
         {errors.cardInfo && <p role="alert" className="text-xs font-medium text-rose-600">{errors.cardInfo}</p>}
-        <PopupMessage message={sampleColumnsChanged ? cmsText("youAlreadyDownloadedTheExcelSampleWithThe", "You already downloaded the Excel sample with the earlier columns. These changes alter the columns, so download the sample again; a file with the old headings will be refused.") : null} type="warning" title={cmsText("downloadTheExcelSampleAgain", "Download the Excel sample again")} />
+        <PopupMessage message={sampleColumnsChanged ? "You already downloaded the Excel sample with the earlier columns. These changes alter the columns, so download the sample again; a file with the old headings will be refused." : null} type="warning" title="Download the Excel sample again" />
       </div>
       )}
 
@@ -238,7 +237,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               onChange={(e) => onChange({ dietaryEnabled: e.target.checked })}
               className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
             />
-            <span className="text-sm font-medium text-gray-900">{cmsText("askForFoodPreference", "Ask for food preference")}</span>
+            <span className="text-sm font-medium text-gray-900">Ask for food preference</span>
           </label>
 
           {draft.dietaryEnabled && (
@@ -246,9 +245,13 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               {categories.map((category, catIdx) => (
                 <div key={category.id} className="pt-4 border-t border-[#EEEEEE] first:border-t-0 first:pt-0 space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <label htmlFor={`pref-title-${category.id}`} className="text-sm font-medium text-gray-900">{cmsText("question", "Question") + " "}{catIdx + 1}{" " + cmsText("title2", "title")}</label>
+                    <label htmlFor={`pref-title-${category.id}`} className="text-sm font-medium text-gray-900">
+                      Question {catIdx + 1} title
+                    </label>
                     {categories.length > 1 && (
-                      <button type="button" onClick={() => setCategories(categories.filter((c) => c.id !== category.id))} className="text-sm font-medium text-rose-600 hover:underline cursor-pointer">{cmsText("removeQuestion", "Remove question")}</button>
+                      <button type="button" onClick={() => setCategories(categories.filter((c) => c.id !== category.id))} className="text-sm font-medium text-rose-600 hover:underline cursor-pointer">
+                        Remove question
+                      </button>
                     )}
                   </div>
                   <input
@@ -257,7 +260,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     value={category.title}
                     maxLength={100}
                     onChange={(e) => updateCategory(category.id, { title: e.target.value })}
-                    placeholder={cmsText("dietaryPreference", "Dietary Preference")}
+                    placeholder="Dietary Preference"
                     className="w-full max-w-md px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-black"
                   />
                   <ul className="space-y-2.5">
@@ -271,7 +274,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                           value={opt}
                           maxLength={60}
                           onChange={(e) => updateCategory(category.id, { options: category.options.map((o, i) => (i === optIdx ? e.target.value : o)) })}
-                          placeholder={optIdx === 0 ? cmsText("option1StaysSelectedByDefaultForInvitees", "Option 1 (stays selected by default for invitees)") : `Option ${optIdx + 1}`}
+                          placeholder={optIdx === 0 ? "Option 1 (stays selected by default for invitees)" : `Option ${optIdx + 1}`}
                           className={`flex-1 ${optIdx === 0 ? "max-w-sm" : "max-w-xs"} border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent`}
                         />
                         {category.options.length > 1 && (
@@ -289,14 +292,18 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       </li>
                     ))}
                   </ul>
-                  <button type="button" onClick={() => { focusNext.current = `pref-opt-${category.id}-${category.options.length}`; updateCategory(category.id, { options: [...category.options, ""] }); }} className="text-sm font-medium text-[#15803D] hover:underline cursor-pointer">{cmsText("addAnotherOption", "Add another option")}</button>
+                  <button type="button" onClick={() => { focusNext.current = `pref-opt-${category.id}-${category.options.length}`; updateCategory(category.id, { options: [...category.options, ""] }); }} className="text-sm font-medium text-[#15803D] hover:underline cursor-pointer">
+                    Add another option
+                  </button>
                 </div>
               ))}
               <button
                 type="button"
                 onClick={() => { const id = newClientKey("pref"); focusNext.current = `pref-title-${id}`; setCategories([...categories, { id, title: "", options: [""] }]); }}
                 className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white text-sm font-medium rounded-md cursor-pointer"
-              >{cmsText("addAnotherQuestion", "+ Add another question")}</button>
+              >
+                + Add another question
+              </button>
             </div>
           )}
           {errors.dietaryPreference && <p className="text-xs font-medium text-rose-600" role="alert">{errors.dietaryPreference}</p>}
@@ -304,8 +311,12 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
       )}
 
       {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
-        <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">{cmsText("back", "Back")}</button>
-        <button type="submit" className="px-7 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer">{cmsText("next", "Next")}</button>
+        <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
+          Back
+        </button>
+        <button type="submit" className="px-7 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer">
+          Next
+        </button>
       </div>}
     </form>
   );

@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import AlertIcon from "@/components/common/AlertIcon";
 import { isEventOver } from "@/utils/eventUtils";
@@ -32,7 +30,6 @@ import { paginate } from "@/utils/pagination.mjs";
 import { formatDateTime, formatDate } from "@/utils/dateTime";
 
 export default function EventAssignUsersPage() {
-  const cmsText = useDashboardCopy();
   const { confirm } = useAlert();
   const params = useParams();
   const eventId = (params?.id as string);
@@ -369,7 +366,7 @@ export default function EventAssignUsersPage() {
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
-      <PageHeader title={user?.role === "ORGANIZER" ? cmsText("eventManagement", "Event Management") : cmsText("event", "Event")} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+      <PageHeader title={user?.role === "ORGANIZER" ? "Event Management" : "Event"} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
 
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-6 relative bg-white">
@@ -392,13 +389,13 @@ export default function EventAssignUsersPage() {
             the selected rows (bottom "Assign N users"), so the separate top "Assign Users" button is gone (organiser feedback). */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
           <div className="flex flex-1 items-center gap-2.5 min-w-0">
-            <label htmlFor="system-user-search" className="text-[17px] font-medium text-black shrink-0">{cmsText("systemUsers", "System Users")}</label>
+            <label htmlFor="system-user-search" className="text-[17px] font-medium text-black shrink-0">System Users</label>
             <div className="relative flex-1 min-w-0">
               <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
               <input
                 id="system-user-search"
                 type="search"
-                placeholder={cmsText("searchSystemUser", "Search system user")}
+                placeholder="Search system user"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                 className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
@@ -423,14 +420,16 @@ export default function EventAssignUsersPage() {
               type="button"
               onClick={() => { setDraft(filters); setFiltersOpen(true); }}
               aria-label={`Filters and sorting${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
-              title={cmsText("filtersSorting", "Filters & Sorting")}
+              title="Filters & Sorting"
               className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
             >
               <Icon name="events/filter" width={20} height={20} />
               {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#1F65FF] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
             </button>
             <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
-              <Icon name="events/add-white" width={24} height={24} />{cmsText("addUser", "Add User")}</Link>
+              <Icon name="events/add-white" width={24} height={24} />
+              Add User
+            </Link>
           </div>
         </div>
 
@@ -439,23 +438,23 @@ export default function EventAssignUsersPage() {
             <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
             <div className="relative w-full max-w-[380px] bg-white h-full flex flex-col shadow-2xl">
               <div className="flex items-center justify-between px-6 pt-6 pb-3">
-                <h2 id="user-filter-title" className="text-xl font-semibold text-[#15191C]">{cmsText("filtersSorting", "Filters & Sorting")}</h2>
-                <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">{cmsText("reset", "Reset")}</button>
+                <h2 id="user-filter-title" className="text-xl font-semibold text-[#15191C]">Filters &amp; Sorting</h2>
+                <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">Reset</button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
                 <section>
-                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">{cmsText("usersStatus", "Users Status")}</h3>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Users Status</h3>
                   {option("All users", draft.status === "ALL", () => setDraft((d) => ({ ...d, status: "ALL" })))}
                   {option("Assigned to this event", draft.status === "ASSIGNED", () => setDraft((d) => ({ ...d, status: "ASSIGNED" })))}
                   {option("Not assigned to this event", draft.status === "UNASSIGNED", () => setDraft((d) => ({ ...d, status: "UNASSIGNED" })))}
                 </section>
                 <section>
-                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">{cmsText("userActivity", "User Activity")}</h3>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
                   {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
                   {option("Has past events", draft.activity === "PAST", () => setDraft((d) => ({ ...d, activity: d.activity === "PAST" ? null : "PAST" })))}
                 </section>
                 <section>
-                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">{cmsText("sortBy", "Sort By")}</h3>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Sort By</h3>
                   {option("Recently added", draft.sort === "RECENT", () => setDraft((d) => ({ ...d, sort: "RECENT" })))}
                   {option("Most events assigned", draft.sort === "MOST_EVENTS", () => setDraft((d) => ({ ...d, sort: "MOST_EVENTS" })))}
                   {option("Most upcoming events assigned", draft.sort === "MOST_UPCOMING", () => setDraft((d) => ({ ...d, sort: "MOST_UPCOMING" })))}
@@ -463,8 +462,8 @@ export default function EventAssignUsersPage() {
                 </section>
               </div>
               <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
-                <button type="button" onClick={() => setFiltersOpen(false)} className={filterSecondaryButtonClass}>{cmsText("cancel2", "Cancel")}</button>
-                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className={filterPrimaryButtonClass}>{cmsText("apply", "Apply")}</button>
+                <button type="button" onClick={() => setFiltersOpen(false)} className={filterSecondaryButtonClass}>Cancel</button>
+                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className={filterPrimaryButtonClass}>Apply</button>
               </div>
             </div>
           </div>,
@@ -480,7 +479,9 @@ export default function EventAssignUsersPage() {
             onChange={handleSelectAll}
             className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
           />
-          <label htmlFor="selectAll" className="cursor-pointer">{cmsText("selectAll2", "Select All (")}{selectedUserIds.length}{" " + cmsText("selected2", "selected)")}</label>
+          <label htmlFor="selectAll" className="cursor-pointer">
+            Select All ({selectedUserIds.length} selected)
+          </label>
         </div>
 
         {/* Users Table */}
@@ -488,18 +489,18 @@ export default function EventAssignUsersPage() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className={showEmptyAssigned ? "hidden" : undefined}>
               <tr className="border-b border-[#D3D3D3] text-[#6B6B6B] font-medium text-sm">
-                <th className="relative py-3 px-4 w-10"><span className="sr-only">{cmsText("select", "Select")}</span></th>
-                <th className="py-3 px-4 font-medium">{cmsText("userName", "User Name")}</th>
-                <th className="py-3 px-4 font-medium">{cmsText("assignedEventSessions", "Assigned Event Sessions")}</th>
-                <th className="py-3 px-4 font-medium">{cmsText("email", "Email")}</th>
-                <th className="py-3 px-4 font-medium">{cmsText("phoneNumber", "Phone Number")}</th>
-                <th className="py-3 px-4 text-right font-medium">{cmsText("action", "Action")}</th>
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
+                <th className="py-3 px-4 font-medium">User Name</th>
+                <th className="py-3 px-4 font-medium">Assigned Event Sessions</th>
+                <th className="py-3 px-4 font-medium">Email</th>
+                <th className="py-3 px-4 font-medium">Phone Number</th>
+                <th className="py-3 px-4 text-right font-medium">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-800">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-0"><TableSkeleton rows={5} cols={5} label={cmsText("loadingSystemUsers", "Loading system users")} /></td>
+                  <td colSpan={6} className="p-0"><TableSkeleton rows={5} cols={5} label="Loading system users" /></td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
@@ -508,19 +509,23 @@ export default function EventAssignUsersPage() {
                       // nobody has been added yet: said in the middle of the page; "Add User" carries on into adding one, who is then put on this event
                       <div className="flex flex-col items-center gap-4 py-16 max-w-[360px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
-                        <p className="text-lg font-medium text-black/60">{cmsText("youHaveNotAddedAnySystemUsersYet", "You have not added any system users yet.")}</p>
-                        <p className="text-sm text-gray-500">{cmsText("addOneNowAndTheyAreAssignedTo", "Add one now and they are assigned to this event straight away.")}</p>
+                        <p className="text-lg font-medium text-black/60">You have not added any system users yet.</p>
+                        <p className="text-sm text-gray-500">Add one now and they are assigned to this event straight away.</p>
                         <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>{cmsText("addUser", "Add User")}</Link>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          Add User
+                        </Link>
                       </div>
                     ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
-                      <span>{cmsText("noSystemUsersAreAssignedToThisSession", "No system users are assigned to this session yet.") + " "}<button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#1F65FF] underline cursor-pointer">{cmsText("showAllSystemUsers", "Show all system users")}</button>{" " + cmsText("toAssignSomeone", "to assign someone.")}</span>
+                      <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#1F65FF] underline cursor-pointer">Show all system users</button> to assign someone.</span>
                     ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
                       // Figma 217:19798 empty state; "Assign User" lists every system user to pick from
                       <div className="flex flex-col items-center gap-[26px] py-16 max-w-[344px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
-                        <p className="text-lg font-medium text-black/50">{cmsText("noSystemUsersAssignedYetAssignSystemUsers", "No system users assigned yet. Assign system users to your event now.")}</p>
-                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#1F65FF] cursor-pointer">{cmsText("assignUser", "Assign User")}</button>
+                        <p className="text-lg font-medium text-black/50">No system users assigned yet. Assign system users to your event now.</p>
+                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#1F65FF] cursor-pointer">
+                          Assign User
+                        </button>
                       </div>
                     ) : (
                       "No system users match your search."
@@ -552,7 +557,9 @@ export default function EventAssignUsersPage() {
 
                       <td className="py-4 px-4 font-medium text-gray-900">
                         <div>{u.name}</div>
-                        <span className="text-[10px] font-mono text-[#1F65FF] bg-[#1F65FF]/10 px-1.5 py-0.5 rounded">{cmsText("system_user", "SYSTEM_USER")}</span>
+                        <span className="text-[10px] font-mono text-[#1F65FF] bg-[#1F65FF]/10 px-1.5 py-0.5 rounded">
+                          SYSTEM_USER
+                        </span>
                         {/* Same three states as the mobile app: already on this event (green), clashes with it (red, with the clashing events), or available */}
                         {(() => {
                           const clashes = otherEvents.filter((o) => o.overlaps);
@@ -560,15 +567,15 @@ export default function EventAssignUsersPage() {
                           return (
                             <div className="mt-1.5 max-w-[300px] space-y-1.5 font-normal">
                               {here ? (
-                                <p className="text-[11px] leading-snug font-semibold text-[#1A9242] bg-[#E6F6EC] rounded px-2 py-1.5 whitespace-normal">{cmsText("alreadyAssignedToThisEventChangeTheirSessions", "Already assigned to this event. Change their sessions from this list.")}</p>
+                                <p className="text-[11px] leading-snug font-semibold text-[#1A9242] bg-[#E6F6EC] rounded px-2 py-1.5 whitespace-normal">Already assigned to this event. Change their sessions from this list.</p>
                               ) : clashes.length === 0 && overlapsReady ? (
-                                <span className="inline-block text-[11px] font-semibold text-[#1A9242] bg-[#E6F6EC] rounded-full px-2.5 py-0.5">{cmsText("available", "Available")}</span>
+                                <span className="inline-block text-[11px] font-semibold text-[#1A9242] bg-[#E6F6EC] rounded-full px-2.5 py-0.5">Available</span>
                               ) : null}
                               {clashes.length > 0 && (
                                 <div className="text-[11px] leading-snug bg-[#FEECEB] border border-[#F5C2BE] rounded px-2 py-1.5 whitespace-normal break-words">
-                                  <p className="font-bold text-[#D92D20]">{cmsText("clashesWithThisEvent", "Clashes with this event")}</p>
+                                  <p className="font-bold text-[#D92D20]">Clashes with this event</p>
                                   {clashes.map((o) => (
-                                    <p key={o.eventId} className="text-[#15191C] mt-0.5">{o.title} · <span className="font-semibold text-[#1F65FF]">{formatDateTime(o.start)}{" " + cmsText("to2", "to") + " "}{formatDateTime(o.end)}</span></p>
+                                    <p key={o.eventId} className="text-[#15191C] mt-0.5">{o.title} · <span className="font-semibold text-[#1F65FF]">{formatDateTime(o.start)} to {formatDateTime(o.end)}</span></p>
                                   ))}
                                 </div>
                               )}
@@ -613,18 +620,21 @@ export default function EventAssignUsersPage() {
                                     type="button"
                                     onClick={() => handleUnassignAssignment(asn.assignmentId)}
                                     className="text-rose-600 underline text-xs font-semibold hover:text-rose-800 cursor-pointer"
-                                  >{cmsText("unassign", "Unassign")}</button>
+                                  >
+                                    Unassign
+                                  </button>
                                 </div>
 
                                 {asn.assignedBy && (
-                                  <div className="text-[10px] text-gray-500">{cmsText("assignedBy", "Assigned by:") + " "}<span className="font-medium text-gray-700">{asn.assignedBy}</span>
+                                  <div className="text-[10px] text-gray-500">
+                                    Assigned by: <span className="font-medium text-gray-700">{asn.assignedBy}</span>
                                     {asn.assignedAt ? ` on ${asn.assignedAt}` : ""}
                                   </div>
                                 )}
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : cmsText("allSessions", "All sessions")}</div>
+                                    <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
@@ -645,10 +655,10 @@ export default function EventAssignUsersPage() {
                               <div key={o.eventId} className={`rounded-md p-3 space-y-1 whitespace-normal border ${o.overlaps ? "bg-[#FFF7F6] border-[#D92D20]" : "bg-gray-50 border-gray-200"}`}>
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C] break-words min-w-0">{o.title}</div>
-                                  <span className="shrink-0 text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 rounded px-1.5 py-0.5">{cmsText("otherEvent", "Other event")}</span>
+                                  <span className="shrink-0 text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 rounded px-1.5 py-0.5">Other event</span>
                                 </div>
                                 <div className="text-[11px] text-gray-500">{formatDateTime(o.start)} – {formatDateTime(o.end)}</div>
-                                <div className="text-[11px] font-medium text-gray-700">{o.sessionIds.length === 0 ? cmsText("allSessions", "All sessions") : `${o.sessionIds.length} ${o.sessionIds.length === 1 ? "session" : "sessions"}`}{o.overlaps ? cmsText("overlapsThisEvent", "· overlaps this event") : ""}</div>
+                                <div className="text-[11px] font-medium text-gray-700">{o.sessionIds.length === 0 ? "All sessions" : `${o.sessionIds.length} ${o.sessionIds.length === 1 ? "session" : "sessions"}`}{o.overlaps ? " · overlaps this event" : ""}</div>
                               </div>
                             ))}
                           </div>
@@ -683,7 +693,7 @@ export default function EventAssignUsersPage() {
         {/* Bottom Control Bar */}
         <div className={`pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${selectedUserIds.length > 0 && !historical ? "sticky bottom-0 z-20 bg-white border-t border-[#EEE] py-3 -mx-1 px-1" : ""}`}>
           <div className="flex items-center gap-1 text-xs">
-            <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label={cmsText("systemUserPages", "System user pages")} />
+            <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label="System user pages" />
           </div>
 
           {/* Nothing ticked, nothing to act on: the button appears once someone is selected */}
@@ -709,7 +719,7 @@ export default function EventAssignUsersPage() {
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">{allAlreadyOnEvent ? cmsText("changeSessionsForSelectedSystemUsers", "Change Sessions for Selected System Users") : cmsText("assignSessionsToSelectedSystemUsers", "Assign Sessions to Selected System Users")}</h3>
+              <h3 className="text-base font-medium text-[#15191C]">{allAlreadyOnEvent ? "Change Sessions for Selected System Users" : "Assign Sessions to Selected System Users"}</h3>
               <button
                 type="button"
                 onClick={closeAssignModal}
@@ -730,7 +740,7 @@ export default function EventAssignUsersPage() {
                 </p>
               )}
               <div>
-                <label htmlFor="assign-event" className="block text-xs font-medium text-[#15191C] mb-1.5">{cmsText("event", "Event")}</label>
+                <label htmlFor="assign-event" className="block text-xs font-medium text-[#15191C] mb-1.5">Event</label>
                 <select id="assign-event" disabled aria-readonly value={eventId} className="w-full h-[46px] px-3.5 bg-[#F4F4F4] border border-[#E0E0E0] rounded-md text-sm text-[#4B4F52] cursor-not-allowed appearance-none">
                   <option value={eventId}>{eventTitle || "This event"}</option>
                 </select>
@@ -749,7 +759,7 @@ export default function EventAssignUsersPage() {
                   disabled={submittingAssign}
                   className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submittingAssign ? cmsText("saving", "Saving...") : allAlreadyOnEvent ? cmsText("save", "Save") : cmsText("assign", "Assign")}
+                  {submittingAssign ? "Saving..." : allAlreadyOnEvent ? "Save" : "Assign"}
                 </button>
               </div>
             </form>
@@ -763,12 +773,14 @@ export default function EventAssignUsersPage() {
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <AlertIcon kind="success" />
 
-            <h3 className="text-lg font-bold text-gray-900">{cmsText("assignedSuccessfully", "Assigned Successfully!")}</h3>
+            <h3 className="text-lg font-bold text-gray-900">Assigned Successfully!</h3>
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
               className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
-            >{cmsText("okay", "Okay")}</button>
+            >
+              Okay
+            </button>
           </div>
         </div>
       )}

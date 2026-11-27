@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React from "react";
 import { formatMoney } from "@/utils/money";
 
@@ -23,13 +21,12 @@ export default function EarningsOverviewCard({
   saving = false,
   isSavedNotice,
 }: EarningsOverviewCardProps) {
-  const cmsText = useDashboardCopy();
   const rateText = rate === null ? "Not set" : formatMoney(rate);
   const rateLine = rate === null ? "No rate has been set yet" : `Per-head billing · ${rateText} / invitee (current rate)`;
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-xl font-medium text-[#15191C]">{cmsText("earningsOverview", "Earnings Overview")}</h2>
+        <h2 className="text-xl font-medium text-[#15191C]">Earnings Overview</h2>
         <p className="text-xs text-[#4B4F52] mt-0.5">
           {rateLine}
         </p>
@@ -44,7 +41,7 @@ export default function EarningsOverviewCard({
               <span className="text-5xl font-semibold text-[#1F65FF]">
                 {rateText}
               </span>
-              <span className="text-sm font-medium text-[#4B4F52]">{cmsText("perHead", "Per head")}</span>
+              <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
             </div>
             <p className="text-sm text-[#4B4F52]">{rateLine}</p>
           </div>
@@ -52,9 +49,13 @@ export default function EarningsOverviewCard({
           {/* Right Side Adjust Rate Box */}
           <div className="bg-[#F7F7F7] rounded-md p-4 max-w-[480px] w-full space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-[#4B4F52] tracking-wide uppercase">{cmsText("adjustRate", "ADJUST RATE")}</span>
+              <span className="text-xs font-medium text-[#4B4F52] tracking-wide uppercase">
+                ADJUST RATE
+              </span>
               {isSavedNotice ? (
-                <span className="text-xs font-semibold text-emerald-700 animate-fadeIn">{cmsText("savedAppliesToEventsCreatedFromNowOn", "Saved. Applies to events created from now on.")}</span>
+                <span className="text-xs font-semibold text-emerald-700 animate-fadeIn">
+                  Saved. Applies to events created from now on.
+                </span>
               ) : (
                 <span className={`text-sm font-semibold ${tempRate !== rate ? "text-[#1F65FF]" : "text-[#4B4F52]"}`} aria-live="polite">
                   {tempRate !== rate ? `New rate: ${formatMoney(tempRate)} per head` : `Current: ${formatMoney(tempRate)} per head`}
@@ -70,7 +71,7 @@ export default function EarningsOverviewCard({
                   max="20"
                   step="0.5"
                   value={tempRate}
-                  aria-label={cmsText("pricePerInvitee", "Price per invitee")}
+                  aria-label="Price per invitee"
                   onChange={(e) => setTempRate(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1F65FF]"
                 />
@@ -87,7 +88,7 @@ export default function EarningsOverviewCard({
                 disabled={saving || tempRate === rate}
                 className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md transition-colors cursor-pointer shrink-0"
               >
-                {saving ? cmsText("saving", "Saving...") : cmsText("save", "Save")}
+                {saving ? "Saving..." : "Save"}
               </button>
             </div>
           </div>

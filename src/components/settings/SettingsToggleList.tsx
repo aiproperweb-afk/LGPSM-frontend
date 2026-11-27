@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useEffect, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import { ApiResponse } from "@/services/apiClient";
@@ -18,7 +16,6 @@ interface SettingsToggleListProps<K extends string> {
 // Loads boolean settings from the API, edits them locally, and saves them back.
 // The "Saved" message only appears after the backend confirms the change.
 export default function SettingsToggleList<K extends string>({ title, description, items, load, save }: SettingsToggleListProps<K>) {
-  const cmsText = useDashboardCopy();
   const [saved, setSaved] = useState<Record<K, boolean> | null>(null);
   const [values, setValues] = useState<Record<K, boolean> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -70,7 +67,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
       </div>
       <PopupMessage message={loadError} action={{ label: "Try again", onClick: fetchSettings }} />
       {loadError ? null : !values ? (
-        <SkeletonRegion label={cmsText("loadingSettings", "Loading settings")} className="space-y-[18px]">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-5" />)}</SkeletonRegion>
+        <SkeletonRegion label="Loading settings" className="space-y-[18px]">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-5" />)}</SkeletonRegion>
       ) : (
           <ul className="space-y-[18px]">
             {items.map((item) => {
@@ -104,10 +101,12 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
               disabled={!dirty || saving}
               className="px-4 py-[9px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {saving ? cmsText("saving", "Saving...") : cmsText("saveChanges", "Save Changes")}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
             {dirty && !saving && (
-              <button type="button" onClick={() => setValues(saved)} className="text-sm text-gray-700 hover:underline cursor-pointer">{cmsText("discardChanges", "Discard changes")}</button>
+              <button type="button" onClick={() => setValues(saved)} className="text-sm text-gray-700 hover:underline cursor-pointer">
+                Discard changes
+              </button>
             )}
             <PopupMessage message={status?.message} type={status?.type === "error" ? "error" : "success"} />
           </div>

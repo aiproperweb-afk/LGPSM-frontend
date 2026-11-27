@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React from "react";
 import { Skeleton } from "@/components/common/Skeleton";
 import { formatMoney } from "@/utils/money";
@@ -13,12 +11,11 @@ interface EarningsStatsRowProps {
 }
 
 export default function EarningsStatsRow({ estimatedTotal, organizersBilled, loading = false }: EarningsStatsRowProps) {
-  const cmsText = useDashboardCopy();
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-[#15191C]">{cmsText("totalEarningEstimated", "Total Earning (estimated)")}</p>
+          <p className="text-sm font-medium text-[#15191C]">Total Earning (estimated)</p>
           <h3 className="text-[32px] leading-tight font-semibold text-black mt-1">
             {loading ? <Skeleton className="h-9 w-28" /> : formatMoney(estimatedTotal)}
           </h3>
@@ -32,7 +29,7 @@ export default function EarningsStatsRow({ estimatedTotal, organizersBilled, loa
 
       <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-[#15191C]">{cmsText("totalOrganizerBilled", "Total Organizer Billed")}</p>
+          <p className="text-sm font-medium text-[#15191C]">Total Organizer Billed</p>
           <h3 className="text-[32px] leading-tight font-semibold text-black mt-1">{loading ? <Skeleton className="h-9 w-16" /> : organizersBilled}</h3>
         </div>
         <div className="w-12 h-12 rounded-full bg-blue-50 text-[#1F65FF] flex items-center justify-center shrink-0">

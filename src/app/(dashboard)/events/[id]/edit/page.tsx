@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { forgetEventCounts } from "@/components/EventSubNav";
 import React, { useEffect, useRef, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -28,7 +26,6 @@ import { usePageTitle, usePageTitleContext } from "@/context/PageTitleContext";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
 
 export default function EditEventPage() {
-  const cmsText = useDashboardCopy();
   const router = useRouter();
   const params = useParams();
   const eventId = (params?.id as string) || "";
@@ -146,7 +143,7 @@ export default function EditEventPage() {
 
   if (isFetchingEvent) {
     return (
-      <SkeletonRegion label={cmsText("loadingEvent", "Loading event")} className="w-full min-h-full bg-white px-6 pt-8 grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
+      <SkeletonRegion label="Loading event" className="w-full min-h-full bg-white px-6 pt-8 grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
         <div className="space-y-5"><Skeleton className="h-10 w-1/2" /><Skeleton className="h-12" /><Skeleton className="h-24" /><div className="grid grid-cols-2 gap-4"><Skeleton className="h-12" /><Skeleton className="h-12" /></div><Skeleton className="h-12" /></div>
         <Skeleton className="h-[520px]" />
       </SkeletonRegion>
@@ -157,9 +154,11 @@ export default function EditEventPage() {
     return (
       <div className="w-full min-h-full flex items-center justify-center bg-[#F4F5F8] p-6">
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
-          <h1 className="text-lg font-bold text-gray-900">{cmsText("eventUnavailable", "Event unavailable")}</h1>
+          <h1 className="text-lg font-bold text-gray-900">Event unavailable</h1>
           <p className="text-xs text-gray-500 break-words">{loadError}</p>
-          <Link href="/events" className="inline-block px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-xs font-semibold">{cmsText("backToEvents", "Back to Events")}</Link>
+          <Link href="/events" className="inline-block px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-xs font-semibold">
+            Back to Events
+          </Link>
         </div>
       </div>
     );
@@ -167,9 +166,9 @@ export default function EditEventPage() {
 
   return (
     <>
-    <PopupMessage message={conflict ? cmsText("thisEventWasChangedBySomeoneElseAfter", "This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten.") : null} type="warning" title={cmsText("eventChangedBySomeoneElse", "Event changed by someone else")} action={{ label: "Reload the latest version (discards my edits)", onClick: () => { draftState.clearDraft(); window.location.reload(); } }} />
+    <PopupMessage message={conflict ? "This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten." : null} type="warning" title="Event changed by someone else" action={{ label: "Reload the latest version (discards my edits)", onClick: () => { draftState.clearDraft(); window.location.reload(); } }} />
     <EventWizard
-      heading={cmsText("editEvent", "Edit Event")}
+      heading="Edit Event"
       eventId={eventId}
       createdAt={createdAt}
       extraCategory={extraCategory}
@@ -183,8 +182,8 @@ export default function EditEventPage() {
       readOnlyReason={lockReason ?? undefined}
       readOnlyActions={lockReason ? (
         <>
-          {canStillAdd.users && <Link href={`/events/${eventId}/assign-users`} className="px-5 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] text-sm font-medium rounded-md">{cmsText("assignUsers", "Assign Users")}</Link>}
-          {canStillAdd.invitees && <Link href={`/events/${eventId}/invitees`} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">{cmsText("addInvitees", "Add Invitees")}</Link>}
+          {canStillAdd.users && <Link href={`/events/${eventId}/assign-users`} className="px-5 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] text-sm font-medium rounded-md">Assign Users</Link>}
+          {canStillAdd.invitees && <Link href={`/events/${eventId}/invitees`} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">Add Invitees</Link>}
         </>
       ) : undefined}
       canDiscard

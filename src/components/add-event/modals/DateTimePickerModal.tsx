@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
@@ -64,14 +62,13 @@ interface TimeStepperProps {
 }
 
 function TimeStepper({ hourIdx, minuteIdx, ampmIdx, onHour, onMinute, onAmpm }: TimeStepperProps) {
-  const cmsText = useDashboardCopy();
   const wrap = (i: number, n: number) => ((i % n) + n) % n;
   return (
     <div className="flex items-center justify-center gap-1.5">
-      <StepColumn label={cmsText("hour", "hour")} value={HOURS[hourIdx]} onUp={() => onHour(wrap(hourIdx + 1, 12))} onDown={() => onHour(wrap(hourIdx - 1, 12))} />
+      <StepColumn label="hour" value={HOURS[hourIdx]} onUp={() => onHour(wrap(hourIdx + 1, 12))} onDown={() => onHour(wrap(hourIdx - 1, 12))} />
       <span className="text-lg font-bold text-gray-500" aria-hidden>:</span>
-      <StepColumn label={cmsText("minute", "minute")} value={MINUTES[minuteIdx]} onUp={() => onMinute(wrap(minuteIdx + 1, 60))} onDown={() => onMinute(wrap(minuteIdx - 1, 60))} />
-      <StepColumn label={cmsText("amOrPm", "AM or PM")} value={AMPM[ampmIdx]} onUp={() => onAmpm(ampmIdx === 0 ? 1 : 0)} onDown={() => onAmpm(ampmIdx === 0 ? 1 : 0)} />
+      <StepColumn label="minute" value={MINUTES[minuteIdx]} onUp={() => onMinute(wrap(minuteIdx + 1, 60))} onDown={() => onMinute(wrap(minuteIdx - 1, 60))} />
+      <StepColumn label="AM or PM" value={AMPM[ampmIdx]} onUp={() => onAmpm(ampmIdx === 0 ? 1 : 0)} onDown={() => onAmpm(ampmIdx === 0 ? 1 : 0)} />
     </div>
   );
 }
@@ -80,7 +77,6 @@ function TimeStepper({ hourIdx, minuteIdx, ampmIdx, onHour, onMinute, onAmpm }: 
 // Main modal
 // ---------------------------------------------------------------------------
 export default function DateTimePickerModal({ isOpen, onClose, onSave, value, title }: DateTimePickerModalProps) {
-  const cmsText = useDashboardCopy();
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef   = useRef<HTMLDivElement>(null);
 
@@ -185,7 +181,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         {/* Header: title and close */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E5E5]">
           <h2 className="text-base font-medium text-[#15191C]">{title || "Select Date & Time"}</h2>
-          <button type="button" onClick={onClose} aria-label={cmsText("close", "Close")} className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -196,12 +192,12 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         <div className="p-4 grid grid-cols-1 sm:grid-cols-[1.45fr_1fr] gap-4 items-stretch">
           <div className="bg-[#F3F4F7] p-4 rounded-lg border border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3 px-1">
-              <button type="button" onClick={handlePrevMonth} aria-label={cmsText("previousMonth", "Previous month")} className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
+              <button type="button" onClick={handlePrevMonth} aria-label="Previous month" className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
               <span className="text-[13px] font-semibold text-gray-900">{MONTH_NAMES[currentMonth]} {currentYear}</span>
-              <button type="button" onClick={handleNextMonth} aria-label={cmsText("nextMonth", "Next month")} className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
+              <button type="button" onClick={handleNextMonth} aria-label="Next month" className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
             </div>
             <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#1F65FF] mb-1.5">
-              <span>{cmsText("sun", "Sun")}</span><span>{cmsText("mon", "Mon")}</span><span>{cmsText("tue", "Tue")}</span><span>{cmsText("wed", "Wed")}</span><span>{cmsText("thu", "Thu")}</span><span>{cmsText("fri", "Fri")}</span><span>{cmsText("sat", "Sat")}</span>
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
             <div className="grid grid-cols-7 text-center gap-y-1 text-[13px] font-semibold text-gray-800">
               {calendarCells}
@@ -218,7 +214,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
               />
             </div>
             <div className="bg-[#EAF1FF] border border-[#D6E4FF] rounded-lg px-3 py-3 text-center">
-              <p className="text-[11px] text-gray-500 font-medium mb-1">{cmsText("selectedDateTime", "Selected Date & Time")}</p>
+              <p className="text-[11px] text-gray-500 font-medium mb-1">Selected Date &amp; Time</p>
               <p className="text-[13px] font-semibold text-gray-900">
                 {Math.min(selectedDay, daysInMonth).toString().padStart(2, "0")} {MONTH_NAMES[currentMonth]} {currentYear}, {displayTime}
               </p>
@@ -228,7 +224,9 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-[#E5E5E5] flex justify-end gap-3">
-          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">{cmsText("save", "Save")}</button>
+          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
+            Save
+          </button>
         </div>
       </div>
     </div>

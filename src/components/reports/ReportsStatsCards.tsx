@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React from "react";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
 import Icon from "@/components/icons/Icon";
@@ -43,20 +41,19 @@ export default function ReportsStatsCards({
   systemUsers = 0,
   loading = false,
 }: ReportsStatsCardsProps) {
-  const cmsText = useDashboardCopy();
   if (loading) {
     return (
-      <SkeletonRegion label={cmsText("loadingReportTotals", "Loading report totals")} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <SkeletonRegion label="Loading report totals" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[158px] rounded-lg!" />)}
       </SkeletonRegion>
     );
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Tile value={totalInvitees} label={cmsText("totalInvitees", "Total Invitees")} icon="invitees" tone="bg-[#D6E4FF]" />
-      <Tile value={totalAttendees} label={cmsText("totalAttendees", "Total Attendees")} icon="attendees" tone="bg-[#C9F6E6]" />
-      <Tile value={String(totalSessions).padStart(2, "0")} label={cmsText("totalSessions", "Total Sessions")} icon="sessions" tone="bg-[#DCE1FF]" />
-      <Tile value={systemUsers} label={cmsText("systemUsers", "System Users")} icon="staff" tone="bg-[#EBDDFF]" />
+      <Tile value={totalInvitees} label="Total Invitees" icon="invitees" tone="bg-[#D6E4FF]" />
+      <Tile value={totalAttendees} label="Total Attendees" icon="attendees" tone="bg-[#C9F6E6]" />
+      <Tile value={String(totalSessions).padStart(2, "0")} label="Total Sessions" icon="sessions" tone="bg-[#DCE1FF]" />
+      <Tile value={systemUsers} label="System Users" icon="staff" tone="bg-[#EBDDFF]" />
     </div>
   );
 }

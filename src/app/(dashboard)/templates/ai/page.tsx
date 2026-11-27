@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -16,13 +14,12 @@ function AiTemplateContent() {
 }
 
 export default function AiTemplatePage() {
-  const cmsText = useDashboardCopy();
   return (
     <div className="w-full min-h-full bg-white">
       <PageHeader
-        title={cmsText("designWithAi", "Design with AI")}
+        title="Design with AI"
         icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>}
-        actions={<Link href="/templates" className="hidden sm:inline-block text-sm text-gray-700 hover:text-[#1A56DB] mr-2">{cmsText("allTemplates", "All templates")}</Link>}
+        actions={<Link href="/templates" className="hidden sm:inline-block text-sm text-gray-700 hover:text-[#1A56DB] mr-2">All templates</Link>}
       />
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24">
         {/* "Design with AI" is switched off for now: the studio below is commented out, uncomment it (and remove the notice) to bring it back
@@ -31,9 +28,9 @@ export default function AiTemplatePage() {
         </Suspense>
         */}
         <div role="status" className="max-w-xl rounded-lg border border-gray-200 bg-gray-50 p-5 text-sm text-gray-700">
-          <p className="font-medium text-gray-900">{cmsText("designWithAiIsTemporarilyUnavailable", "Design with AI is temporarily unavailable.")}</p>
-          <p className="mt-1">{cmsText("pleaseChooseOneOfTheExistingTemplatesFor", "Please choose one of the existing templates for now.")}</p>
-          <Link href="/templates" className="mt-3 inline-block text-[#1F65FF] underline">{cmsText("goToTemplates", "Go to templates")}</Link>
+          <p className="font-medium text-gray-900">Design with AI is temporarily unavailable.</p>
+          <p className="mt-1">Please choose one of the existing templates for now.</p>
+          <Link href="/templates" className="mt-3 inline-block text-[#1F65FF] underline">Go to templates</Link>
         </div>
       </div>
     </div>

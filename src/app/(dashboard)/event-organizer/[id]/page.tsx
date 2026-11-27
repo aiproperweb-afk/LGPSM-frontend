@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { filterPrimaryButtonClass, filterSecondaryButtonClass } from "@/components/common/filterButtons";
 import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -44,7 +42,6 @@ interface OrganizerDetail {
 }
 
 export default function OrganizerDetailsPage() {
-  const cmsText = useDashboardCopy();
   const params = useParams();
   const router = useRouter();
   const organizerId = (params?.id as string) || "";
@@ -196,12 +193,14 @@ export default function OrganizerDetailsPage() {
   if (!loading && !organizer) {
     return (
       <div className="flex-1 flex flex-col min-w-0 bg-white">
-        <PageHeader title={cmsText("eventOrganizer", "Event Organizer")} />
+        <PageHeader title="Event Organizer" />
         <div className="flex-1 flex justify-center items-center py-24 px-6">
           <div className="max-w-md w-full border border-gray-200 rounded-md p-8 text-center space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">{cmsText("organizerUnavailable", "Organizer unavailable")}</h2>
+            <h2 className="text-lg font-bold text-gray-900">Organizer unavailable</h2>
             <p className="text-xs text-gray-500 break-words">{loadError || "Organizer not found."}</p>
-            <Link href="/event-organizer" className="inline-block px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-xs font-semibold">{cmsText("backToOrganizers", "Back to Organizers")}</Link>
+            <Link href="/event-organizer" className="inline-block px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-xs font-semibold">
+              Back to Organizers
+            </Link>
           </div>
         </div>
       </div>
@@ -211,11 +210,11 @@ export default function OrganizerDetailsPage() {
   if (loading || !organizer) {
     return (
       <div className="flex-1 flex flex-col min-w-0 bg-white">
-        <PageHeader title={cmsText("eventOrganizer", "Event Organizer")} />
-        <SkeletonRegion label={cmsText("loadingOrganizer", "Loading organizer")} className="px-6 pt-8 space-y-5">
+        <PageHeader title="Event Organizer" />
+        <SkeletonRegion label="Loading organizer" className="px-6 pt-8 space-y-5">
           <Skeleton className="h-[110px]" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[92px]" />)}</div>
-          <TableSkeleton rows={5} cols={6} label={cmsText("loadingEvents", "Loading events")} />
+          <TableSkeleton rows={5} cols={6} label="Loading events" />
         </SkeletonRegion>
       </div>
     );
@@ -224,7 +223,7 @@ export default function OrganizerDetailsPage() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
-        <PageHeader title={cmsText("eventOrganizer", "Event Organizer")} />
+        <PageHeader title="Event Organizer" />
 
         {/* Page Content */}
         <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
@@ -240,7 +239,7 @@ export default function OrganizerDetailsPage() {
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-[#1F65FF]/10 border border-[#1F65FF]/20 text-[#1F65FF] flex items-center justify-center font-bold text-xl uppercase tracking-wider shrink-0">
-                  {organizer.name ? organizer.name.slice(0, 2) : cmsText("og", "OG")}
+                  {organizer.name ? organizer.name.slice(0, 2) : "OG"}
                 </div>
               )}
               <div className="space-y-1.5 min-w-0">
@@ -252,16 +251,16 @@ export default function OrganizerDetailsPage() {
                         : "bg-emerald-100 text-emerald-700"
                       }`}
                   >
-                    {isDeactivated ? cmsText("deactivated", "Deactivated") : cmsText("active", "Active")}
+                    {isDeactivated ? "Deactivated" : "Active"}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 flex items-center gap-4 flex-wrap">
                   <span className="break-all">
-                    <strong className="text-gray-700">{cmsText("email3", "Email:")}</strong> {organizer.email}
+                    <strong className="text-gray-700">Email:</strong> {organizer.email}
                   </span>
                   <span className="text-gray-300">|</span>
                   <span>
-                    <strong className="text-gray-700">{cmsText("phone", "Phone:")}</strong> {organizer.phone}
+                    <strong className="text-gray-700">Phone:</strong> {organizer.phone}
                   </span>
                 </div>
               </div>
@@ -273,7 +272,7 @@ export default function OrganizerDetailsPage() {
                 onClick={() => setIsRateOpen(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#EAF1FF] hover:bg-[#D6E4FF] text-[#1F65FF] text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
-                <span>{cmsText("setRate", "Set Rate")}</span>
+                <span>Set Rate</span>
               </button>
               <button
                 onClick={() => setIsDeactivateModalOpen(true)}
@@ -283,7 +282,7 @@ export default function OrganizerDetailsPage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
                 </svg>
-                <span>{isDeactivated ? cmsText("deactivated", "Deactivated") : cmsText("deactivate", "Deactivate")}</span>
+                <span>{isDeactivated ? "Deactivated" : "Deactivate"}</span>
               </button>
             </div>
           </div>
@@ -296,7 +295,7 @@ export default function OrganizerDetailsPage() {
             {/* Total Events */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">{cmsText("totalEvents", "Total Events")}</span>
+                <span className="text-sm font-medium text-[#15191C] block">Total Events</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">{events.length}</span>
               </div>
               <div className="size-[52px] rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
@@ -309,7 +308,7 @@ export default function OrganizerDetailsPage() {
             {/* Upcoming Events */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">{cmsText("upcomingEvents", "Upcoming Events")}</span>
+                <span className="text-sm font-medium text-[#15191C] block">Upcoming Events</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">{upcomingEventsCount}</span>
               </div>
               <div className="size-[52px] rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
@@ -322,9 +321,9 @@ export default function OrganizerDetailsPage() {
             {/* Earnings */}
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-[#15191C] block">{cmsText("earnings", "Earnings")}</span>
+                <span className="text-sm font-medium text-[#15191C] block">Earnings</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">—</span>
-                <span className="text-[10px] text-gray-500 block">{cmsText("billingIsNotConfiguredYet", "Billing is not configured yet")}</span>
+                <span className="text-[10px] text-gray-500 block">Billing is not configured yet</span>
               </div>
               <div className="size-[52px] rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +337,7 @@ export default function OrganizerDetailsPage() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2.5 flex-1 max-w-[340px]">
-                <h3 className="text-[17px] font-medium text-black shrink-0">{cmsText("events", "Events")}</h3>
+                <h3 className="text-[17px] font-medium text-black shrink-0">Events</h3>
                 <div className="relative flex-1">
                   <svg
                     className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2"
@@ -350,7 +349,7 @@ export default function OrganizerDetailsPage() {
                   </svg>
                   <input
                     type="text"
-                    placeholder={cmsText("searchEvent", "Search event..")}
+                    placeholder="Search event.."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-[47px] pl-10 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -373,8 +372,8 @@ export default function OrganizerDetailsPage() {
                     {activeFilterCount > 0 && <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-[#1F65FF] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
                   </button>
                   {filterOpen && (
-                    <div role="dialog" aria-label={cmsText("filterEvents", "Filter events")} className="absolute right-0 top-full mt-2 z-30 w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-[#E0E0E0] rounded-lg shadow-xl p-4 space-y-3 text-left">
-                      <p className="text-sm font-medium text-[#15191C]">{cmsText("filterEvents", "Filter events")}</p>
+                    <div role="dialog" aria-label="Filter events" className="absolute right-0 top-full mt-2 z-30 w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-[#E0E0E0] rounded-lg shadow-xl p-4 space-y-3 text-left">
+                      <p className="text-sm font-medium text-[#15191C]">Filter events</p>
                       <CustomDropdown
                         ariaLabel="Category"
                         value={draftFilters.category}
@@ -388,14 +387,18 @@ export default function OrganizerDetailsPage() {
                         options={[{ value: "", label: "All statuses" }, ...["Upcoming", "Ongoing", "Completed", "Invitation not sent", "Cancelled"].map((st) => ({ value: st, label: st }))]}
                       />
                       <div className="grid grid-cols-2 gap-2">
-                        <label className="text-xs font-medium text-[#4B4F52]">{cmsText("startsFrom", "Starts from")}<DateField className="mt-1" placeholder={cmsText("selectDate", "Select date")} value={draftFilters.from} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, from: v, to: f.to && v > f.to ? v : f.to }))} />
+                        <label className="text-xs font-medium text-[#4B4F52]">
+                          Starts from
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.from} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, from: v, to: f.to && v > f.to ? v : f.to }))} />
                         </label>
-                        <label className="text-xs font-medium text-[#4B4F52]">{cmsText("startsUntil", "Starts until")}<DateField className="mt-1" placeholder={cmsText("selectDate", "Select date")} value={draftFilters.to} min={draftFilters.from || undefined} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, to: v }))} />
+                        <label className="text-xs font-medium text-[#4B4F52]">
+                          Starts until
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.to} min={draftFilters.from || undefined} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, to: v }))} />
                         </label>
                       </div>
                       <div className="flex items-center gap-3 pt-1">
-                        <button type="button" onClick={() => { const cleared = { category: "", status: "", from: "", to: "" }; setDraftFilters(cleared); setFilters(cleared); setFilterOpen(false); }} className={filterSecondaryButtonClass}>{cmsText("reset", "Reset")}</button>
-                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className={filterPrimaryButtonClass}>{cmsText("apply", "Apply")}</button>
+                        <button type="button" onClick={() => { const cleared = { category: "", status: "", from: "", to: "" }; setDraftFilters(cleared); setFilters(cleared); setFilterOpen(false); }} className={filterSecondaryButtonClass}>Reset</button>
+                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className={filterPrimaryButtonClass}>Apply</button>
                       </div>
                     </div>
                   )}
@@ -407,7 +410,7 @@ export default function OrganizerDetailsPage() {
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>{cmsText("addEvent", "Add Event")}</span>
+                  <span>Add Event</span>
                 </Link>
               </div>
             </div>
@@ -417,19 +420,19 @@ export default function OrganizerDetailsPage() {
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm bg-white">
-                    <th className="py-3 px-4 font-medium">{cmsText("eventId", "Event ID")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("eventName", "Event Name")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("organizer", "Organizer")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("createdOn", "Created on")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("category", "Category")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("eventStartDate", "Event Start Date")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("eventEndDate", "Event End Date")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("status", "Status")}</th>
+                    <th className="py-3 px-4 font-medium">Event ID</th>
+                    <th className="py-3 px-4 font-medium">Event Name</th>
+                    <th className="py-3 px-4 font-medium">Organizer</th>
+                    <th className="py-3 px-4 font-medium">Created on</th>
+                    <th className="py-3 px-4 font-medium">Category</th>
+                    <th className="py-3 px-4 font-medium">Event Start Date</th>
+                    <th className="py-3 px-4 font-medium">Event End Date</th>
+                    <th className="py-3 px-4 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
                   {filteredEvents.length === 0 && (
-                    <tr><td colSpan={8} className="py-12 text-center text-gray-500 text-sm">{events.length > 0 ? cmsText("noEventsMatchYourSearchOrFilters", "No events match your search or filters.") : cmsText("noEventsFoundForThisOrganizer", "No events found for this organizer.")}</td></tr>
+                    <tr><td colSpan={8} className="py-12 text-center text-gray-500 text-sm">{events.length > 0 ? "No events match your search or filters." : "No events found for this organizer."}</td></tr>
                   )}
                   {filteredEvents.map((ev) => (
                     <tr key={ev.id} onClick={() => router.push(`/events/${ev.id}`)} onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === "Enter") router.push(`/events/${ev.id}`); }} tabIndex={0} role="link" aria-label={`Open ${ev.name}`} className="hover:bg-gray-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1F65FF] transition-colors cursor-pointer">
@@ -442,16 +445,24 @@ export default function OrganizerDetailsPage() {
                       <td className="py-4 px-4 text-gray-600">{ev.endDate}</td>
                       <td className="py-4 px-4">
                         {ev.status === "Upcoming" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">{cmsText("upcoming", "Upcoming")}</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
+                            Upcoming
+                          </span>
                         )}
                         {ev.status === "Completed" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">{cmsText("completed", "Completed")}</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+                            Completed
+                          </span>
                         )}
                         {ev.status === "Ongoing" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">{cmsText("ongoing", "Ongoing")}</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">
+                            Ongoing
+                          </span>
                         )}
                         {ev.status === "Invitation not sent" && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">{cmsText("invitationNotSent", "Invitation not sent")}</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
+                            Invitation not sent
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -468,7 +479,7 @@ export default function OrganizerDetailsPage() {
           <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">{cmsText("deactivateOrganizer", "Deactivate Organizer")}</h3>
+              <h3 className="text-base font-medium text-[#15191C]">Deactivate Organizer</h3>
               <button
                 onClick={() => setIsDeactivateModalOpen(false)}
                 className="text-gray-500 hover:text-gray-600 cursor-pointer"
@@ -483,7 +494,8 @@ export default function OrganizerDetailsPage() {
             <form onSubmit={handleDeactivate} className="px-6 pt-5 space-y-5">
               {/* Reason Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">{cmsText("reason", "Reason")}<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">
+                  Reason<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <CustomDropdown portal
                   value={deactivateReason}
@@ -500,12 +512,13 @@ export default function OrganizerDetailsPage() {
 
               {/* Message Organizer Textarea */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">{cmsText("messageOrganizer", "Message Organizer")}<span className="text-red-500 ml-0.5">*</span>
+                <label className="text-sm font-medium text-[#15191C]">
+                  Message Organizer<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <textarea
                   rows={6}
                   required
-                  placeholder={cmsText("type", "Type")}
+                  placeholder="Type"
                   value={deactivateMessage}
                   onChange={(e) => setDeactivateMessage(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black resize-none"
@@ -521,7 +534,9 @@ export default function OrganizerDetailsPage() {
                   type="submit"
                   disabled={isDeactivating}
                   className="px-6 py-[11px] bg-[#D92D20] hover:bg-[#B42318] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60"
-                >{cmsText("deactivate", "Deactivate")}</button>
+                >
+                  Deactivate
+                </button>
               </div>
             </form>
           </div>

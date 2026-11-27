@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
 import React, { useState, useEffect, useRef } from "react";
@@ -55,7 +53,6 @@ export default function AddInviteeManualModal({
   onClose,
   onSaved,
 }: AddInviteeManualModalProps) {
-  const cmsText = useDashboardCopy();
   const has = (k: InviteeFieldKey) => fields.includes(k);
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -171,12 +168,14 @@ export default function AddInviteeManualModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 id="add-invitee-manual-title" className="text-base font-bold text-gray-900">{cmsText("addInvitee", "Add Invitee")}</h2>
+          <h2 id="add-invitee-manual-title" className="text-base font-bold text-gray-900">
+            Add Invitee
+          </h2>
           <button
             type="button"
             onClick={closeModal}
             disabled={submitting}
-            aria-label={cmsText("close", "Close")}
+            aria-label="Close"
             className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer disabled:opacity-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -191,7 +190,7 @@ export default function AddInviteeManualModal({
             {/* Session first, when sessions keep their own invitee lists */}
             {sessionOptions.length > 1 && onSessionChange && (
               <div>
-                <span className={labelClass}>{cmsText("addToSession", "Add to session")}</span>
+                <span className={labelClass}>Add to session</span>
                 <CustomDropdown
                   portal
                   ariaLabel="Add to session"
@@ -204,14 +203,15 @@ export default function AddInviteeManualModal({
 
             {/* Name */}
             <div>
-              <label htmlFor="ai-name" className={labelClass}>{cmsText("fullName", "Full Name") + " "}<span className="text-rose-500">*</span>
+              <label htmlFor="ai-name" className={labelClass}>
+                Full Name <span className="text-rose-500">*</span>
               </label>
               <input
                 id="ai-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={cmsText("eGPriyaSharma", "e.g. Priya Sharma")}
+                placeholder="e.g. Priya Sharma"
                 className={inputClass}
                 autoComplete="off"
                 required
@@ -220,14 +220,16 @@ export default function AddInviteeManualModal({
 
             {/* Email */}
             <div>
-              <label htmlFor="ai-email" className={labelClass}>{cmsText("emailAddress", "Email Address")}<span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("requiredIfNoMobile", "(required if no mobile)")}</span>
+              <label htmlFor="ai-email" className={labelClass}>
+                Email Address
+                <span className="text-[#6B6B6B] font-normal text-xs ml-1">(required if no mobile)</span>
               </label>
               <input
                 id="ai-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={cmsText("eGPriyaExampleCom", "e.g. priya@example.com")}
+                placeholder="e.g. priya@example.com"
                 className={inputClass}
                 autoComplete="off"
               />
@@ -235,7 +237,9 @@ export default function AddInviteeManualModal({
 
             {/* Mobile */}
             <div>
-              <label htmlFor="ai-mobile" className={labelClass}>{cmsText("mobileNumber", "Mobile Number")}<span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("requiredIfNoEmail", "(required if no email)")}</span>
+              <label htmlFor="ai-mobile" className={labelClass}>
+                Mobile Number
+                <span className="text-[#6B6B6B] font-normal text-xs ml-1">(required if no email)</span>
               </label>
               <PhoneInput
                 id="ai-mobile"
@@ -252,19 +256,20 @@ export default function AddInviteeManualModal({
             identityLabel ? (
             <div>
               <label htmlFor="ai-identity" className={labelClass}>
-                {identityLabel} <span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("optional", "(optional)")}</span>
+                {identityLabel} <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
               </label>
               <input id="ai-identity" type="text" value={identityValue} maxLength={100} onChange={(e) => setIdentityValue(e.target.value)} placeholder={`Enter ${identityLabel}`} className={inputClass} autoComplete="off" />
             </div>
             ) : (
             <div>
-              <label className={labelClass}>{cmsText("professionalIdentity", "Professional Identity") + " "}<span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("optional", "(optional)")}</span>
+              <label className={labelClass}>
+                Professional Identity <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
               </label>
               <CustomDropdown
                 value={identityType}
                 onChange={setIdentityType}
                 options={professionalIdentityOptions}
-                placeholder={cmsText("selectAnIdentityType", "Select an identity type")}
+                placeholder="Select an identity type"
                 ariaLabel="Professional identity type"
               />
               {identityType && (
@@ -285,7 +290,7 @@ export default function AddInviteeManualModal({
             {has("identity2") && (
               <div>
                 <label htmlFor="ai-identity2" className={labelClass}>
-                  {identity2Label || "Second Identity"} <span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("optional", "(optional)")}</span>
+                  {identity2Label || "Second Identity"} <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
                 </label>
                 <input id="ai-identity2" type="text" value={identity2Value} maxLength={100} onChange={(e) => setIdentity2Value(e.target.value)} placeholder={`Enter ${identity2Label || "second identity"}`} className={inputClass} autoComplete="off" />
               </div>
@@ -294,14 +299,15 @@ export default function AddInviteeManualModal({
             {/* Company: when chosen for the card; never required */}
             {has("company") && (
               <div>
-                <label htmlFor="ai-company" className={labelClass}>{cmsText("companyName", "Company Name") + " "}<span className="text-[#6B6B6B] font-normal text-xs ml-1">{cmsText("optional", "(optional)")}</span>
+                <label htmlFor="ai-company" className={labelClass}>
+                  Company Name <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
                 </label>
                 <input
                   id="ai-company"
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder={cmsText("eGAcmeCorp", "e.g. Acme Corp")}
+                  placeholder="e.g. Acme Corp"
                   className={inputClass}
                   autoComplete="off"
                 />
@@ -324,7 +330,9 @@ export default function AddInviteeManualModal({
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>{cmsText("adding", "Adding...")}</span>
+                  </svg>
+                  Adding...
+                </span>
               ) : (
                 "Add Invitee"
               )}

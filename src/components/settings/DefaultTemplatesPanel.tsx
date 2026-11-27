@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useEffect, useState } from "react";
 import { templateService, DefaultTemplatePlan } from "@/services/templateService";
 import { useAlert } from "@/context/AlertContext";
@@ -9,7 +7,6 @@ import { useAlert } from "@/context/AlertContext";
 // Offers the invitation designs the designers made (birthday, wedding, rice ceremony, corporate) as ready-to-use
 // templates. Shown only while some of them are missing, and nothing existing is ever changed by adding them.
 export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: () => void | Promise<void> }) {
-  const cmsText = useDashboardCopy();
   const { confirm, showAlert } = useAlert();
   const [plan, setPlan] = useState<DefaultTemplatePlan | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,9 +49,10 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
   return (
     <section aria-labelledby="default-templates-title" className="border border-[#D6E4FF] bg-[#FFF8F3] rounded-lg p-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h2 id="default-templates-title" className="text-base font-semibold text-gray-900">{cmsText("invitationDesignsFromTheDesignTeam", "Invitation designs from the design team")}</h2>
+        <h2 id="default-templates-title" className="text-base font-semibold text-gray-900">Invitation designs from the design team</h2>
         <p className="mt-1 text-sm text-[#4B4F52]">
-          {plan.templatesToCreate.length}{" " + cmsText("readyMadeInvitationDesign", "ready-made invitation design")}{plan.templatesToCreate.length === 1 ? cmsText("is", "is") : cmsText("sAre", "s are")}{" " + cmsText("notInYourListYetEachCardIs", "not in your list yet. Each card is filled in automatically from the event, so a birthday reads like a birthday and a summit like a summit.")}</p>
+          {plan.templatesToCreate.length} ready-made invitation design{plan.templatesToCreate.length === 1 ? " is" : "s are"} not in your list yet. Each card is filled in automatically from the event, so a birthday reads like a birthday and a summit like a summit.
+        </p>
         <ul className="mt-3 flex flex-wrap gap-2">
           {plan.templatesToCreate.map((t) => (
             <li key={t.name} className="text-xs bg-white border border-[#E1EAF8] rounded-full px-3 py-1 text-gray-800">
@@ -70,7 +68,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
         disabled={busy}
         className="shrink-0 px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {busy ? cmsText("adding", "Adding...") : cmsText("addDefaultTemplates", "Add default templates")}
+        {busy ? "Adding..." : "Add default templates"}
       </button>
     </section>
   );

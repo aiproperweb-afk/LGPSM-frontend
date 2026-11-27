@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import Image from "next/image";
@@ -45,7 +43,6 @@ type Busy = null | "starting" | "saving" | "discarding";
 
 /** With `editTemplateId` the studio changes a design that is already saved, instead of creating a new one. */
 export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: string }) {
-  const cmsText = useDashboardCopy();
   const [editTarget, setEditTarget] = useState<{ id: string; name: string; imageKey: string | null; kind: TemplateKind } | null>(null);
   const [editLoadError, setEditLoadError] = useState<string | null>(null);
   const [options, setOptions] = useState<GenerationOptions | null>(null);
@@ -239,19 +236,19 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
   if (optionsError) {
     const missing = /route not found|not found/i.test(optionsError);
-    return <Panel tone={missing ? "info" : "error"} title={cmsText("aiDesignIsNotAvailable", "AI design is not available")} message={missing ? cmsText("thereWasAProblemWithTheAiDesign", "There was a problem with the AI design service.") : optionsError} />;
+    return <Panel tone={missing ? "info" : "error"} title="AI design is not available" message={missing ? "There was a problem with the AI design service." : optionsError} />;
   }
-  if (!options) return <SkeletonRegion label={cmsText("loading", "Loading")} className="space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-40" /><Skeleton className="h-12 w-40" /></SkeletonRegion>;
+  if (!options) return <SkeletonRegion label="Loading" className="space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-40" /><Skeleton className="h-12 w-40" /></SkeletonRegion>;
   if (!options.available) {
-    return <Panel tone="info" title={cmsText("aiDesignIsNotAvailableRightNow", "AI design is not available right now")} message={cmsText("theDesignServiceIsNotSetUpOn", "The design service is not set up on this server. You can still use the ready-made templates.")} action={{ href: "/templates", label: "Browse templates" }} />;
+    return <Panel tone="info" title="AI design is not available right now" message="The design service is not set up on this server. You can still use the ready-made templates." action={{ href: "/templates", label: "Browse templates" }} />;
   }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6 items-start">
-      <form onSubmit={generate} className="bg-white border border-[#E0E0E0] rounded-lg p-5 space-y-5 xl:sticky xl:top-24" aria-label={cmsText("describeYourDesign", "Describe your design")}>
+      <form onSubmit={generate} className="bg-white border border-[#E0E0E0] rounded-lg p-5 space-y-5 xl:sticky xl:top-24" aria-label="Describe your design">
         <div>
-          <h2 className="text-base font-medium text-gray-900">{editTarget ? cmsText("editYourDesign", "Edit your design") : cmsText("describeYourDesign", "Describe your design")}</h2>
-          <p className="text-sm text-[#6B6B6B] mt-0.5">{cmsText("weDesignTheLookYourEventDetailsAre", "We design the look. Your event details are filled in automatically every time you use it.")}</p>
+          <h2 className="text-base font-medium text-gray-900">{editTarget ? "Edit your design" : "Describe your design"}</h2>
+          <p className="text-sm text-[#6B6B6B] mt-0.5">We design the look. Your event details are filled in automatically every time you use it.</p>
         </div>
 
         {editTarget ? (
@@ -263,45 +260,45 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">{cmsText("editing", "Editing")}</p>
+                <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">Editing</p>
                 <p className="text-sm font-medium text-gray-900 break-words">{editTarget.name}</p>
-                <p className="text-xs text-[#6B6B6B] mt-1">{cmsText("yourOriginalStaysAsItIsUntilYou", "Your original stays as it is until you choose to replace it.")}</p>
+                <p className="text-xs text-[#6B6B6B] mt-1">Your original stays as it is until you choose to replace it.</p>
               </div>
             </div>
             <div>
-              <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("whatShouldChange", "What should change?")}</label>
-              <textarea id="ai-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={options?.limits.changeMax || 500} placeholder={cmsText("eGUseADeepBlueBackgroundAnd", "e.g. Use a deep blue background and make the title larger")} className={inputClass} />
-              <div className="mt-1 flex justify-between text-xs text-[#6B6B6B]"><span>{prompt.length > 0 && prompt.trim().length < 10 ? <span className="text-rose-600">{cmsText("addALittleMoreDetail10Characters", "Add a little more detail (10+ characters)")}</span> : cmsText("describeOnlyWhatYouWantDifferent", "Describe only what you want different.")}</span><span className="tabular-nums">{prompt.length}/{options?.limits.changeMax || 500}</span></div>
+              <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">What should change?</label>
+              <textarea id="ai-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={options?.limits.changeMax || 500} placeholder="e.g. Use a deep blue background and make the title larger" className={inputClass} />
+              <div className="mt-1 flex justify-between text-xs text-[#6B6B6B]"><span>{prompt.length > 0 && prompt.trim().length < 10 ? <span className="text-rose-600">Add a little more detail (10+ characters)</span> : "Describe only what you want different."}</span><span className="tabular-nums">{prompt.length}/{options?.limits.changeMax || 500}</span></div>
             </div>
           </>
         ) : editTemplateId && !editLoadError ? (
-          <SkeletonRegion label={cmsText("loadingTheDesignToEdit", "Loading the design to edit")} className="space-y-3"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-32" /></SkeletonRegion>
+          <SkeletonRegion label="Loading the design to edit" className="space-y-3"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-32" /></SkeletonRegion>
         ) : editLoadError ? (
           <ErrorBanner error={{ title: "This design cannot be edited", message: editLoadError, retryable: false, kind: "validation" }} />
         ) : (
           <>
         <fieldset>
-          <legend className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("whatAreYouMaking", "What are you making?")}</legend>
+          <legend className="block text-sm font-medium text-gray-900 mb-1.5">What are you making?</legend>
           <div className="grid grid-cols-2 gap-2" role="radiogroup">
             {(["INVITATION", "POSTER"] as TemplateKind[]).map((k) => (
               <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`rounded-md border px-3 py-2.5 text-sm font-medium cursor-pointer ${kind === k ? "border-[#1F65FF] bg-[#EAF1FF] text-[#1F65FF]" : "border-[#D9D9D9] text-gray-700 hover:bg-gray-50"}`}>
-                {k === "INVITATION" ? cmsText("invitation", "Invitation") : cmsText("poster", "Poster")}
+                {k === "INVITATION" ? "Invitation" : "Poster"}
               </button>
             ))}
           </div>
-          <p className="text-xs text-[#6B6B6B] mt-1.5">{kind === "INVITATION" ? cmsText("eachGuestGetsTheirOwnCheckInQr", "Each guest gets their own check-in QR code on it.") : cmsText("carriesARegistrationQrCodeYouChooseWhen", "Carries a registration QR code you choose when you download it.")}</p>
+          <p className="text-xs text-[#6B6B6B] mt-1.5">{kind === "INVITATION" ? "Each guest gets their own check-in QR code on it." : "Carries a registration QR code you choose when you download it."}</p>
         </fieldset>
 
         <div>
-          <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("size", "Size")}</span>
+          <span className="block text-sm font-medium text-gray-900 mb-1.5">Size</span>
           <CustomDropdown ariaLabel="Size" value={effectivePreset} onChange={setPreset} options={presets.map((p) => ({ value: p.id, label: presetLabel(p) }))} />
         </div>
 
         <div>
-          <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("describeTheLook", "Describe the look")}</label>
+          <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">Describe the look</label>
           <textarea id="ai-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={promptMax} placeholder={PROMPT_EXAMPLES[kind][0]} className={inputClass} aria-describedby="ai-prompt-help" />
           <div id="ai-prompt-help" className="mt-1 flex items-start justify-between gap-3 text-xs text-[#6B6B6B]">
-            <span>{prompt.length > 0 && promptTooShort ? <span className="text-rose-600">{cmsText("addALittleMoreDetail", "Add a little more detail (")}{options.limits.promptMin}{cmsText("characters", "+ characters)")}</span> : cmsText("mentionOccasionMoodAndColours", "Mention occasion, mood and colours.")}</span>
+            <span>{prompt.length > 0 && promptTooShort ? <span className="text-rose-600">Add a little more detail ({options.limits.promptMin}+ characters)</span> : "Mention occasion, mood and colours."}</span>
             <span className="shrink-0 tabular-nums">{prompt.length}/{promptMax}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -315,17 +312,17 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("mood", "Mood")}</span>
+            <span className="block text-sm font-medium text-gray-900 mb-1.5">Mood</span>
             <CustomDropdown ariaLabel="Mood" value={mood} onChange={setMood} options={[{ value: "", label: "Any" }, ...options.moods.map((m) => ({ value: m, label: m[0].toUpperCase() + m.slice(1) }))]} />
           </div>
           <div>
-            <label htmlFor="ai-colors" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("colours", "Colours")}</label>
-            <input id="ai-colors" value={colorHint} onChange={(e) => setColorHint(e.target.value)} maxLength={40} placeholder={cmsText("eGNavyGold", "e.g. navy & gold")} className={inputClass} />
+            <label htmlFor="ai-colors" className="block text-sm font-medium text-gray-900 mb-1.5">Colours</label>
+            <input id="ai-colors" value={colorHint} onChange={(e) => setColorHint(e.target.value)} maxLength={40} placeholder="e.g. navy & gold" className={inputClass} />
           </div>
         </div>
 
         <div>
-          <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("optionsToGenerate", "Options to generate")}</span>
+          <span className="block text-sm font-medium text-gray-900 mb-1.5">Options to generate</span>
           <CustomDropdown ariaLabel="Options to generate" value={String(variantCount)} onChange={(v) => setVariantCount(Number(v))} options={Array.from({ length: options.limits.maxVariants }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))} />
         </div>
 
@@ -335,23 +332,23 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
         {error && !job && <ErrorBanner error={error} />}
 
         <button type="submit" disabled={busy !== null || running || promptTooShort || usageExhausted(usage) || (!!editTemplateId && !editTarget)} className="w-full rounded-md bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 cursor-pointer">
-          {busy === "starting" ? cmsText("starting", "Starting…") : running ? cmsText("designing", "Designing…") : editTarget ? cmsText("applyEdit", "Apply edit") : cmsText("generateDesigns", "Generate designs")}
+          {busy === "starting" ? "Starting…" : running ? "Designing…" : editTarget ? "Apply edit" : "Generate designs"}
         </button>
         <p className={`text-xs text-center ${usageExhausted(usage) ? "text-amber-700 font-medium" : "text-[#6B6B6B]"}`} aria-live="polite">{usageLabel(usage) || `Up to ${options.limits.dailyQuota} generations per day.`}</p>
       </form>
 
-      <section aria-live="polite" aria-label={cmsText("designs", "Designs")} className="min-w-0 space-y-5">
+      <section aria-live="polite" aria-label="Designs" className="min-w-0 space-y-5">
         {!job && (
           <div className="relative rounded-lg bg-[#FAFAFA] py-16 px-6 text-center">
             <DashedBorder width={1} radius={8} className="text-[#D9D9D9]" />
-            <p className="text-base font-medium text-gray-900">{cmsText("yourDesignsWillAppearHere", "Your designs will appear here")}</p>
-            <p className="text-sm text-[#6B6B6B] mt-1 max-w-md mx-auto">{cmsText("describeTheLookYouWantAndChooseGenerate", "Describe the look you want and choose Generate. A design usually takes about a minute.")}</p>
+            <p className="text-base font-medium text-gray-900">Your designs will appear here</p>
+            <p className="text-sm text-[#6B6B6B] mt-1 max-w-md mx-auto">Describe the look you want and choose Generate. A design usually takes about a minute.</p>
           </div>
         )}
 
         {recent.length > 0 && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#6B6B6B] mb-2">{cmsText("recent", "Recent")}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-[#6B6B6B] mb-2">Recent</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {recent.map((j) => (
                 <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#1F65FF] bg-[#EAF1FF]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
@@ -374,7 +371,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 <div key={i} className="aspect-[9/16] rounded-md bg-gradient-to-b from-[#F4F5F8] to-[#ECEDF1] animate-pulse" />
               ))}
             </div>
-            {slow && <p className="mt-4 text-sm text-[#6B6B6B]">{cmsText("thisIsTakingLongerThanUsualItKeeps", "This is taking longer than usual. It keeps running on our servers, so you can leave this page and come back.")}</p>}
+            {slow && <p className="mt-4 text-sm text-[#6B6B6B]">This is taking longer than usual. It keeps running on our servers, so you can leave this page and come back.</p>}
           </div>
         )}
 
@@ -382,7 +379,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
           <div className="space-y-3">
             <ErrorBanner error={describeGenerationError(job.error || {})} />
             <div className="flex gap-3">
-              <button type="button" onClick={discard} className="text-sm text-gray-700 underline cursor-pointer">{cmsText("clear", "Clear")}</button>
+              <button type="button" onClick={discard} className="text-sm text-gray-700 underline cursor-pointer">Clear</button>
             </div>
           </div>
         )}
@@ -391,13 +388,15 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
           <>
             {job.status === "CONCEPT_ONLY" && (
               <div role="status" className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p className="font-medium">{cmsText("weCouldDrawTheIdeaButNotTurn", "We could draw the idea, but not turn it into a usable template.")}</p>
-                <p className="mt-1">{cmsText("thePictureBelowIsOnlyAConceptIt", "The picture below is only a concept: it can't be used for invitations or posters. Ask for changes or generate again.")}</p>
+                <p className="font-medium">We could draw the idea, but not turn it into a usable template.</p>
+                <p className="mt-1">The picture below is only a concept: it can&apos;t be used for invitations or posters. Ask for changes or generate again.</p>
               </div>
             )}
 
             {job.mode === "CREATE" && job.variants.length < job.variantCount && (
-              <p role="status" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{cmsText("youAskedFor", "You asked for") + " "}{job.variantCount}{" " + cmsText("optionsButOnly", "options, but only") + " "}{job.variants.length}{" " + cmsText("couldBeCreatedThisTimeUseMoreLike", "could be created this time. Use “More like this” to try for more.")}</p>
+              <p role="status" className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                You asked for {job.variantCount} options, but only {job.variants.length} could be created this time. Use &ldquo;More like this&rdquo; to try for more.
+              </p>
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -408,10 +407,10 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 return (
                   <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#2563EB]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
                     <div className="relative w-full aspect-[9/16] bg-[#F4F5F8]">
-                      {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#6B6B6B]">{cmsText("noPreview", "No preview")}</span>}
+                      {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#6B6B6B]">No preview</span>}
                     </div>
                     <div className="px-3 py-2 flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-gray-900">{cmsText("option", "Option") + " "}{v.index + 1}</span>
+                      <span className="text-sm font-medium text-gray-900">Option {v.index + 1}</span>
                       <span className={`text-xs rounded-full px-2 py-0.5 ${badge.tone === "concept" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>{badge.label}</span>
                     </div>
                   </button>
@@ -432,11 +431,11 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                     </div>
                     {variant.ready && variant.conceptImageKey && (
                       <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-[#F4F5F8] p-1 text-xs" role="tablist">
-                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white font-medium" : "text-gray-600"}`}>{cmsText("yourTemplate", "Your template")}</button>
-                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white font-medium" : "text-gray-600"}`}>{cmsText("originalConcept", "Original concept")}</button>
+                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Your template</button>
+                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Original concept</button>
                       </div>
                     )}
-                    <p className="mt-2 text-xs text-[#6B6B6B]">{variant.ready ? cmsText("previewUsesSampleDetailsYourRealEventVenue", "Preview uses sample details. Your real event, venue and QR code are filled in when you use it.") : cmsText("conceptOnlyNotATemplate", "Concept only, not a template.")}</p>
+                    <p className="mt-2 text-xs text-[#6B6B6B]">{variant.ready ? "Preview uses sample details. Your real event, venue and QR code are filled in when you use it." : "Concept only, not a template."}</p>
                   </div>
 
                   <div className="space-y-5 min-w-0">
@@ -448,41 +447,41 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
                     {saved ? (
                       <div role="status" className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 space-y-3">
-                        <p className="font-medium">&ldquo;{saved.name}{cmsText("isSaved", "” is saved")}{saved.published ? cmsText("andReadyToUse", "and ready to use") : cmsText("asADraft", "as a draft")}.</p>
+                        <p className="font-medium">&ldquo;{saved.name}&rdquo; is saved{saved.published ? " and ready to use" : " as a draft"}.</p>
                         <div className="flex flex-wrap gap-3">
-                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">{cmsText("createAnEventWithIt", "Create an event with it")}</Link>}
-                          <Link href="/templates?view=mine" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">{cmsText("goToMyTemplates", "Go to my templates")}</Link>
+                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
+                          <Link href="/templates?view=mine" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">Go to my templates</Link>
                         </div>
                       </div>
                     ) : canSave(variant) ? (
                       <div className="space-y-3">
                         <div>
-                          <label htmlFor="ai-name" className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("templateName", "Template name")}</label>
-                          <input id="ai-name" value={saveName} onChange={(e) => setSaveName(e.target.value)} maxLength={100} placeholder={cmsText("eGGalaGoldInvitation", "e.g. Gala gold invitation")} className={inputClass} />
+                          <label htmlFor="ai-name" className="block text-sm font-medium text-gray-900 mb-1.5">Template name</label>
+                          <input id="ai-name" value={saveName} onChange={(e) => setSaveName(e.target.value)} maxLength={100} placeholder="e.g. Gala gold invitation" className={inputClass} />
                         </div>
                         {editTarget && (
                           <div className="flex flex-wrap gap-3">
-                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? cmsText("saving2", "Saving…") : `Replace “${editTarget.name}”`}</button>
+                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : `Replace “${editTarget.name}”`}</button>
                           </div>
                         )}
                         <div className="flex flex-wrap gap-3">
-                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? cmsText("saving2", "Saving…") : editTarget ? cmsText("saveAsNewTemplate", "Save as new template") : cmsText("saveAndUse", "Save and use")}</button>
-                          <button type="button" disabled={busy !== null} onClick={() => save(false)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{editTarget ? cmsText("saveNewOneAsDraft", "Save new one as draft") : cmsText("saveAsDraft", "Save as draft")}</button>
+                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : editTarget ? "Save as new template" : "Save and use"}</button>
+                          <button type="button" disabled={busy !== null} onClick={() => save(false)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{editTarget ? "Save new one as draft" : "Save as draft"}</button>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md p-3">{cmsText("thisConceptCanTBeSavedAsA", "This concept can't be saved as a template. Try “Adjust” below, or generate new options.")}</p>
+                      <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-md p-3">This concept can&apos;t be saved as a template. Try &ldquo;Adjust&rdquo; below, or generate new options.</p>
                     )}
 
                     {error && <ErrorBanner error={error} />}
 
                     <div className="border-t border-[#E5E5E5] pt-4 space-y-3">
-                      <label htmlFor="ai-change" className="block text-sm font-medium text-gray-900">{cmsText("adjustThisDesign", "Adjust this design")}</label>
-                      <textarea id="ai-change" value={changePrompt} onChange={(e) => setChangePrompt(e.target.value)} rows={2} maxLength={options.limits.changeMax} placeholder={cmsText("eGMakeTheHeadingLargerAndUse", "e.g. Make the heading larger and use a deeper blue")} className={inputClass} />
+                      <label htmlFor="ai-change" className="block text-sm font-medium text-gray-900">Adjust this design</label>
+                      <textarea id="ai-change" value={changePrompt} onChange={(e) => setChangePrompt(e.target.value)} rows={2} maxLength={options.limits.changeMax} placeholder="e.g. Make the heading larger and use a deeper blue" className={inputClass} />
                       <div className="flex flex-wrap gap-3">
-                        <button type="button" disabled={busy !== null || changePrompt.trim().length < 5} onClick={() => change("edit")} className="px-4 py-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{cmsText("applyChanges", "Apply changes")}</button>
-                        <button type="button" disabled={busy !== null || changePrompt.trim().length < 5} onClick={() => change("variations")} className="px-4 py-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{cmsText("moreLikeThis", "More like this")}</button>
-                        <button type="button" disabled={busy !== null} onClick={discard} className="px-4 py-2 text-sm text-rose-700 hover:underline cursor-pointer">{cmsText("discardTheseDesigns", "Discard these designs")}</button>
+                        <button type="button" disabled={busy !== null || changePrompt.trim().length < 5} onClick={() => change("edit")} className="px-4 py-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">Apply changes</button>
+                        <button type="button" disabled={busy !== null || changePrompt.trim().length < 5} onClick={() => change("variations")} className="px-4 py-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">More like this</button>
+                        <button type="button" disabled={busy !== null} onClick={discard} className="px-4 py-2 text-sm text-rose-700 hover:underline cursor-pointer">Discard these designs</button>
                       </div>
                     </div>
                   </div>

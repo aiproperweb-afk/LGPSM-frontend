@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
 import type { InvitationChannel } from "@/utils/invitationChannel";
@@ -16,7 +14,6 @@ import { ACCEPTED_IMAGE_TYPES, mediaService } from '@/services/mediaService';
 import DashedBorder from "@/components/common/DashedBorder";
 
 export default function AddEventOrganizerPage() {
-  const cmsText = useDashboardCopy();
   const router = useRouter();
   const [formData, setFormData] = useState({
     organizationName: "",
@@ -98,17 +95,17 @@ export default function AddEventOrganizerPage() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
-        <PageHeader title={cmsText("addEventOrganizer", "Add Event Organizer")} />
+        <PageHeader title="Add Event Organizer" />
 
         {/* Form Container */}
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-6">
           <form onSubmit={handleSubmit} className="bg-white border border-[#E0E0E0] rounded-lg p-5 md:p-6 space-y-5">
-            <h2 className="text-xl font-medium text-[#15191C]">{cmsText("eventOrganizer", "Event Organizer")}</h2>
+            <h2 className="text-xl font-medium text-[#15191C]">Event Organizer</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-5">
               {/* Organizer type: Individual, or an Organization with its name */}
               <div className="space-y-2">
-                <span className="block text-sm font-medium text-[#15191C]">{cmsText("organizerType", "Organizer type")}<span className="text-red-500">*</span></span>
+                <span className="block text-sm font-medium text-[#15191C]">Organizer type<span className="text-red-500">*</span></span>
                 <div className="flex gap-2">
                   {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
                     <label key={value} className={`flex-1 flex items-center gap-2 h-[47px] px-3 rounded-md border text-sm cursor-pointer ${formData.organizationType === value ? "border-[#1F65FF] bg-[#EAF1FF] font-semibold" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
@@ -122,12 +119,12 @@ export default function AddEventOrganizerPage() {
               {/* Organization / organizer name */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#15191C]">
-                  {formData.organizationType === "ORGANIZATION" ? cmsText("organisationName", "Organisation Name") : cmsText("organizerName", "Organizer Name")}<span className="text-red-500">*</span>
+                  {formData.organizationType === "ORGANIZATION" ? "Organisation Name" : "Organizer Name"}<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={formData.organizationType === "ORGANIZATION" ? cmsText("typeOrganisationName", "Type Organisation Name") : cmsText("typeTheOrganizerSName", "Type the organizer's name")}
+                  placeholder={formData.organizationType === "ORGANIZATION" ? "Type Organisation Name" : "Type the organizer's name"}
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -136,12 +133,13 @@ export default function AddEventOrganizerPage() {
 
               {/* Email Address */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#15191C]">{cmsText("emailAddress", "Email Address")}<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-[#15191C]">
+                  Email Address<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   required
-                  placeholder={cmsText("typeEmail", "Type Email")}
+                  placeholder="Type Email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -150,11 +148,12 @@ export default function AddEventOrganizerPage() {
 
               {/* Phone Number */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#15191C]">{cmsText("phoneNumber", "Phone Number")}<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-[#15191C]">
+                  Phone Number<span className="text-red-500">*</span>
                 </label>
                 <PhoneInput
                   required
-                  placeholder={cmsText("typePhoneNumber", "Type Phone Number")}
+                  placeholder="Type Phone Number"
                   value={formData.phone}
                   onValueChange={(v) => setFormData({ ...formData, phone: v })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -165,13 +164,14 @@ export default function AddEventOrganizerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-5">
               {/* Temporary Password (the organizer signs in with this) */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#15191C]">{cmsText("temporaryPassword", "Temporary Password")}<span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-[#15191C]">
+                  Temporary Password<span className="text-red-500">*</span>
                 </label>
                 <PasswordField
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  placeholder={cmsText("atLeast8Characters", "At least 8 characters")}
+                  placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
@@ -189,7 +189,7 @@ export default function AddEventOrganizerPage() {
               {/* Organizer Logo Box */}
               <div className="space-y-2">
                 {/* an individual has a profile picture; an organization has a logo */}
-                <label className="block text-sm font-medium text-[#15191C]">{formData.organizationType === "INDIVIDUAL" ? cmsText("profilePicture", "Profile Picture") : cmsText("organizerLogo", "Organizer Logo")} <span className="font-normal text-[#6B6B6B]">{cmsText("optional", "(optional)")}</span></label>
+                <label className="block text-sm font-medium text-[#15191C]">{formData.organizationType === "INDIVIDUAL" ? "Profile Picture" : "Organizer Logo"} <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
                 <input
                   ref={logoInputRef}
                   type="file"
@@ -220,7 +220,7 @@ export default function AddEventOrganizerPage() {
                     <button
                       type="button"
                       onClick={() => setLogoFile(null)}
-                      aria-label={cmsText("removeLogo", "Remove logo")}
+                      aria-label="Remove logo"
                       className="p-1 text-gray-500 hover:text-red-500 transition-colors cursor-pointer shrink-0"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,9 +236,10 @@ export default function AddEventOrganizerPage() {
                     className="group relative rounded-md p-6 bg-white hover:bg-gray-50 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-[110px] select-none"
                   >
                     <DashedBorder width={1} className="text-gray-300 group-hover:text-[#1A56DB]" />
-                    <span className="text-[11px] text-gray-500 max-w-[200px] leading-tight">{cmsText("dragAndDropAPhotoHereOr", "Drag and drop a photo here or") + " "}<span className="text-[#1F65FF] font-semibold underline">{cmsText("clickToOpenFile", "click to open file")}</span>
+                    <span className="text-[11px] text-gray-500 max-w-[200px] leading-tight">
+                      Drag and drop a photo here or <span className="text-[#1F65FF] font-semibold underline">click to open file</span>
                     </span>
-                    <span className="text-[10px] text-gray-500 mt-1">{cmsText("jpgPngOrWebpUpTo5Mb", "JPG, PNG or WEBP, up to 5 MB")}</span>
+                    <span className="text-[10px] text-gray-500 mt-1">JPG, PNG or WEBP, up to 5 MB</span>
                   </div>
                 )}
               </div>
@@ -251,14 +252,14 @@ export default function AddEventOrganizerPage() {
                 disabled={isSubmitting}
                 className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? cmsText("adding", "Adding...") : cmsText("addOrganizer", "Add Organizer")}
+                {isSubmitting ? 'Adding...' : 'Add Organizer'}
               </button>
             </div>
           </form>
 
           <PopupMessage message={error} onClose={() => setError("")} />
 
-          <PopupMessage message={isSuccess ? cmsText("organizerAddedSuccessfullyRedirectingToTheList", "Organizer added successfully! Redirecting to the list…") : null} type="success" onClose={() => undefined} />
+          <PopupMessage message={isSuccess ? "Organizer added successfully! Redirecting to the list…" : null} type="success" onClose={() => undefined} />
         </div>
     </div>
   );

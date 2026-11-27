@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
@@ -27,7 +25,6 @@ export default function AddUserPage() {
 }
 
 function AddUserContent() {
-  const cmsText = useDashboardCopy();
   const router = useRouter();
   const search = useSearchParams();
   const openedByLink = search.get("new") === "1";
@@ -136,29 +133,31 @@ function AddUserContent() {
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
-        <PageHeader title={cmsText("addUser", "Add User")} />
+        <PageHeader title="Add User" />
 
         {/* Page Content */}
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
-              <label className="block text-sm font-medium text-[#15191C]">{cmsText("organizer", "Organizer")}<span className="text-red-500 ml-0.5">*</span></label>
+              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-red-500 ml-0.5">*</span></label>
               <CustomDropdown
                 value={organizerId}
                 onChange={rememberOrganizer}
                 options={organizers.map((o) => ({ value: o._id, label: `${o.fullName}${(o.profile?.organizationName as string) ? ` · ${o.profile?.organizationName as string}` : ""}` }))}
-                placeholder={cmsText("selectAnOrganizer", "Select an organizer")}
+                placeholder="Select an organizer"
                 ariaLabel="Organizer whose system users to show"
                 disabled={!!fromEventId}
               />
-              <p className="text-xs text-[#6B6B6B]">{fromEventId ? cmsText("thisEventSOrganizer", "This event's organizer.") : cmsText("systemUsersShownAndAddedHereBelongTo", "System users shown and added here belong to the selected organizer.")}</p>
+              <p className="text-xs text-[#6B6B6B]">{fromEventId ? "This event's organizer." : "System users shown and added here belong to the selected organizer."}</p>
             </div>
           )}
-          <ListControls label={cmsText("systemUsers", "System Users")} searchId="add-user-search" placeholder={cmsText("findSystemUsersByNameOrPhoneNumber", "Find system users by name or phone number...")} value={searchQuery} onChange={setSearchQuery}>
+          <ListControls label="System Users" searchId="add-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
             <button type="button" onClick={() => setIsAddUserModalOpen(true)} className={`${addButtonClass} cursor-pointer`}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>{cmsText("addUser", "Add User")}</button>
+              </svg>
+              Add User
+            </button>
           </ListControls>
 
           <PopupMessage message={formError} onClose={() => setFormError(null)} />
@@ -167,14 +166,16 @@ function AddUserContent() {
           <PopupMessage message={addedUserName ? `User “${addedUserName}” added successfully!` : null} type="success" onClose={() => setAddedUserName("")} />
 
           {loadingUsers ? (
-            <TableSkeleton rows={5} cols={3} label={cmsText("loadingSystemUsers", "Loading system users")} />
+            <TableSkeleton rows={5} cols={3} label="Loading system users" />
           ) : loadError ? (
             <div className="flex-1 flex flex-col items-center justify-center py-16 space-y-3">
               <p className="text-sm font-semibold text-rose-600 text-center break-words">{loadError}</p>
               <button
                 onClick={() => loadSystemUsers()}
                 className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-[#1F65FF] font-semibold text-xs rounded-md transition-colors cursor-pointer"
-              >{cmsText("retry", "Retry")}</button>
+              >
+                Retry
+              </button>
             </div>
           ) : systemUsers.length === 0 ? (
             /* Empty State Container (Image 1) */
@@ -183,26 +184,30 @@ function AddUserContent() {
               <svg className="w-20 h-20 text-[#BDBDBD]" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
-              <p className="text-base text-[#4B4F52]">{cmsText("noUsersAddedYetAddUsersNow", "No users added yet. Add users now.")}</p>
+              <p className="text-base text-[#4B4F52]">
+                No users added yet. Add users now.
+              </p>
               <button
                 onClick={() => setIsAddUserModalOpen(true)}
                 className="px-6 py-2 bg-[#F6F6F6] hover:bg-gray-200 text-[#1F65FF] font-medium text-base rounded-md transition-colors cursor-pointer"
-              >{cmsText("addUser", "Add User")}</button>
+              >
+                Add User
+              </button>
             </div>
           ) : (
             <div className="border border-gray-200 rounded-md overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50 text-gray-500">
                   <tr>
-                    <th className="py-3 px-4 font-medium">{cmsText("name", "Name")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("email", "Email")}</th>
-                    <th className="py-3 px-4 font-medium">{cmsText("contactNo", "Contact No")}</th>
+                    <th className="py-3 px-4 font-medium">Name</th>
+                    <th className="py-3 px-4 font-medium">Email</th>
+                    <th className="py-3 px-4 font-medium">Contact No</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-8 text-center text-gray-500">{cmsText("noUsersMatchYourSearch", "No users match your search.")}</td>
+                      <td colSpan={3} className="py-8 text-center text-gray-500">No users match your search.</td>
                     </tr>
                   ) : (
                     filteredUsers.map((u) => (

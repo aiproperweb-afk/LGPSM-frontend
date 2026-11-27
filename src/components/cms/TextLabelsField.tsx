@@ -6,7 +6,7 @@ import type { CustomFieldRender } from "@puckeditor/core";
 type Labels = Record<string, string>;
 const label = (key: string) => key.replace(/([A-Z])/g, " $1").replaceAll("_", " ").replace(/^./, first => first.toUpperCase());
 
-export default function DashboardLabelsField({ id, value, onChange, readOnly }: Parameters<CustomFieldRender<Labels>>[0]) {
+export default function TextLabelsField({ id, value, onChange, readOnly }: Parameters<CustomFieldRender<Labels>>[0]) {
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(40);
   const search = query.trim().toLowerCase();

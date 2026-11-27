@@ -1,4 +1,11 @@
-import DashboardLabelsField from "./DashboardLabelsField";
+import ClientPage from "@/components/clients/ClientPage";
+import FeaturesPage from "@/components/features/FeaturesPage";
+import HowItWorksPage from "@/components/how-it-works/HowItWorksPage";
+import Testimonials from "@/components/landing/Testimonials";
+import { CLIENT_CATEGORIES, getClientCategory } from "@/constants/clients";
+import { marketingFields } from "./marketingFields";
+import { clientCopy, featuresCopy, howItWorksCopy, testimonialsCopy } from "./marketingContent";
+import TextLabelsField from "./TextLabelsField";
 import type { Config, SelectField, TextField, TextareaField } from "@puckeditor/core";
 import ContactContent from "@/components/landing/ContactContent";
 import { contactCopy } from "./contactContent";
@@ -28,7 +35,7 @@ const image = { image: imageReferenceField, imageAlt: { ...text, label: "Image a
 const textCopy = {
   defaultProps: { labels: {} },
   fields: {
-    labels: { type: "custom" as const, label: "Editable text", render: (props: Parameters<typeof DashboardLabelsField>[0]) => <DashboardLabelsField {...props} /> },
+    labels: { type: "custom" as const, label: "Editable text", render: (props: Parameters<typeof TextLabelsField>[0]) => <TextLabelsField {...props} /> },
   },
   render: ({ labels }: { labels: Record<string, string> }) => (
     <section className="mx-auto grid max-w-2xl gap-3 p-6 text-sm">
@@ -37,11 +44,39 @@ const textCopy = {
   ),
 };
 
+const clientDefaults = clientCopy(CLIENT_CATEGORIES[0]);
+
 export const cmsConfig: Config<CmsComponents> = {
   root: { fields: {} },
   components: {
-    DashboardCopy: { ...textCopy, label: "Tab text" },
     SiteChromeCopy: { ...textCopy, label: "Navbar or footer text" },
+    FeaturesContent: {
+      label: "Features page",
+      defaultProps: featuresCopy,
+      fields: marketingFields(featuresCopy, ["footer"]),
+      render: (copy) => <FeaturesPage copy={copy} />,
+    },
+    HowItWorksContent: {
+      label: "How it works page",
+      defaultProps: howItWorksCopy,
+      fields: marketingFields(howItWorksCopy, ["footer"]),
+      render: (copy) => <HowItWorksPage copy={copy} />,
+    },
+    ClientContent: {
+      label: "Client category page",
+      defaultProps: clientDefaults,
+      fields: marketingFields(clientDefaults, ["footer"]),
+      render: ({ id, ...copy }) => {
+        const category = getClientCategory(id.replace(/^clients-/, "")) ?? CLIENT_CATEGORIES[0];
+        return <ClientPage category={category} copy={copy} />;
+      },
+    },
+    Testimonials: {
+      label: "Testimonials",
+      defaultProps: testimonialsCopy,
+      fields: marketingFields(testimonialsCopy),
+      render: (copy) => <Testimonials copy={copy} />,
+    },
     ContactContent: {
       label: "Contact page",
       fields: { pageHeading: text, informationHeading: text, formHeading: text, introduction: paragraph, submitLabel: text },

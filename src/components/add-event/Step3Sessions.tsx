@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { AccessControl, DraftErrors, DraftSession, createSessionDraft } from "./eventDraft";
@@ -99,7 +97,6 @@ export default function Step3Sessions({
   submitting = false,
   submitLabel = "Save",
 }: Step3SessionsProps) {
-  const cmsText = useDashboardCopy();
   const [fileError, setFileError] = React.useState<Record<string, string | undefined>>({});
   const { confirm } = useAlert();
 
@@ -185,12 +182,15 @@ export default function Step3Sessions({
           <section key={sess.key} aria-label={`Session ${index + 1}`} className="p-4 sm:p-5 border border-[#E0E0E0] rounded-lg bg-white space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1.5 gap-2">
-                <label htmlFor={`session-name-${sess.key}`} className="text-sm font-medium text-gray-900">{cmsText("sessionName", "Session Name")}<span className="text-red-500 ml-0.5">*</span>
-                  {isPrimary && <span className="ml-2 text-xs font-normal text-[#6B6B6B]">{cmsText("primarySession", "Primary session")}</span>}
+                <label htmlFor={`session-name-${sess.key}`} className="text-sm font-medium text-gray-900">
+                  Session Name<span className="text-red-500 ml-0.5">*</span>
+                  {isPrimary && <span className="ml-2 text-xs font-normal text-[#6B6B6B]">Primary session</span>}
                 </label>
-                <InfoTip label={cmsText("aboutTheSessionName", "About the session name")} text="Guests and system users see this name for the session, for example Entry or Lunch." className="ml-auto" />
+                <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." className="ml-auto" />
                 {!sess.backendId && sessions.length > 1 && (
-                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#D92D20] hover:underline cursor-pointer">{cmsText("remove", "Remove")}</button>
+                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#D92D20] hover:underline cursor-pointer">
+                    Remove
+                  </button>
                 )}
               </div>
               <input
@@ -199,7 +199,7 @@ export default function Step3Sessions({
                 maxLength={100}
                 value={sess.name}
                 onChange={(e) => updateSession(sess.key, { name: e.target.value })}
-                placeholder={cmsText("entrySession", "Entry Session")}
+                placeholder="Entry Session"
                 aria-invalid={!!nameError}
                 className={`${fieldClass} ${nameError ? "!border-rose-500" : "border-[#E0E0E0]"}`}
               />
@@ -207,7 +207,8 @@ export default function Step3Sessions({
             </div>
 
             {isPrimary && (
-              <p className="text-sm text-[#6B6B6B]">{cmsText("thisSessionIsThePrimarySessionForThe", "This session is the primary session for the event. Its start and end times are used as the default for any new sessions you add. You can change them here or in the event's Sessions page later.")}</p>
+              <p className="text-sm text-[#6B6B6B]">This session is the primary session for the event. Its start and end times are used as the default for any new sessions you add. You can change them here or in the event's Sessions page later.
+              </p>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -215,7 +216,7 @@ export default function Step3Sessions({
                 <div key={field} className="min-w-0">
                   <span className={`${labelClass} flex items-center justify-between gap-2`}>
                     <span>
-                      {field === "start" ? cmsText("startTime", "Start Time") : cmsText("endTime", "End Time")}
+                      {field === "start" ? "Start Time" : "End Time"}
                       <span className="text-red-500 ml-0.5">*</span>
                     </span>
                     <InfoTip
@@ -238,8 +239,8 @@ export default function Step3Sessions({
               ))}
               <div className="min-w-0">
                 <span className={`${labelClass} flex items-center justify-between gap-2`}>
-                  <span>{cmsText("accessControl", "Access Control")}<span className="text-red-500 ml-0.5">*</span></span>
-                  <InfoTip label={cmsText("aboutAccessControl", "About access control")} text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
+                  <span>Access Control<span className="text-red-500 ml-0.5">*</span></span>
+                  <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                 </span>
                 <CustomDropdown
                   value={sess.accessControl}
@@ -250,7 +251,7 @@ export default function Step3Sessions({
               </div>
             </div>
             {timeError && <p className="-mt-2 text-xs font-medium text-rose-600">{timeError}</p>}
-            {sess.timesLinked && <p className="-mt-2 text-xs text-[#6B6B6B]">{cmsText("followsTheEventStartAndEndUntilYou", "Follows the event start and end until you change it.")}</p>}
+            {sess.timesLinked && <p className="-mt-2 text-xs text-[#6B6B6B]">Follows the event start and end until you change it.</p>}
 
             {!isPrimary && (
               <div className="flex flex-wrap items-center gap-2">
@@ -265,7 +266,9 @@ export default function Step3Sessions({
                       updateSession(sess.key, { inviteeSource: "NEW_LIST", sourceSessionKey: null });
                     }
                   }}
-                >{cmsText("keepSameInviteesAs", "Keep same invitees as")}</Checkbox>
+                >
+                  Keep same invitees as
+                </Checkbox>
                 <div className="w-48">
                   <CustomDropdown
                     value={copies ? sess.sourceSessionKey || "" : ""}
@@ -275,7 +278,7 @@ export default function Step3Sessions({
                     invalid={!!sourceError}
                     optional={!copies}
                     placeholder={sourceOptions[0]?.label || "Session"}
-                    emptyMessage={cmsText("noEarlierSessionHasItsOwnList", "No earlier session has its own list")}
+                    emptyMessage="No earlier session has its own list"
                     ariaLabel="Session to copy invitees from"
                   />
                 </div>
@@ -287,10 +290,12 @@ export default function Step3Sessions({
               <div>
                 {(() => {
                   const mustAdd = !skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean) && isPrimary;
-                  return <span className={labelClass}>{cmsText("addInviteesList", "Add Invitees List") + " "}{mustAdd ? <span className="text-red-500">*</span> : <span className="font-normal text-[#828282]">{cmsText("optional", "(optional)")}</span>}</span>;
+                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-red-500">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
                 })()}
                 <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] || (errors[`session:${sess.key}:invitees`] && !fileInfo) ? "border-rose-400" : "border-[#E0E0E0]"}`}>
-                  <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">{cmsText("chooseFile", "Choose File")}<input
+                  <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">
+                    Choose File
+                    <input
                       type="file"
                       accept=".xls,.xlsx"
                       className="sr-only"
@@ -307,17 +312,17 @@ export default function Step3Sessions({
                         type="button"
                         onClick={() => onOpenInviteesPreview(sess.key)}
                         className="flex items-center gap-2 text-sm text-gray-800 hover:text-[#1A56DB] cursor-pointer min-w-0"
-                        title={cmsText("openTheInviteesListPreview", "Open the invitees list preview")}
+                        title="Open the invitees list preview"
                       >
                         <ExcelLogo />
                         <span className="truncate">{fileInfo.name}</span>
                         <span className="shrink-0 text-[#6B6B6B]">({fileInfo.rows.length})</span>
                       </button>
                     ) : (
-                      <span className="text-sm text-[#6B6B6B]">{cmsText("noFileChosen", "No file chosen")}</span>
+                      <span className="text-sm text-[#6B6B6B]">No file chosen</span>
                     )}
                     {fileInfo && (
-                      <button type="button" onClick={() => onSessionFileChange(sess.key, null)} aria-label={cmsText("removeFile", "Remove file")} className="p-1 text-gray-500 hover:text-rose-600 cursor-pointer shrink-0">
+                      <button type="button" onClick={() => onSessionFileChange(sess.key, null)} aria-label="Remove file" className="p-1 text-gray-500 hover:text-rose-600 cursor-pointer shrink-0">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -326,30 +331,32 @@ export default function Step3Sessions({
                   </div>
                 </div>
                 {errors[`session:${sess.key}:invitees`] && !fileInfo && <p className="mt-1 text-xs font-medium text-rose-600">{errors[`session:${sess.key}:invitees`]}</p>}
-                {fileInfo && <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("theseInviteesAreAddedToTheEventS", "These invitees are added to the event's list when you create the event. People who appear twice are imported once.")}</p>}
+                {fileInfo && <p className="mt-1 text-xs text-[#6B6B6B]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
                 {(() => {
                   // A list uploaded for this session; lists without a session (the whole event) show on the primary session
                   const lists = existingLists.filter((l) => (l.sessionId ? l.sessionId === sess.backendId : isPrimary));
                   return lists.length > 0 && (
                     <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 space-y-0.5">
                       {lists.map((l) => (
-                        <p key={l.id} className="break-words">{cmsText("alreadyUploaded", "Already uploaded:") + " "}<span className="font-medium">{listDisplayName(l.name)}</span> ({l.total} {l.total === 1 ? cmsText("invitee", "invitee") : cmsText("invitees2", "invitees")}){l.createdAt ? `, ${formatDateTime(l.createdAt, "")}` : ""}
+                        <p key={l.id} className="break-words">
+                          Already uploaded: <span className="font-medium">{listDisplayName(l.name)}</span> ({l.total} {l.total === 1 ? "invitee" : "invitees"}){l.createdAt ? `, ${formatDateTime(l.createdAt, "")}` : ""}
                         </p>
                       ))}
-                      <p className="text-emerald-800">{cmsText("chooseAFileOnlyIfYouWantTo", "Choose a file only if you want to add more invitees.")}</p>
+                      <p className="text-emerald-800">Choose a file only if you want to add more invitees.</p>
                     </div>
                   );
                 })()}
                 {fileError[sess.key] && <p role="alert" className="mt-1 text-xs font-medium text-rose-600">{fileError[sess.key]}</p>}
                 {fileInfo && fileInfo.problemCount > 0 && (
-                  <p className="mt-1 text-xs font-medium text-amber-700">{fileInfo.problemCount}{" " + cmsText("rowSNeedAttentionOpenThePreviewTo", "row(s) need attention — open the preview to fix them.")}</p>
+                  <p className="mt-1 text-xs font-medium text-amber-700">{fileInfo.problemCount} row(s) need attention — open the preview to fix them.</p>
                 )}
                 <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
-                  <p className="text-xs text-[#6B6B6B]">{cmsText("importedWhenYouSaveFilesAreNotKept", "Imported when you save. Files are not kept in the saved draft.")}</p>
+                  <p className="text-xs text-[#6B6B6B]">Imported when you save. Files are not kept in the saved draft.</p>
                   <span className="inline-flex items-center gap-2">
                     <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#1A56DB] cursor-pointer">
-                      <ExcelLogo />{" " + cmsText("downloadExcelSample", "Download Excel Sample")}</button>
-                    <InfoTip label={cmsText("aboutTheExcelSample", "About the Excel sample")} text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
+                      <ExcelLogo /> Download Excel Sample
+                    </button>
+                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
                   </span>
                 </div>
               </div>
@@ -363,20 +370,25 @@ export default function Step3Sessions({
         onClick={handleAddSession}
         className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
       >
-        <span aria-hidden>+</span>{" " + cmsText("addSessions", "Add Sessions")}</button>
+        <span aria-hidden>+</span> Add Sessions
+      </button>
 
       {!readOnly && <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-end gap-3">
         {!Object.values(sessionFiles).some(Boolean) && existingLists.length === 0 && (
-          <Checkbox id="skip-invitees" checked={skipInvitees} onChange={onSkipInviteesChange}>{cmsText("iDonTHaveAnyInviteesListYet", "I don't have any invitees list yet, skip for later")}</Checkbox>
+          <Checkbox id="skip-invitees" checked={skipInvitees} onChange={onSkipInviteesChange}>
+            I don&apos;t have any invitees list yet, skip for later
+          </Checkbox>
         )}
         <div className="flex items-center justify-end gap-3">
-          <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">{cmsText("back", "Back")}</button>
+          <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
+            Back
+          </button>
           <button
             type="submit"
             disabled={submitting}
             className="px-7 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {submitting ? cmsText("saving", "Saving...") : submitLabel}
+            {submitting ? "Saving..." : submitLabel}
           </button>
         </div>
       </div>}

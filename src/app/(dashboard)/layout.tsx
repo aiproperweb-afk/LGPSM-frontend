@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { DashboardCopyProvider } from "@/components/cms/DashboardCopyProvider";
 import Sidebar from "@/components/Sidebar";
 import CompleteProfileModal from "@/components/auth/CompleteProfileModal";
 import BrandLoader from "@/components/common/BrandLoader";
@@ -100,15 +99,13 @@ export default function DashboardLayout({
   const isPageEditor = /^\/admin\/pages\/[^/]+\/edit$/.test(pathname);
 
   return (
-    <DashboardCopyProvider pathname={pathname}>
-      <div className="flex flex-col md:flex-row h-screen h-dvh bg-[#F8F9FA] overflow-clip font-sans">
-        {!isPageEditor && <Sidebar />}
-        <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
-          {children}
-        </main>
-        {/* an organizer whose profile is incomplete (for example after signing up with Google) must finish it first */}
-        <CompleteProfileModal />
-      </div>
-    </DashboardCopyProvider>
+    <div className="flex flex-col md:flex-row h-screen h-dvh bg-[#F8F9FA] overflow-clip font-sans">
+      {!isPageEditor && <Sidebar />}
+      <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
+        {children}
+      </main>
+      {/* an organizer whose profile is incomplete (for example after signing up with Google) must finish it first */}
+      <CompleteProfileModal />
+    </div>
   );
 }

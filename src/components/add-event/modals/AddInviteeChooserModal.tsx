@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
@@ -27,7 +25,6 @@ export default function AddInviteeChooserModal({
   sessionId = "",
   onSessionChange,
 }: AddInviteeChooserModalProps) {
-  const cmsText = useDashboardCopy();
   const overlayClose = useOverlayClose(onClose);
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -63,11 +60,13 @@ export default function AddInviteeChooserModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 id="add-invitee-chooser-title" className="text-base font-bold text-gray-900">{cmsText("addInvitees", "Add Invitees")}</h2>
+          <h2 id="add-invitee-chooser-title" className="text-base font-bold text-gray-900">
+            Add Invitees
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label={cmsText("close", "Close")}
+            aria-label="Close"
             className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -80,7 +79,7 @@ export default function AddInviteeChooserModal({
         <div className="p-6 space-y-3">
           {sessionOptions.length > 1 && onSessionChange && (
             <div className="mb-4">
-              <span className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("addToSession", "Add to session")}</span>
+              <span className="block text-sm font-medium text-gray-900 mb-1.5">Add to session</span>
               <CustomDropdown
                 portal
                 ariaLabel="Add to session"
@@ -88,10 +87,12 @@ export default function AddInviteeChooserModal({
                 onChange={onSessionChange}
                 options={sessionOptions.length === 1 ? [{ value: "", label: sessionOptions[0].name }] : [{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
               />
-              <p className="mt-1 text-xs text-gray-500">{cmsText("chooseASessionWhenItHasItsOwn", "Choose a session when it has its own invitee list. The guests you add can then enter that session.")}</p>
+              <p className="mt-1 text-xs text-gray-500">Choose a session when it has its own invitee list. The guests you add can then enter that session.</p>
             </div>
           )}
-          <p className="text-sm text-gray-500 mb-4">{cmsText("howWouldYouLikeToAddInvitees", "How would you like to add invitees?")}</p>
+          <p className="text-sm text-gray-500 mb-4">
+            How would you like to add invitees?
+          </p>
 
           {/* the two ways side by side, in one row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -111,8 +112,12 @@ export default function AddInviteeChooserModal({
               </svg>
             </span>
             <span>
-              <span className="block text-sm font-semibold text-gray-900">{cmsText("uploadViaExcel", "Upload via Excel")}</span>
-              <span className="block text-xs text-gray-500 mt-0.5">{cmsText("importABulkListFromAnXlsxOr", "Import a bulk list from an .xlsx or .xls file")}</span>
+              <span className="block text-sm font-semibold text-gray-900">
+                Upload via Excel
+              </span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Import a bulk list from an .xlsx or .xls file
+              </span>
             </span>
           </button>
 
@@ -130,8 +135,12 @@ export default function AddInviteeChooserModal({
               </svg>
             </span>
             <span>
-              <span className="block text-sm font-semibold text-gray-900">{cmsText("addManually", "Add Manually")}</span>
-              <span className="block text-xs text-gray-500 mt-0.5">{cmsText("enterOneInviteeSDetailsByHand", "Enter one invitee's details by hand")}</span>
+              <span className="block text-sm font-semibold text-gray-900">
+                Add Manually
+              </span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Enter one invitee's details by hand
+              </span>
             </span>
           </button>
           </div>

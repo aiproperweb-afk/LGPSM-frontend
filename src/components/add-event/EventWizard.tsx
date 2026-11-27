@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import AlertIcon from "@/components/common/AlertIcon";
 import { templateColumnsFor } from "@/utils/inviteeTemplate";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -100,7 +98,6 @@ export default function EventWizard({
   readOnlyReason,
   readOnlyActions,
 }: EventWizardProps) {
-  const cmsText = useDashboardCopy();
   const { confirm, showAlert } = useAlert();
   const { user } = useAuth();
   const categories = useCategories(extraCategory);
@@ -444,13 +441,16 @@ export default function EventWizard({
           <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
             <div className="px-6 pt-7 pb-6 text-center sm:px-8">
               <AlertIcon kind="draft" className="w-14 h-14 mx-auto mb-4" />
-              <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">{cmsText("yourUnsavedEventDraftWasRestored", "Your unsaved event draft was restored")}</h2>
-              <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">{cmsText("thisDraftWasSavedTemporarily", "This draft was saved temporarily.")}<br />{cmsText("wouldYouLikeToContinueEditingItOr", "Would you like to continue editing it or discard it and start fresh?")}</p>
+              <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">Your unsaved event draft was restored</h2>
+              <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">
+                This draft was saved temporarily.<br />
+                Would you like to continue editing it or discard it and start fresh?
+              </p>
               {missingFiles.length > 0 && (
                 <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   {missingFiles.length === 1
-                    ? <>{cmsText("theInviteeFile", "The invitee file “")}{missingFiles[0]}{cmsText("needsToBeAttachedAgain", "” needs to be attached again.")}</>
-                    : <>{cmsText("theseInviteeFilesNeedToBeAttachedAgain", "These invitee files need to be attached again:") + " "}{missingFiles.map((name) => `“${name}”`).join(", ")}.</>}
+                    ? <>The invitee file &ldquo;{missingFiles[0]}&rdquo; needs to be attached again.</>
+                    : <>These invitee files need to be attached again: {missingFiles.map((name) => `“${name}”`).join(", ")}.</>}
                 </p>
               )}
             </div>
@@ -466,7 +466,9 @@ export default function EventWizard({
                       onDiscardDraft();
                     }}
                     className="rounded-lg bg-[#D92D20] px-5 py-3 text-sm font-semibold text-white hover:bg-rose-600 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
-                  >{cmsText("discardDraft", "Discard draft")}</button>
+                  >
+                    Discard draft
+                  </button>
                 )}
                 <button
                   type="button"
@@ -474,7 +476,7 @@ export default function EventWizard({
                   onClick={onDismissDraftStatus}
                   className="rounded-lg bg-[#1F65FF] px-5 py-3 text-sm font-semibold text-white hover:bg-[#5b89ee] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F65FF] transistion-colors"
                 >
-                  {canDiscard ? cmsText("keepDraftAndContinue", "Keep draft and continue") : cmsText("continue", "Continue")}
+                  {canDiscard ? "Keep draft and continue" : "Continue"}
                 </button>
               </div>
             </div>
@@ -483,17 +485,18 @@ export default function EventWizard({
       )}
 
       {/* Problems are shown as popups, not banners */}
-      <PopupMessage message={currentStepHasErrors ? stepProblemMessage : null} type="warning" title={stepProblems.length === 1 ? cmsText("pleaseCheckThis", "Please check this") : `Please check Step ${currentStep}`} onClose={() => setShowErrors(false)} />
-      <PopupMessage message={draftStatus === "discarded-stale" ? cmsText("anOlderUnsavedDraftWasDiscardedBecauseThis", "An older unsaved draft was discarded because this event was changed since it was saved.") : null} type="info" title={cmsText("draftDiscarded", "Draft discarded")} onClose={onDismissDraftStatus} />
-      <PopupMessage message={submitError && submitError !== dismissedError ? `${submitError} Your entries are kept, so you can fix the problem and try again.` : null} title={cmsText("theEventCouldNotBeSaved", "The event could not be saved")} onClose={() => setDismissedError(submitError)} />
+      <PopupMessage message={currentStepHasErrors ? stepProblemMessage : null} type="warning" title={stepProblems.length === 1 ? "Please check this" : `Please check Step ${currentStep}`} onClose={() => setShowErrors(false)} />
+      <PopupMessage message={draftStatus === "discarded-stale" ? "An older unsaved draft was discarded because this event was changed since it was saved." : null} type="info" title="Draft discarded" onClose={onDismissDraftStatus} />
+      <PopupMessage message={submitError && submitError !== dismissedError ? `${submitError} Your entries are kept, so you can fix the problem and try again.` : null} title="The event could not be saved" onClose={() => setDismissedError(submitError)} />
       {(draftSavedAt && draftStatus !== "restored") && (
         <div className="px-4 sm:px-6 pt-4 space-y-2">
           {(
-            <p className="text-xs text-[#6B6B6B]">{cmsText("draftSavedOnThisDeviceAt", "Draft saved on this device at") + " "}{new Date(draftSavedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+            <p className="text-xs text-[#6B6B6B]">
+              Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
               {canDiscard && (
                 <>
                   {" · "}
-                  <button type="button" onClick={discard} className="cursor-pointer bg-[#D92D20] text-white px-2 py-1 rounded">{cmsText("discardDraft", "Discard draft")}</button>
+                  <button type="button" onClick={discard} className="cursor-pointer bg-[#D92D20] text-white px-2 py-1 rounded">Discard draft</button>
                 </>
               )}
             </p>
@@ -509,19 +512,19 @@ export default function EventWizard({
             <StepHeader currentStep={currentStep} onStepClick={handleStepChange} maxUnlockedStep={maxUnlockedStep} />
             {readOnly && (
               <div role="status" className="mx-6 mt-5 rounded-md border border-[#B8D0FF] bg-[#EAF1FF] px-4 py-3 text-sm text-[#0F3A99]">
-                <p className="font-semibold text-[#1647B8]">{cmsText("editingIsClosed", "Editing is closed")}</p>
-                <p className="mt-0.5">{readOnlyReason ? `${readOnlyReason} ` : ""}{cmsText("everythingIsShownAsItWasSavedYou", "Everything is shown as it was saved. You can look through the three steps, but nothing can be changed.")}</p>
+                <p className="font-semibold text-[#1647B8]">Editing is closed</p>
+                <p className="mt-0.5">{readOnlyReason ? `${readOnlyReason} ` : ""}Everything is shown as it was saved. You can look through the three steps, but nothing can be changed.</p>
               </div>
             )}
             {/* closed for editing: a disabled fieldset turns every field in the step off; the few controls that are not form fields are switched off too */}
             <fieldset disabled={readOnly} className={`min-w-0 border-0 p-0 m-0 flex-1 ${readOnly ? "[&_[role=checkbox]]:pointer-events-none [&_[role=switch]]:pointer-events-none [&_[role=radio]]:pointer-events-none [&_[role=combobox]]:pointer-events-none [&_[role=option]]:pointer-events-none [&_[role=button]]:pointer-events-none" : ""}`}>
             <div ref={stepContentRef} className="flex-1">
               {featuresLoading ? (
-                <div className="p-8 text-center text-sm text-[#667085]" role="status">{cmsText("loadingSavedEventSettings", "Loading saved event settings…")}</div>
+                <div className="p-8 text-center text-sm text-[#667085]" role="status">Loading saved event settings…</div>
               ) : featuresError || !features ? (
                 <div className="p-8 text-center space-y-3" role="alert">
-                  <p className="text-sm text-rose-700">{featuresError || "Event settings are unavailable."}{" " + cmsText("theEventFormNeedsTheSavedPlatformSettings", "The event form needs the saved platform settings before you can continue.")}</p>
-                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#1F65FF] rounded-md text-sm font-medium text-[#1F65FF]">{cmsText("retry", "Retry")}</button>
+                  <p className="text-sm text-rose-700">{featuresError || "Event settings are unavailable."} The event form needs the saved platform settings before you can continue.</p>
+                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#1F65FF] rounded-md text-sm font-medium text-[#1F65FF]">Retry</button>
                 </div>
               ) : currentStep === 1 ? (
                 <Step1EventDetails
@@ -576,8 +579,8 @@ export default function EventWizard({
             {readOnly && (
               <div className="px-6 pb-6 pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5]">
                 <div className="flex items-center gap-3 pt-4">
-                  {currentStep > 1 ? <button type="button" onClick={() => setCurrentStep(currentStep - 1)} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">{cmsText("back", "Back")}</button> : <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">{cmsText("backToEvent", "Back to event")}</button>}
-                  {currentStep < 3 ? <button type="button" onClick={() => setCurrentStep(currentStep + 1)} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">{cmsText("next", "Next")}</button> : <button type="button" onClick={onCancel} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">{cmsText("backToEvent", "Back to event")}</button>}
+                  {currentStep > 1 ? <button type="button" onClick={() => setCurrentStep(currentStep - 1)} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back</button> : <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
+                  {currentStep < 3 ? <button type="button" onClick={() => setCurrentStep(currentStep + 1)} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">Next</button> : <button type="button" onClick={onCancel} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
                 </div>
                 {readOnlyActions && <div className="flex items-center gap-3 pt-4">{readOnlyActions}</div>}
               </div>
@@ -651,7 +654,7 @@ export default function EventWizard({
 
       {previewKey && previewFile && (
         <InviteesPreviewModal
-          title={cmsText("inviteePreviewList", "Invitee Preview List")}
+          title="Invitee Preview List"
           subtitle={`${previewSession?.name || "Session"} · ${previewFile.name}`}
           rows={previewFile.rows}
           showCompany={!!inviteeConfig.company || previewFile.rows.some((r) => r.company)}

@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { formatOrganizerId } from "@/utils/formatId";
 import PopupMessage from "@/components/common/PopupMessage";
 import OrganisationDetailsForm from "@/components/settings/OrganisationDetailsForm";
@@ -24,7 +22,6 @@ import VerifyPhoneModal from "@/components/settings/modals/VerifyPhoneModal";
 
 
 export default function AccountSettingsPage() {
-  const cmsText = useDashboardCopy();
   const { user, updateProfile, updateProfilePhoto, refreshUser } = useAuth();
   const { showAlert, confirm } = useAlert();
   const router = useRouter();
@@ -159,23 +156,23 @@ export default function AccountSettingsPage() {
 
   const displayName = fullName || user?.fullName || user?.email || "Account Name";
   const phoneBadge = user?.isPhoneVerified
-    ? <span className="inline-flex rounded-full bg-[#C0FFD5] px-2.5 py-0.5 text-xs font-medium text-[#0F7A33]">{cmsText("verified", "Verified")}</span>
-    : <span className="inline-flex rounded-full bg-[#FFF3C4] px-2.5 py-0.5 text-xs font-medium text-[#8A6A00]">{cmsText("unverified", "Unverified")}</span>;
+    ? <span className="inline-flex rounded-full bg-[#C0FFD5] px-2.5 py-0.5 text-xs font-medium text-[#0F7A33]">Verified</span>
+    : <span className="inline-flex rounded-full bg-[#FFF3C4] px-2.5 py-0.5 text-xs font-medium text-[#8A6A00]">Unverified</span>;
 
   return (
     <div className="w-full min-h-full bg-white font-sans text-gray-900 select-none">
       {/* Header */}
-      <PageHeader title={cmsText("accountSettings", "Account Settings")} />
+      <PageHeader title="Account Settings" />
 
       {/* Figma 2171:1911 "My Profile" (default) and 2171:2034 "Edit Profile": full-width grey card, 154px photo */}
       <div className="px-4 sm:px-6 pt-10 pb-24 w-full space-y-6">
-        <h2 className="text-xl font-medium text-black">{editing ? cmsText("editProfile", "Edit Profile") : cmsText("myProfile", "My Profile")}</h2>
+        <h2 className="text-xl font-medium text-black">{editing ? "Edit Profile" : "My Profile"}</h2>
 
-        <PopupMessage message={savedMessage ? cmsText("accountDetailsUpdatedSuccessfully", "Account details updated successfully!") : null} type="success" onClose={() => setSavedMessage(false)} />
+        <PopupMessage message={savedMessage ? "Account details updated successfully!" : null} type="success" onClose={() => setSavedMessage(false)} />
         <PopupMessage message={errorMessage} onClose={() => setErrorMessage("")} />
 
         {!editing ? (
-          <section className="bg-[#F8F8F8] border border-[#E5E5E5] rounded-lg p-8 flex flex-col sm:flex-row items-start sm:items-center gap-10" aria-label={cmsText("myProfile2", "My profile")}>
+          <section className="bg-[#F8F8F8] border border-[#E5E5E5] rounded-lg p-8 flex flex-col sm:flex-row items-start sm:items-center gap-10" aria-label="My profile">
             <span className="relative size-[154px] shrink-0 rounded-full overflow-hidden bg-[#D9D9D9] flex items-center justify-center">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- local preview or stored avatar URL
@@ -197,16 +194,19 @@ export default function AccountSettingsPage() {
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
               <p className="text-xl text-black break-all">{email}</p>
               {isOrganizer && (
-                <p className="flex flex-wrap items-center gap-2 text-base text-[#4B4F52]">{cmsText("mobile2", "Mobile:") + " "}<span className="font-medium text-black">{savedPhone ? `+91 ${savedPhone}` : cmsText("notAdded", "Not added")}</span>
+                <p className="flex flex-wrap items-center gap-2 text-base text-[#4B4F52]">
+                  Mobile: <span className="font-medium text-black">{savedPhone ? `+91 ${savedPhone}` : "Not added"}</span>
                   {savedPhone && phoneBadge}
                   {savedPhone && !user?.isPhoneVerified && user?.phoneVerificationAvailable && (
-                    <button type="button" onClick={() => setPhoneOpen(true)} className="text-sm font-semibold text-[#1F65FF] hover:underline cursor-pointer">{cmsText("verify", "Verify")}</button>
+                    <button type="button" onClick={() => setPhoneOpen(true)} className="text-sm font-semibold text-[#1F65FF] hover:underline cursor-pointer">Verify</button>
                   )}
                 </p>
               )}
-              {isOrganizer && <p className="text-base text-[#4B4F52]">{cmsText("accountType", "Account type:") + " "}<span className="font-medium text-black">{accountType}</span></p>}
-              {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">{cmsText("organizerId2", "Organizer ID:") + " "}<span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
-              <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">{cmsText("editProfile", "Edit Profile")}</button>
+              {isOrganizer && <p className="text-base text-[#4B4F52]">Account type: <span className="font-medium text-black">{accountType}</span></p>}
+              {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
+              <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">
+                Edit Profile
+              </button>
             </div>
           </section>
         ) : (
@@ -223,56 +223,60 @@ export default function AccountSettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 {/* Not in the frame, but renaming the account is an existing feature */}
                 <div>
-                  <label htmlFor="account-name" className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("accountName", "Account Name")}</label>
+                  <label htmlFor="account-name" className="block text-sm font-medium text-[#15191C] mb-2">Account Name</label>
                   <input id="account-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className={field} />
                 </div>
                 {/* the organizer's ID: shown for reference, never editable */}
                 {isOrganizer && user?._id && (
                   <div>
-                    <label htmlFor="account-organizer-id" className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("organizerId", "Organizer ID")}</label>
-                    <input id="account-organizer-id" type="text" value={formatOrganizerId(user._id)} readOnly title={cmsText("yourOrganizerIdCannotBeChanged", "Your organizer ID cannot be changed")} className={`${field} text-[#6B6B6B] cursor-not-allowed`} />
+                    <label htmlFor="account-organizer-id" className="block text-sm font-medium text-[#15191C] mb-2">Organizer ID</label>
+                    <input id="account-organizer-id" type="text" value={formatOrganizerId(user._id)} readOnly title="Your organizer ID cannot be changed" className={`${field} text-[#6B6B6B] cursor-not-allowed`} />
                   </div>
                 )}
                 {isOrganizer && (
                   <div>
-                    <span className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("accountType2", "Account Type")}</span>
+                    <span className="block text-sm font-medium text-[#15191C] mb-2">Account Type</span>
                     <CustomDropdown
                       value={chosenType || (accountType === "Organization" ? "ORGANIZATION" : accountType === "Individual" ? "INDIVIDUAL" : "")}
                       onChange={(v) => setChosenType(v as "INDIVIDUAL" | "ORGANIZATION")}
                       options={[{ value: "INDIVIDUAL", label: "Individual" }, { value: "ORGANIZATION", label: "Organization" }]}
-                      placeholder={cmsText("chooseTheAccountType", "Choose the account type")}
+                      placeholder="Choose the account type"
                       ariaLabel="Account type"
                     />
                   </div>
                 )}
                 {isOrganizer && (
                   <div>
-                    <label htmlFor="account-phone" className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("mobileNumber", "Mobile Number")}<span className="text-[#D92D20]">*</span></label>
-                    <PhoneInput id="account-phone" required value={phone} onValueChange={setTypedPhone} placeholder={cmsText("text10DigitMobileNumber", "10-digit mobile number")} className={field} />
-                    {typedPhone !== null && typedPhone !== savedPhone && <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("aNewNumberIsUnverifiedUntilYouVerify", "A new number is unverified until you verify it.")}</p>}
+                    <label htmlFor="account-phone" className="block text-sm font-medium text-[#15191C] mb-2">Mobile Number<span className="text-[#D92D20]">*</span></label>
+                    <PhoneInput id="account-phone" required value={phone} onValueChange={setTypedPhone} placeholder="10-digit mobile number" className={field} />
+                    {typedPhone !== null && typedPhone !== savedPhone && <p className="mt-1 text-xs text-[#6B6B6B]">A new number is unverified until you verify it.</p>}
                   </div>
                 )}
                 <div>
-                  <label htmlFor="account-email" className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("email", "Email")}</label>
+                  <label htmlFor="account-email" className="block text-sm font-medium text-[#15191C] mb-2">Email</label>
                   <div className="relative">
-                    <input id="account-email" type="email" value={email} readOnly title={googleAccount ? cmsText("thisAccountSignsInWithGoogleSoIt", "This account signs in with Google, so it keeps its Google address") : undefined} className={`${field} text-[#6B6B6B] ${isOrganizer && !googleAccount ? "pr-28" : "cursor-not-allowed"}`} />
+                    <input id="account-email" type="email" value={email} readOnly title={googleAccount ? "This account signs in with Google, so it keeps its Google address" : undefined} className={`${field} text-[#6B6B6B] ${isOrganizer && !googleAccount ? "pr-28" : "cursor-not-allowed"}`} />
                     {isOrganizer && !googleAccount && (
-                      <button type="button" onClick={() => setEmailOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">{cmsText("changeEmail", "Change email")}</button>
+                      <button type="button" onClick={() => setEmailOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">
+                        Change email
+                      </button>
                     )}
                   </div>
-                  {isOrganizer && googleAccount && <p className="mt-1 text-xs text-[#6B6B6B]">{cmsText("youSignInWithGoogleSoThisIs", "You sign in with Google, so this is your Google address.")}</p>}
+                  {isOrganizer && googleAccount && <p className="mt-1 text-xs text-[#6B6B6B]">You sign in with Google, so this is your Google address.</p>}
                 </div>
                 <div>
-                  <label htmlFor="account-password" className="block text-sm font-medium text-[#15191C] mb-2">{cmsText("password", "Password")}</label>
+                  <label htmlFor="account-password" className="block text-sm font-medium text-[#15191C] mb-2">Password</label>
                   <div className="relative">
                     <input id="account-password" type="password" value={password} readOnly className={`${field} pr-36`} />
-                    <button type="button" onClick={() => setIsPasswordModalOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">{cmsText("changePassword", "Change password")}</button>
+                    <button type="button" onClick={() => setIsPasswordModalOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">
+                      Change password
+                    </button>
                   </div>
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
-                <button type="submit" className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">{cmsText("save", "Save")}</button>
-                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); setChosenType(""); setTypedPhone(null); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">{cmsText("cancel2", "Cancel")}</button>
+                <button type="submit" className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Save</button>
+                <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); setChosenType(""); setTypedPhone(null); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
               </div>
             </div>
           </form>

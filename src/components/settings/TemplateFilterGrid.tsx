@@ -1,7 +1,5 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import React, { useState } from "react";
 import { TemplateItem } from "@/types/settings";
 import TemplateGridItem from "./TemplateGridItem";
@@ -18,7 +16,6 @@ interface TemplateFilterGridProps {
 }
 
 export default function TemplateFilterGrid({ templates, categories, loading = false, onEditTemplate }: TemplateFilterGridProps) {
-  const cmsText = useDashboardCopy();
   const [selectedCat, setSelectedCat] = useState("");
   const [selectedSub, setSelectedSub] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -34,7 +31,7 @@ export default function TemplateFilterGrid({ templates, categories, loading = fa
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventCategory", "Event Category")}</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</label>
           <CustomDropdown
             value={selectedCat}
             onChange={(v) => {
@@ -45,17 +42,17 @@ export default function TemplateFilterGrid({ templates, categories, loading = fa
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("eventSubcategory", "Event Subcategory")}</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Subcategory</label>
           <CustomDropdown
             value={selectedSub}
             onChange={setSelectedSub}
             disabled={!selectedCat}
-            placeholder={selectedCat ? cmsText("allSubcategories2", "All Subcategories") : cmsText("selectACategoryFirst", "Select a category first")}
+            placeholder={selectedCat ? "All Subcategories" : "Select a category first"}
             options={selectedCat ? [{ value: "", label: "All Subcategories" }, ...categories.subcategoryOptionsFor(selectedCat)] : []}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-1.5">{cmsText("templateStatus", "Template Status")}</label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Template Status</label>
           <CustomDropdown
             value={statusFilter}
             onChange={setStatusFilter}
@@ -69,12 +66,12 @@ export default function TemplateFilterGrid({ templates, categories, loading = fa
       </div>
 
       {loading ? (
-        <SkeletonRegion label={cmsText("loadingTemplates", "Loading templates")} className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
+        <SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
 {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[302/524]" />)}
 </SkeletonRegion>
       ) : filtered.length === 0 ? (
         <div className="rounded-md border border-[#E0E0E0] p-8 text-center text-sm text-[#6B6B6B]">
-          {templates.length === 0 ? cmsText("noTemplatesHaveBeenAddedYet", "No templates have been added yet.") : cmsText("noTemplatesMatchTheSelectedFilters", "No templates match the selected filters.")}
+          {templates.length === 0 ? "No templates have been added yet." : "No templates match the selected filters."}
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">

@@ -1,14 +1,11 @@
 "use client";
 
-import { useDashboardCopy } from "@/components/cms/DashboardCopyProvider";
-
 import { isEventOver } from "@/utils/eventUtils";
 
 // Shown where an event's guests, sessions or staff would otherwise be editable. The server refuses those changes for a closed,
 // cancelled or finished event; this says so up front instead of offering buttons that can only fail.
 // Drawn as a notice (amber, with a lock) rather than plain text, so it is not mistaken for a field.
 export default function ClosedEventNotice({ status, endsAt }: { status?: string; endsAt?: unknown }) {
-  const cmsText = useDashboardCopy();
   if (!isEventOver({ status, schedule: { end: endsAt } })) return null;
   const cancelled = status === "CANCELLED";
   const closed = status === "COMPLETED";
@@ -21,8 +18,8 @@ export default function ClosedEventNotice({ status, endsAt }: { status?: string;
         <path d="M12 15v2.2" />
       </svg>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-[#7A4300]">{title}{cmsText("viewOnly", ": view only")}</p>
-        <p className="text-sm text-[#7A4300]/90">{cmsText("whatIsShownHereIsKeptAsA", "What is shown here is kept as a record and can no longer be changed.")}</p>
+        <p className="text-sm font-semibold text-[#7A4300]">{title}: view only</p>
+        <p className="text-sm text-[#7A4300]/90">What is shown here is kept as a record and can no longer be changed.</p>
       </div>
     </div>
   );
