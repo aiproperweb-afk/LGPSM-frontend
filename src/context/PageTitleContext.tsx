@@ -83,6 +83,7 @@ function resolveRouteTitle(
   if (pathname === "/dashboard") return "Dashboard";
   if (pathname === "/events") return "Events";
   if (pathname === "/events/add") return "Create Event";
+  if (pathname === "/events/all-invitees") return "All Invitees";
   if (pathname === "/billing") return "Billing & Subscriptions";
   if (pathname === "/earnings") return "Earnings & Payouts";
   if (pathname === "/reports") return "Reports & Analytics";

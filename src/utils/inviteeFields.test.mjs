@@ -49,27 +49,28 @@ test("the food choice is never a column or a form field, even when the event ask
   assert.ok(!("Dietary Preference" in templateRow(cfg)));
 });
 
-test("name, email and mobile are always the first three columns", () => {
-  assert.deepEqual(excelColumnsFor({ company: true, identity: true, dietary: true }).slice(0, 3), ["Name", "Email", "Mobile"]);
+test("name, email, mobile and the number of guests are always the first four columns", () => {
+  assert.deepEqual(excelColumnsFor({ company: true, identity: true, dietary: true }).slice(0, 4), ["Name", "Email", "Mobile", "No of Guests"]);
+  assert.equal(templateRow({})["No of Guests"], "1");
 });
 
 test("the organizer's own title for the custom detail becomes its column title and form label", () => {
   const cfg = inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: "PROFESSIONAL_IDENTITY", identityLabel: "  Designation " } });
   assert.equal(cfg.identityLabel, "Designation");
-  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "Designation"]);
+  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "No of Guests", "Designation"]);
   assert.ok("Designation" in templateRow(cfg));
-  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.header), ["Name", "Email", "Mobile", "Designation"]);
+  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.header), ["Name", "Email", "Mobile", "No of Guests", "Designation"]);
   // without a title, or when the detail is not on the card, the standard title applies
   assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: "PROFESSIONAL_IDENTITY" } })).slice(-1), ["Professional Identity"]);
   assert.equal(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null, identityLabel: "Designation" } }).identityLabel, undefined);
 });
 
-test("the sample is the three standard columns plus exactly what Additional Information chose, in that order", () => {
-  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ corporate: true })), ["Name", "Email", "Mobile"]);
-  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null } })), ["Name", "Email", "Mobile"]);
-  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "COMPANY_NAME", secondary: null } })), ["Name", "Email", "Mobile", "Company Name"]);
+test("the sample is the four standard columns plus exactly what Additional Information chose, in that order", () => {
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ corporate: true })), ["Name", "Email", "Mobile", "No of Guests"]);
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null } })), ["Name", "Email", "Mobile", "No of Guests"]);
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "COMPANY_NAME", secondary: null } })), ["Name", "Email", "Mobile", "No of Guests", "Company Name"]);
   const cfg = inviteeConfigFor({ cardInfo: { primary: "PROFESSIONAL_IDENTITY", secondary: "SECONDARY_IDENTITY", identityLabel: "MTG-B4000", secondaryIdentityLabel: "Table No" } });
-  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "MTG-B4000", "Table No"]);
+  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "No of Guests", "MTG-B4000", "Table No"]);
   assert.equal(templateRow(cfg)["MTG-B4000"], "Sample value");
-  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.key), ["name", "email", "mobile", "identity", "identity2"]);
+  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.key), ["name", "email", "mobile", "guests", "identity", "identity2"]);
 });

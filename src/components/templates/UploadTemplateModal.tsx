@@ -15,11 +15,13 @@ interface Props {
   onCreated: (template: Template) => void;
   /** Opened from the Templates page: an administrator's design is then published to every organizer. Elsewhere (Add Event) it stays a private card. */
   publish?: boolean;
+  /** The window's heading */
+  title?: string;
 }
 
 // "Upload your own template": a finished invitation design becomes the card, sent exactly as it is. The one exception is an administrator
 // publishing from the Templates page: that design is shared, and each event's own details are written over its wording.
-export default function UploadTemplateModal({ onClose, onCreated, publish = false }: Props) {
+export default function UploadTemplateModal({ onClose, onCreated, publish = false, title = "Upload your own template" }: Props) {
   const categories = useCategories();
   const shared = publish && !categories.isOrganizer;
   const [name, setName] = useState("");
@@ -62,7 +64,7 @@ export default function UploadTemplateModal({ onClose, onCreated, publish = fals
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upload-template-title" {...overlayClose}>
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-          <h2 id="upload-template-title" className="text-base font-medium text-gray-900">Upload your own template</h2>
+          <h2 id="upload-template-title" className="text-base font-medium text-gray-900">{title}</h2>
           <button type="button" onClick={onClose} disabled={saving} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer disabled:opacity-50">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>

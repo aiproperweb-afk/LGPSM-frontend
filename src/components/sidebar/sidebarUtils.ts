@@ -12,6 +12,7 @@ export function getActiveItemFromPathname(pathname: string, role: WebRole): stri
     // The Add Event button above the menu is the active item here, not Event Management
     if (within("/events/add")) return "add-event";
     if (within("/events/select")) return "invitees-management";
+    if (within("/events/all-invitees")) return "all-invitees";
     if (within("/events")) {
       if (pathname.includes("/invitees")) return "invitees-management";
       if (pathname.includes("/assign-users")) return "user-management";
@@ -30,6 +31,7 @@ export function getActiveItemFromPathname(pathname: string, role: WebRole): stri
   if (within("/admin/pages")) return "pages";
   if (within("/events/add")) return "add-event";
   if (within("/events/select")) return "add-invitees";
+  if (within("/events/all-invitees")) return "all-invitees";
   if (within("/events")) return "events-list";
   if (within("/user-management/assign")) return "assign-system-users";
   if (within("/user-management/add")) return "add-user";

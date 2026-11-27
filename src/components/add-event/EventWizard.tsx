@@ -12,6 +12,7 @@ import Step3Sessions, { SessionInviteeFile } from "./Step3Sessions";
 import MobileCardPreview from "./MobileCardPreview";
 import ChoiceModal from "@/components/common/ChoiceModal";
 import SelectTemplateModal from "./modals/SelectTemplateModal";
+import ChooseOrganizerModal from "./modals/ChooseOrganizerModal";
 import DateTimePickerModal from "./modals/DateTimePickerModal";
 import ListResetWarningModal from "./modals/ListResetWarningModal";
 import InviteesPreviewModal from "./modals/InviteesPreviewModal";
@@ -236,7 +237,10 @@ export default function EventWizard({
   // A new event starts by choosing a template (the dialog cannot be closed until one is chosen); the template then
   // sets the event category and subcategory. Editing a saved event does not ask again.
   const [dismissedError, setDismissedError] = useState<string | null>(null);
-  const mustPickTemplate = !readOnly && !eventId && draftHydrated && !draft.template;
+  // an administrator says who the event is for before choosing its template (also when a template came in from the Templates page; a
+  // saved draft that already names an organizer has said)
+  const mustPickOrganizer = isAdmin && !readOnly && !eventId && draftHydrated && !draft.organizerChosen && draft.organizerIds.length === 0;
+  const mustPickTemplate = !readOnly && !eventId && draftHydrated && !draft.template && !mustPickOrganizer;
   const chooseTemplate = (template: SelectedTemplate | null, suggested?: { categoryId: string; subcategoryId: string }, invitationType?: InvitationType) => {
     // an explicit choice is never swapped out by the automatic suggestion that follows a category change
     autoTemplateId.current = null;
@@ -612,6 +616,12 @@ export default function EventWizard({
         </div>
       </div>
 
+      {mustPickOrganizer && (
+        <ChooseOrganizerModal
+          onChoose={(id) => setDraft((prev) => ({ ...prev, organizerIds: id ? [id] : [], organizerChosen: true }))}
+          onLeave={onCancel}
+        />
+      )}
       <SelectTemplateModal
         key={isTemplateModalOpen || mustPickTemplate ? "template-open" : "template-closed"}
         isOpen={isTemplateModalOpen || mustPickTemplate}

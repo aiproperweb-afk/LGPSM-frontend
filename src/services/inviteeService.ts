@@ -16,6 +16,7 @@ export interface InviteeData {
   company?: string;
   /** e.g. "Employee ID: 4521" */
   professionalIdentity?: string;
+  guestCount?: number;
   dietaryPreference?: string;
   dietarySelections?: { title: string; value: string }[];
   category?: string;
@@ -28,6 +29,8 @@ export interface InviteeData {
 
 export interface CreateInviteePayload {
   name: string;
+  /** "No of Guests": how many people this guest's pass admits */
+  guestCount?: number;
   email?: string;
   mobile?: string;
   company?: string;
@@ -99,6 +102,7 @@ export interface InviteeSetMember {
   email: string | null;
   mobile: string | null;
   company?: string | null;
+  guestCount?: number;
   delivery: DeliveryState;
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   checkedIn: boolean;
@@ -215,12 +219,17 @@ export const inviteeService = {
     }, true);
   },
 
+  /** Takes guests out of one session only; those who can attend no other session come back in `onlyThisSession` */
+  async removeFromSession(eventId: string, sessionId: string, inviteeIds: string[]): Promise<ApiResponse<{ removed: number; onlyThisSession: string[]; notInSession: number }>> {
+    return apiClient(`/api/v1/events/${eventId}/invitees/session-access/remove`, { method: "POST", body: JSON.stringify({ sessionId, inviteeIds }) }, true);
+  },
+
   /**
    * Import invitees from Excel file (.xlsx / .xls)
    * POST /api/v1/events/:eventId/invitees/import
    */
   // The latest upload replaces the not-yet-invited list (for the event, or for one session when sessionId is given)
-  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; removedLists?: RemovedInviteeList[]; hasSent: boolean; archivedCount: number }>> {
+  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; removedLists?: RemovedInviteeList[]; hasSent: boolean; archivedCount: number; /** every active guest of the event */ totalGuests?: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets`, { method: "GET" }, true);
   },
 

@@ -27,6 +27,9 @@ export interface CheckInRecord {
   eventId: string;
   checkInMethod: "QR" | "MANUAL";
   checkInAt: string;
+  /** how many of the pass's guests have entered, out of how many it admits */
+  admitted?: number;
+  guestCount?: number;
   checkedInBy?: {
     _id: string;
     fullName?: string;

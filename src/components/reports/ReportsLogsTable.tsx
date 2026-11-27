@@ -192,6 +192,7 @@ export default function ReportsLogsTable({
                     <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                       <th className="py-3 px-4 font-medium">Invitee</th>
                       <th className="py-3 px-4 font-medium">Session</th>
+                      <th className="py-3 px-4 font-medium">Guests In</th>
                       <th className="py-3 px-4 font-medium">Method</th>
                       <th className="py-3 px-4 font-medium">Check-In Time</th>
                       <th className="py-3 px-4 font-medium">Checked In By</th>
@@ -222,6 +223,7 @@ export default function ReportsLogsTable({
                             )}
                           </td>
                           <td className="py-4 px-4 font-medium text-gray-700">{sessionName}</td>
+                          <td className="py-4 px-4 font-medium text-gray-900">{log.admitted ?? 1} of {log.guestCount ?? 1}</td>
                           <td className="py-4 px-4">
                             {method === "QR" ? (
                               <span className="bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">
@@ -284,6 +286,7 @@ export default function ReportsLogsTable({
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                   <th className="py-3 px-4 font-medium">Invitee Name</th>
                   <th className="py-3 px-4 font-medium">Mobile No.</th>
+                  <th className="py-3 px-4 font-medium">Guests In</th>
                   <th className="py-3 px-4 font-medium">Invitation Status</th>
                   <th className="py-3 px-4 font-medium">RSVP Status</th>
                   <th className="py-3 px-4 font-medium">Check-in Status</th>
@@ -296,12 +299,13 @@ export default function ReportsLogsTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-800">
-                {loadingDetails && statusRow(6 + sessionColumns.length, "Loading invitees...")}
-                {!loadingDetails && inviteeLogs.length === 0 && statusRow(6 + sessionColumns.length, "No invitees found for this event.")}
+                {loadingDetails && statusRow(7 + sessionColumns.length, "Loading invitees...")}
+                {!loadingDetails && inviteeLogs.length === 0 && statusRow(7 + sessionColumns.length, "No invitees found for this event.")}
                 {!loadingDetails && inviteeLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="py-4 px-4 font-semibold text-gray-900 max-w-[220px] truncate" title={log.name}>{log.name}</td>
                     <td className="py-4 px-4 text-gray-600">{log.mobile}</td>
+                    <td className="py-4 px-4 text-gray-900">{log.guestsIn} of {log.guestCount}</td>
                     <td className="py-4 px-4">
                       {log.invitationStatus === "Sent" && (
                         <span className="bg-emerald-100/70 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
@@ -426,13 +430,14 @@ export default function ReportsLogsTable({
                     <th className="py-3 px-4 font-medium">Date & Time</th>
                     <th className="py-3 px-4 font-medium">Invitees</th>
                     <th className="py-3 px-4 font-medium">Attendees</th>
+                    <th className="py-3 px-4 font-medium">Guests In</th>
                     <th className="py-3 px-4 font-medium">Access Control</th>
                     <th className="py-3 px-4 font-medium">System Users</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
-                  {loadingDetails && statusRow(7, "Loading sessions...")}
-                  {!loadingDetails && sessionsReport.length === 0 && statusRow(7, "No sessions for this event.")}
+                  {loadingDetails && statusRow(8, "Loading sessions...")}
+                  {!loadingDetails && sessionsReport.length === 0 && statusRow(8, "No sessions for this event.")}
                   {!loadingDetails && sessionsReport.map((sess) => (
                     <tr key={sess.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-4 px-4 font-semibold text-gray-600">{sess.id}</td>
@@ -440,6 +445,7 @@ export default function ReportsLogsTable({
                       <td className="py-4 px-4 text-gray-600">{sess.dateTime}</td>
                       <td className="py-4 px-4 font-medium text-gray-900">{sess.invitees}</td>
                       <td className="py-4 px-4 font-medium text-gray-900">{sess.attendees}</td>
+                      <td className="py-4 px-4 font-medium text-gray-900">{sess.guestsIn}</td>
                       <td className="py-4 px-4 text-gray-700 font-medium">{sess.accessControl}</td>
                       <td className="py-4 px-4 font-medium text-gray-900">{sess.systemUsers}</td>
                     </tr>

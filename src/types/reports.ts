@@ -2,6 +2,9 @@ export interface InviteeLog {
   id: string;
   name: string;
   mobile: string;
+  /** how many people the guest's pass admits, and the most that entered any one session */
+  guestCount: number;
+  guestsIn: number;
   invitationStatus: "Sent" | "Pending" | "Failed";
   /** "Not requested" when the event does not use RSVP (shown as the "--" placeholder) */
   rsvpStatus: "Accepted" | "Pending" | "Declined" | "Not requested";
@@ -35,6 +38,8 @@ export interface SessionReport {
   dateTime: string;
   invitees: number;
   attendees: number;
+  /** people who entered out of the people the passes admit, as text */
+  guestsIn: string;
   accessControl: string;
   systemUsers: string;
 }

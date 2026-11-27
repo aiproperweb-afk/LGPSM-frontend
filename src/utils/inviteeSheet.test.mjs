@@ -31,30 +31,30 @@ test("a sheet without the column still parses, with no identity", async () => {
 test("a sheet is checked against the columns the event's settings ask for", async () => {
   const plain = { };
   const withExtras = { company: true, identity: true, dietary: true };
-  const full = fileOf([["Name", "Email", "Mobile", "Company Name", "Professional Identity"], ["Pia Roy", "pia@x.com", "", "Acme", "ID 1"]]);
+  const full = fileOf([["Name", "Email", "Mobile", "No of Guests", "Company Name", "Professional Identity"], ["Pia Roy", "pia@x.com", "", 1, "Acme", "ID 1"]]);
   assert.deepEqual((await parseInviteeSheet(full, [], expectedColumnsFor(withExtras))).missingColumns, []);
   // only the chosen Additional Information (Professional Identity) is asked for on top of the basics
-  const basic = fileOf([["Name", "Email", "Mobile"], ["Pia Roy", "pia@x.com", ""]]);
+  const basic = fileOf([["Name", "Email", "Mobile", "No of Guests"], ["Pia Roy", "pia@x.com", "", 1]]);
   assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor(plain))).missingColumns, []);
   assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor({ identity: true }))).missingColumns, ["Professional Identity"]);
   assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor(withExtras))).missingColumns, ["Professional Identity", "Company Name"]);
   // no heading row at all: every column counts as missing; with no settings given nothing is checked
   const noHeader = fileOf([["Pia Roy", "pia@x.com", "98765"]]);
-  assert.equal((await parseInviteeSheet(noHeader, [], expectedColumnsFor(plain))).missingColumns.length, 3);
+  assert.equal((await parseInviteeSheet(noHeader, [], expectedColumnsFor(plain))).missingColumns.length, 4);
   assert.deepEqual((await parseInviteeSheet(noHeader)).missingColumns, []);
 });
 
 test("a sheet with the organizer's own title for the custom detail is read into that detail", async () => {
   const expected = expectedColumnsFor({ identity: true, identityLabel: "Badge Code" });
-  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Badge Code"], ["Pia Roy", "pia@x.com", "", "BC-9"]]), [], expected);
+  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "No of Guests", "Badge Code"], ["Pia Roy", "pia@x.com", "", 1, "BC-9"]]), [], expected);
   assert.deepEqual(parsed.missingColumns, []);
   assert.equal(parsed.rows[0].identity, "BC-9");
-  assert.deepEqual((await parseInviteeSheet(fileOf([["Name", "Email", "Mobile"], ["Pia Roy", "pia@x.com", ""]]), [], expected)).missingColumns, ["Badge Code"]);
+  assert.deepEqual((await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "No of Guests"], ["Pia Roy", "pia@x.com", "", 1]]), [], expected)).missingColumns, ["Badge Code"]);
 });
 
 test("two custom details are read into their own fields, and survive being rebuilt into a file", async () => {
   const expected = expectedColumnsFor({ identity: true, identityLabel: "Badge", identity2: true, identity2Label: "Table" });
-  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Badge", "Table"], ["Pia Roy", "pia@x.com", "", "B1", "T9"]]), [], expected);
+  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "No of Guests", "Badge", "Table"], ["Pia Roy", "pia@x.com", "", 1, "B1", "T9"]]), [], expected);
   assert.deepEqual(parsed.missingColumns, []);
   assert.deepEqual([parsed.rows[0].identity, parsed.rows[0].identity2], ["B1", "T9"]);
   const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"));
@@ -88,7 +88,7 @@ test("sheetIssues: an invalid row does not make a later valid row a repeat", () 
 });
 
 test("columns the event does not use are reported and nothing of theirs is taken", async () => {
-  const sheet = () => fileOf([["Name", "Email", "Mobile", "Employee ID", "Company Name"], ["Pia Roy", "pia@x.com", "9876543210", "E-4521", "Acme"]]);
+  const sheet = () => fileOf([["Name", "Email", "Mobile", "No of Guests", "Employee ID", "Company Name"], ["Pia Roy", "pia@x.com", "9876543210", 1, "E-4521", "Acme"]]);
   const parsed = await parseInviteeSheet(sheet(), [], expectedColumnsFor({}));
   assert.deepEqual(parsed.ignoredColumns, ["Employee ID", "Company Name"]);
   assert.deepEqual(parsed.missingColumns, []);
@@ -118,4 +118,15 @@ test("the report export carries only the additional information the event uses, 
   ]);
   // a custom title that only renames the mobile column adds nothing of its own
   assert.deepEqual(additionalColumns({ primary: "PROFESSIONAL_IDENTITY", identityLabel: "Ph No" }), []);
+});
+
+test("No of Guests is read whatever way the heading is written, never taken as the name, and checked row by row", async () => {
+  const parsed = await parseInviteeSheet(fileOf([["Guest Name", "Email", "Mobile", "No. of Guests"], ["Family One", "f@x.com", "", 10], ["Blank", "b@x.com", "", ""], ["Half", "h@x.com", "", "2.5"], ["Crowd", "c@x.com", "", 101]]), [], expectedColumnsFor({}));
+  assert.deepEqual(parsed.missingColumns, []);
+  assert.deepEqual(parsed.ignoredColumns, []);
+  assert.deepEqual(parsed.rows.map((r) => [r.name, r.guests]), [["Family One", "10"], ["Blank", ""], ["Half", "2.5"], ["Crowd", "101"]]);
+  assert.deepEqual(parsed.problems.map((p) => p.row), ["3", "4", "5"]);
+  assert.match(parsed.problems[0].error, /No of Guests is required/);
+  const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"), [], expectedColumnsFor({}));
+  assert.equal(again.rows[0].guests, "10");
 });

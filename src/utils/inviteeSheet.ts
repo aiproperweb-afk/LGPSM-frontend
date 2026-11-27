@@ -1,6 +1,7 @@
 // The spreadsheet library is by far the largest thing these screens use (500 KB), and most visits never touch a spreadsheet: it loads when needed
 const loadXlsx = () => import("xlsx");
 import { meaningOf, meaningsOf } from "./columnMeaning.ts";
+import { GUEST_COUNT_HEADER, guestCountProblem, isGuestCountHeader } from "./guestCount.ts";
 import type { ExpectedColumn, InviteeFieldKey } from "@/utils/inviteeFields";
 
 // Parses an invitee sheet with the same header rules as the backend import
@@ -11,6 +12,8 @@ export interface InviteeSheetRow {
   name: string;
   email: string;
   phone: string;
+  /** "No of Guests" as written in the sheet: how many people this guest's pass admits */
+  guests?: string;
   company: string;
   identity?: string;
   identity2?: string;
@@ -40,15 +43,17 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
   const nonBlank = raw.filter((r) => Array.isArray(r) && r.some((c) => clean(c) !== ""));
   if (nonBlank.length === 0) return { rows: [], problems: [], missingColumns: [], ignoredColumns: [] };
 
-  let nameIdx = -1, emailIdx = -1, mobileIdx = -1, companyIdx = -1, identityIdx = -1, identity2Idx = -1;
+  let nameIdx = -1, emailIdx = -1, mobileIdx = -1, companyIdx = -1, identityIdx = -1, identity2Idx = -1, guestsIdx = -1;
   const sessionColumns = new Map<number, string>();
   const header = nonBlank[0].map((c) => clean(c).toLowerCase());
   const customIdentity = (expected?.find((c) => c.key === "identity")?.header || "").toLowerCase();
   const customIdentity2 = (expected?.find((c) => c.key === "identity2")?.header || "second identity").toLowerCase();
-  const hasHeader = header.some((c) => c.includes("name") || c.includes("email") || c.includes("mobile") || c.includes("phone") || c.includes("company") || meaningsOf(c).length > 0);
+  const hasHeader = header.some((c) => c.includes("name") || c.includes("email") || c.includes("mobile") || c.includes("phone") || c.includes("company") || meaningsOf(c).length > 0 || isGuestCountHeader(c));
   if (hasHeader) {
     header.forEach((c, i) => {
       if (!c) return;
+      // checked first: "No of Guests" would otherwise be read as the guest's name
+      if (isGuestCountHeader(c)) { if (guestsIdx === -1) guestsIdx = i; return; }
       if (c === customIdentity2 || c === "second identity") identity2Idx = i;
       else if (c.includes("identity") || c.includes("designation") || (customIdentity && c === customIdentity)) identityIdx = i;
       // a heading is read by what it means: "Ph No", "Telephone" and "Contact no" are the mobile column, "Guest" the name column
@@ -68,7 +73,7 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
 
   // Only what the event's settings ask for is taken; without settings to go by, every known column is
   const wants = (key: InviteeFieldKey) => keepAll || !expected || expected.some((c) => c.key === key);
-  const taken = new Set<number>([nameIdx, emailIdx, mobileIdx, wants("company") ? companyIdx : -1, wants("identity") ? identityIdx : -1, wants("identity2") ? identity2Idx : -1, ...sessionColumns.keys()]);
+  const taken = new Set<number>([nameIdx, emailIdx, mobileIdx, guestsIdx, wants("company") ? companyIdx : -1, wants("identity") ? identityIdx : -1, wants("identity2") ? identity2Idx : -1, ...sessionColumns.keys()]);
   const ignoredColumns = hasHeader && expected && !keepAll ? nonBlank[0].map((c, i) => (taken.has(i) ? "" : clean(c))).filter(Boolean) : [];
 
   const cell = (row: unknown[], i: number) => (i >= 0 ? clean(row[i]) : "");
@@ -78,24 +83,26 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
   dataRows.forEach((r, i) => {
     const rowNo = String(i + (hasHeader ? 2 : 1));
     const sessionValues = sessionColumns.size ? Object.fromEntries([...sessionColumns].map(([idx, name]) => [name, !["N", "NO", "FALSE", "0"].includes(cell(r, idx).toUpperCase())])) : undefined;
-    const row: InviteeSheetRow = { id: rowNo, name: cell(r, nameIdx), email: cell(r, emailIdx).toLowerCase(), phone: cell(r, mobileIdx), company: wants("company") ? cell(r, companyIdx) : "", identity: wants("identity") ? cell(r, identityIdx) : "", identity2: wants("identity2") ? cell(r, identity2Idx) : "", sessions: sessionValues };
+    const row: InviteeSheetRow = { id: rowNo, name: cell(r, nameIdx), email: cell(r, emailIdx).toLowerCase(), phone: cell(r, mobileIdx), guests: guestsIdx >= 0 ? cell(r, guestsIdx) : undefined, company: wants("company") ? cell(r, companyIdx) : "", identity: wants("identity") ? cell(r, identityIdx) : "", identity2: wants("identity2") ? cell(r, identity2Idx) : "", sessions: sessionValues };
     const problem = rowProblem(row);
     if (problem) problems.push({ row: rowNo, error: problem });
     rows.push(row);
   });
   // The sheet needs a heading for every column the event's settings ask for (the sample Excel has exactly these)
-  const found: Record<InviteeFieldKey, boolean> = { name: nameIdx >= 0, email: emailIdx >= 0, mobile: mobileIdx >= 0, company: companyIdx >= 0, identity: identityIdx >= 0, identity2: identity2Idx >= 0 };
+  const found: Record<InviteeFieldKey, boolean> = { name: nameIdx >= 0, email: emailIdx >= 0, mobile: mobileIdx >= 0, company: companyIdx >= 0, identity: identityIdx >= 0, identity2: identity2Idx >= 0, guests: guestsIdx >= 0 };
   const missingColumns = expected ? expected.filter((c) => !hasHeader || !found[c.key]).map((c) => c.header) : [];
   return { rows, problems, missingColumns, ignoredColumns };
 }
 
-export function rowProblem(row: Pick<InviteeSheetRow, "name" | "email" | "phone">): string | null {
+export function rowProblem(row: Pick<InviteeSheetRow, "name" | "email" | "phone" | "guests">): string | null {
   if (!row.name || row.name.length < 2) return "Name must be at least 2 characters";
   if (row.name.length > 100) return "Name must be 100 characters or less";
   if (row.email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(row.email)) return "Invalid email";
   const digits = row.phone.replace(/\D/g, "");
   if (row.phone && (digits.length < 7 || digits.length > 15)) return "Invalid mobile number";
   if (!row.email && !row.phone) return "Email or mobile is required";
+  // (rows with no such column at all are caught as a missing column when the sheet is read)
+  if (row.guests !== undefined) return guestCountProblem(row.guests);
   return null;
 }
 
@@ -115,7 +122,7 @@ export interface SheetIssues {
   importable: number;
 }
 
-export function sheetIssues(rows: Pick<InviteeSheetRow, "id" | "name" | "email" | "phone">[]): SheetIssues {
+export function sheetIssues(rows: Pick<InviteeSheetRow, "id" | "name" | "email" | "phone" | "guests">[]): SheetIssues {
   const invalid = new Map<string, string>();
   const repeated = new Map<string, string>();
   const byEmail = new Map<string, string>();
@@ -137,7 +144,7 @@ export function sheetIssues(rows: Pick<InviteeSheetRow, "id" | "name" | "email" 
 export async function rowsToSheetFile(rows: InviteeSheetRow[], fileName: string, sessionNames: string[] = []): Promise<File> {
   const XLSX = await loadXlsx();
   const sheet = XLSX.utils.json_to_sheet(rows.map((r) => ({
-    Name: r.name, Email: r.email, Mobile: r.phone, ...(rows.some((x) => x.company) ? { "Company Name": r.company } : {}), ...(r.identity ? { "Professional Identity": r.identity } : {}), ...(r.identity2 ? { "Second Identity": r.identity2 } : {}),
+    Name: r.name, Email: r.email, Mobile: r.phone, ...(rows.some((x) => x.guests !== undefined) ? { [GUEST_COUNT_HEADER]: r.guests ?? "" } : {}), ...(rows.some((x) => x.company) ? { "Company Name": r.company } : {}), ...(r.identity ? { "Professional Identity": r.identity } : {}), ...(r.identity2 ? { "Second Identity": r.identity2 } : {}),
     ...Object.fromEntries(sessionNames.map((name) => [name, r.sessions?.[name] === false ? "N" : "Y"])),
   })));
   const workbook = XLSX.utils.book_new();

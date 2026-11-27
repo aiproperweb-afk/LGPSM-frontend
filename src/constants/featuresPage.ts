@@ -66,7 +66,7 @@ export const STAGES: Stage[] = [
   { n: 3, label: "Control", rows: [
     { eyebrow: "Sessions and access rules", icon: "e6.svg", title: "Session-wise entry for events with more than one moment", text: "Weddings, conferences and multi-day festivals rarely happen in one go. Create separate sessions, each with its own time, guest list and entry rules, all within one event.", image: "f6-sessions.png", w: 1140, h: 944, items: [
       I("Multiple timed sessions", "Set up the ceremony, lunch, keynote or gala dinner as separate sessions."),
-      I("Only Once or No Restrictions", "Allow a single entry per guest, or let guests come and go freely."),
+      I("Family passes", "One QR code admits as many people as the guest list says, counted at the door."),
       I("Reusable guest lists", "Apply the same list to several sessions without uploading it again."),
       I("Entry-session requirement", "Make guests check in at the main entry before they can access other sessions."),
       I("Overall attendee limit", "Cap total attendance to match venue capacity."),

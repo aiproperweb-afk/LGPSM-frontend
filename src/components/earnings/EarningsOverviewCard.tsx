@@ -54,11 +54,11 @@ export default function EarningsOverviewCard({
               </span>
               {isSavedNotice ? (
                 <span className="text-xs font-semibold text-emerald-700 animate-fadeIn">
-                  Saved. Applies to events created from now on.
+                  Saved. Applies to events with nothing sent yet.
                 </span>
               ) : (
                 <span className={`text-sm font-semibold ${tempRate !== rate ? "text-[#1F65FF]" : "text-[#4B4F52]"}`} aria-live="polite">
-                  {tempRate !== rate ? `New rate: ${formatMoney(tempRate)} per head` : `Current: ${formatMoney(tempRate)} per head`}
+                  {!(tempRate >= 1 && tempRate <= 20) ? "Enter a price from 1 to 20" : tempRate !== rate ? `New rate: ${formatMoney(tempRate)} per head` : `Current: ${formatMoney(tempRate)} per head`}
                 </span>
               )}
             </div>
@@ -70,8 +70,8 @@ export default function EarningsOverviewCard({
                   min="1"
                   max="20"
                   step="0.5"
-                  value={tempRate}
-                  aria-label="Price per invitee"
+                  value={Number.isFinite(tempRate) ? tempRate : 1}
+                  aria-label="Price per invitee slider"
                   onChange={(e) => setTempRate(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1F65FF]"
                 />
@@ -82,10 +82,24 @@ export default function EarningsOverviewCard({
                 </div>
               </div>
 
+              <label className="flex items-center gap-1 shrink-0 text-sm text-[#4B4F52]">
+                ₹
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  step={0.5}
+                  value={Number.isFinite(tempRate) ? tempRate : ""}
+                  aria-label="Price per invitee in rupees"
+                  onChange={(e) => setTempRate(parseFloat(e.target.value))}
+                  className="w-[72px] h-10 px-2 border border-[#E0E0E0] rounded-md text-sm font-medium text-[#15191C] bg-white focus:outline-none focus:border-black"
+                />
+              </label>
+
               <button
                 type="button"
                 onClick={onSaveRate}
-                disabled={saving || tempRate === rate}
+                disabled={saving || !(tempRate >= 1 && tempRate <= 20)}
                 className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md transition-colors cursor-pointer shrink-0"
               >
                 {saving ? "Saving..." : "Save"}

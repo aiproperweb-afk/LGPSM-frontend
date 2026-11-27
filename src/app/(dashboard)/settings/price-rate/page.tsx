@@ -35,10 +35,11 @@ export default function PriceRateSettingsPage() {
   useEffect(() => { void Promise.resolve().then(load); }, [load]);
 
   const handleSaveRate = async (newRate: number) => {
-    if (saving || newRate === pricing?.ratePerInvitee) return;
+    // saving the rate already in force is allowed: it brings events with nothing sent up to it
+    if (saving) return;
     setSaving(true);
     const res = await platformSettingsService.updateRate(newRate);
-    if (res.success && res.data) { setPricing(res.data); setError(null); setNotice(`The price per invitee is now ₹${newRate}. It applies to events created from now on; existing events keep their rate.`); }
+    if (res.success && res.data) { setPricing(res.data); setError(null); setNotice(`The price per invitee is now ₹${newRate}. It applies to new events and to events with nothing sent yet; events already sent keep their rate.`); }
     else setError(res.message || "The rate could not be saved, so it is unchanged.");
     setSaving(false);
   };
@@ -60,7 +61,8 @@ export default function PriceRateSettingsPage() {
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-7 w-full space-y-6 pb-24">
         <p className="text-xs text-[#4B4F52]">
-          A new rate applies to events created from now on. Each existing event keeps the rate that was in force when it was created.
+          A new rate applies to new events and to existing events with nothing sent yet. An event whose invitations have gone out keeps the
+          rate they were sent at. Saving the current rate again brings any event that missed it up to date.
         </p>
         <PopupMessage message={error} onClose={() => setError(null)} />
         <PopupMessage message={notice} type="success" title="Price rate updated" onClose={() => setNotice(null)} />

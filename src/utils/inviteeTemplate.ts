@@ -12,7 +12,7 @@ export async function downloadInviteeTemplate(cols: TemplateColumns = {}): Promi
     const worksheet = XLSX.utils.json_to_sheet([templateRow(cols)]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Invitees");
-    XLSX.writeFile(workbook, "LGPSM_Invitee_Sample_Template.xlsx");
+    XLSX.writeFile(workbook, "EventQRapp_Invitee_Sample_Template.xlsx");
     return true;
   } catch (err) {
     console.error("Error generating sample excel:", err);

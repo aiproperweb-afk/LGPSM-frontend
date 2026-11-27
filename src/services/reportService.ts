@@ -34,6 +34,9 @@ export interface EventReportData {
     name: string;
     checkInCount: number;
     attendeeCount?: number;
+    /** people who entered, and the people the session's passes admit */
+    admittedCount?: number;
+    expectedGuests?: number;
     invitedCount?: number;
     checkInsToday?: number;
     systemUsers?: number;

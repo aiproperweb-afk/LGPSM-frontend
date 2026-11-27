@@ -37,13 +37,14 @@ const PAGE_SIZE = 10;
 const sessionsText = (m: InviteeSetMember) => (!m.sessions || m.sessions.length === 0 ? "—" : (m.sessionCount ?? 0) > 1 && m.sessions.length === m.sessionCount ? "All sessions" : m.sessions.join(", "));
 
 export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false, onAddInvitees, reloadSignal = 0 }: Props) {
-  const { showAlert } = useAlert();
+  const { showAlert, confirm } = useAlert();
   // the guests being deleted: asked for a reason (and where to send it) first
   const [removing, setRemoving] = useState<InviteeSetMember[] | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
-  const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string; guestCount?: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [sets, setSets] = useState<InviteeSetInfo[] | null>(null);
+  const [totalGuests, setTotalGuests] = useState<number | null>(null);
   // the datasets the dropdown already offers, to spot a new one after an upload
   const knownSets = useRef<Set<string> | null>(null);
   const [setId, setSetId] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
         if (!live) return;
         const list = r.success && r.data ? [...r.data.sets, ...(r.data.sessionLists ?? [])] : [];
         setSets(list);
+        setTotalGuests(r.data?.totalGuests ?? null);
         knownSets.current = new Set(list.map((x) => x.id));
         // opens on "All" (every guest of the event); a single dataset can be chosen from the dropdown
         setSetId(list.length ? ALL : "");
@@ -102,6 +104,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     inviteeService.getInviteeSets(eventId).then((r) => {
       if (!r.success || !r.data) return;
       const fresh = [...r.data.sets, ...(r.data.sessionLists ?? [])];
+      setTotalGuests(r.data.totalGuests ?? null);
       // a dataset that was not there before (a new Excel upload) is added to the dropdown and chosen, so its guests show straight away
       const before = knownSets.current;
       const added = before ? fresh.find((x) => !before.has(x.id)) : undefined;
@@ -123,7 +126,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
   const options = [
     // "All" is always offered, even when there is only one dataset
-    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.filter((x) => x.source !== "SESSION").reduce((n, x) => n + x.total, 0)})` }] : []),
+    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${totalGuests ?? sets.filter((x) => x.source !== "SESSION").reduce((n, x) => n + x.total, 0)})` }] : []),
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
   // every guest can be edited and deleted (unless the page is read-only); the history of a guest something has happened to is kept
@@ -139,6 +142,32 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     const sent = [notice.email === "SENT" && "email", notice.whatsapp === "SENT" && "WhatsApp"].filter(Boolean).join(" and ");
     const bad = [notice.email, notice.whatsapp].some((v) => v === "FAILED" || v === "UNAVAILABLE");
     return `${sent ? ` Message sent by ${sent}.` : ""}${bad ? ` Some messages could not be sent${notice.reasons?.length ? `: ${notice.reasons.join("; ")}` : ""}.` : ""}`;
+  };
+
+  // A list that belongs to one session (a session's list, or a file uploaded to it): "delete" takes guests out of that session only. Those
+  // who attend no other session are deleted through the usual window.
+  const askRemove = async (list: InviteeSetMember[]) => {
+    const chosen = sets?.find((x) => x.id === setId);
+    const sessionId = chosen?.sessionId;
+    // (a guest ticked on an earlier page is known only by id: the server decides which session rule applies to them)
+    const allOnlyHere = list.every((m) => !!m.sessions && m.sessions.length <= 1);
+    if (!sessionId || allOnlyHere) return setRemoving(list);
+    const many = (n: number) => `${n} ${n === 1 ? "guest" : "guests"}`;
+    const yes = await confirm({
+      title: "Remove from this session?",
+      message: `This list belongs to one session. ${many(list.length)} will be removed from that session only and stay in their other sessions. Anyone who attends no other session is asked about next.`,
+      confirmText: "Remove from this session",
+      tone: "danger",
+    });
+    if (!yes) return;
+    setBusy(true);
+    const res = await inviteeService.removeFromSession(eventId, sessionId, list.map((m) => m.id));
+    setBusy(false);
+    if (!res.success || !res.data) return showAlert(res.message || "The guests could not be removed from this session.", "error");
+    const rest = list.filter((m) => res.data!.onlyThisSession.includes(m.id));
+    refresh();
+    if (rest.length) setRemoving(rest);
+    else showAlert(`${many(res.data.removed)} removed from the session.`, "success");
   };
 
   const removeGuests = async (removal: RemovalDetails) => {
@@ -158,8 +187,8 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     refresh();
   };
 
-  const saveEdit = async (row: { id: string; name: string; email: string; phone: string }) => {
-    const res = await inviteeService.updateInvitee(row.id, { name: row.name, email: row.email, mobile: row.phone });
+  const saveEdit = async (row: { id: string; name: string; email: string; phone: string; guestCount?: number }) => {
+    const res = await inviteeService.updateInvitee(row.id, { name: row.name, email: row.email, mobile: row.phone, guestCount: row.guestCount });
     if (!res.success) return showAlert(res.message || "The invitee could not be updated.", "error");
     showAlert("Invitee updated.", "success");
     setEditing(null);
@@ -214,8 +243,8 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. A guest who was already invited loses their access pass.</p>
-                <button type="button" onClick={() => setRemoving(members.filter((m) => selected.includes(m.id)).concat(selected.filter((id) => !members.some((m) => m.id === id)).map((id) => ({ id, name: "Invitee" } as InviteeSetMember))))} disabled={!selected.length || busy} className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. A guest who was already invited can no longer enter with the QR code they were sent.</p>
+                <button type="button" onClick={() => void askRemove(members.filter((m) => selected.includes(m.id)).concat(selected.filter((id) => !members.some((m) => m.id === id)).map((id) => ({ id, name: "Invitee" } as InviteeSetMember))))} disabled={!selected.length || busy} className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                   {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
                 </button>
@@ -233,6 +262,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   <th className="py-2.5 pr-3 font-medium">Name</th>
                   <th className="py-2.5 pr-3 font-medium">Email</th>
                   <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
+                  <th className="py-2.5 pr-3 font-medium whitespace-nowrap">No of Guests</th>
                   <th className="py-2.5 pr-3 font-medium">Invitee Dataset</th>
                   <th className="py-2.5 pr-3 font-medium">Session</th>
                   {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
@@ -251,15 +281,16 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                     <td className="py-2.5 pr-3 text-gray-900 break-words">{m.name}</td>
                     <td className="py-2.5 pr-3 break-all">{m.email || "—"}</td>
                     <td className="py-2.5 pr-3 whitespace-nowrap">{m.mobile || "—"}</td>
+                    <td className="py-2.5 pr-3">{m.guestCount || 1}</td>
                     <td className="py-2.5 pr-3 break-words" title={m.setName}>{m.setName ? listDisplayName(m.setName) : "—"}</td>
                     <td className="py-2.5 pr-3 break-words">{sessionsText(m)}</td>
                     {showCompany && <td className="py-2.5 pr-3 break-words">{m.company || "—"}</td>}
                     {!readOnly && (
                       <td className="py-2.5 text-right whitespace-nowrap">
-                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit(m)} title={canEdit(m) ? "Edit" : "Invitations were already sent to this guest, so they can only be deleted"} aria-label={`Edit ${m.name}`} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "", guestCount: m.guestCount })} disabled={!canEdit(m)} title={canEdit(m) ? "Edit" : "Invitations were already sent to this guest, so they can only be deleted"} aria-label={`Edit ${m.name}`} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.5 2.5 0 00-3.536-3.536L4.5 16.5V20z" /></svg>
                         </button>
-                        <button type="button" onClick={() => setRemoving([m])} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => void askRemove([m])} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                         </button>
                       </td>
@@ -267,10 +298,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   </tr>
                 ))}
                 {!loading && members.length === 0 && (
-                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
+                  <tr><td colSpan={10} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
                 )}
                 {loading && members.length === 0 && (
-                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
+                  <tr><td colSpan={10} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
                 )}
               </tbody>
             </table>

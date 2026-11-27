@@ -450,7 +450,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                         <p className="font-medium">&ldquo;{saved.name}&rdquo; is saved{saved.published ? " and ready to use" : " as a draft"}.</p>
                         <div className="flex flex-wrap gap-3">
                           {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
-                          <Link href="/templates?view=mine" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">Go to my templates</Link>
+                          <Link href="/templates" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">Go to templates</Link>
                         </div>
                       </div>
                     ) : canSave(variant) ? (

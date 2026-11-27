@@ -15,6 +15,7 @@ import { isTooLarge } from "@/utils/uploadLimits";
 import RepeatedGuestsModal from "@/components/invitees/RepeatedGuestsModal";
 import { findRepeatedGuests, type RepeatedGuest } from "@/utils/repeatedGuests";
 import InfoTip from "@/components/common/InfoTip";
+import { planSameList, sheetSignature } from "@/utils/sameSheet";
 
 // Invitee sheets stay in memory only (they hold guest contact details and a File object)
 export interface SessionInviteeFile {
@@ -140,9 +141,22 @@ export default function Step3Sessions({
       }
       if (parsed.ignoredColumns.length > 0) await confirm({ title: "Extra columns ignored", message: ignoredColumnsMessage(parsed.ignoredColumns, expected.map((c) => c.header)), confirmText: "Got it", cancelButton: false, icon: "info" });
       const accept = () => {
-        onSessionFileChange(session.key, { file, name: file.name, rows: parsed.rows, problemCount: parsed.problems.length });
+        const chosen = { file, name: file.name, rows: parsed.rows, problemCount: parsed.problems.length };
+        // the same list as another session's: the later session simply keeps the earlier one's invitees, as the tick box does
+        const others = Object.fromEntries(Object.entries(sessionFiles).map(([k, f]) => [k, f ? sheetSignature(f.rows) : undefined]));
+        const same = planSameList(sessions, others, session.key, sheetSignature(parsed.rows));
         onSkipInviteesChange(false);
-        onOpenInviteesPreview(session.key);
+        if (!same) {
+          onSessionFileChange(session.key, chosen);
+          onOpenInviteesPreview(session.key);
+          return;
+        }
+        // an earlier session being given a later session's list takes the file, and the later one keeps it from there
+        onSessionFileChange(same.source, same.source === session.key ? chosen : sessionFiles[same.source]!);
+        onSessionFileChange(same.copy, null);
+        onSessionsChange(same.sessions);
+        const nameOf = (k: string) => { const i = sessions.findIndex((s) => s.key === k); return sessions[i]?.name.trim() || `Session ${i + 1}`; };
+        void confirm({ title: "Same invitee list", message: `This is the same guest list as the one for ${nameOf(same.source === session.key ? same.copy : same.source)}, so "${nameOf(same.copy)}" now keeps the same invitees as "${nameOf(same.source)}". Untick the box to give it its own list.`, confirmText: "Got it", cancelButton: false, icon: "info" });
       };
       // the same email or mobile twice in the file: the file is kept only if the organizer confirms
       const dup = findRepeatedGuests(parsed.rows);
@@ -240,7 +254,7 @@ export default function Step3Sessions({
               <div className="min-w-0">
                 <span className={`${labelClass} flex items-center justify-between gap-2`}>
                   <span>Access Control<span className="text-red-500 ml-0.5">*</span></span>
-                  <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
+                  <InfoTip label="About access control" text="Each guest's QR code admits as many people as their No of Guests, in every session. This holds for both choices." />
                 </span>
                 <CustomDropdown
                   value={sess.accessControl}
@@ -356,7 +370,7 @@ export default function Step3Sessions({
                     <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#1A56DB] cursor-pointer">
                       <ExcelLogo /> Download Excel Sample
                     </button>
-                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
+                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are four main columns - Name, Email, Mobile and No of Guests (how many people the guest's QR code admits). Name, Mobile and No of Guests are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
                   </span>
                 </div>
               </div>

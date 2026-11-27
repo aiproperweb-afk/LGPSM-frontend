@@ -50,7 +50,7 @@ export interface EarningsRow {
   createdAt: string;
   invitesSent: number;
   ratePerInvitee: number | null;
-  rateSource: "locked" | "historical" | "unset";
+  rateSource: "organizer" | "locked" | "historical" | "unset";
   amount: number | null;
 }
 
@@ -79,6 +79,9 @@ export const platformSettingsService = {
   getNotificationPreferences: () => apiClient<NotificationPreferences>("/api/v1/settings/notifications", { method: "GET" }, true),
   updateNotificationPreferences: (prefs: NotificationPreferences) =>
     apiClient<NotificationPreferences>("/api/v1/settings/notifications", { method: "PUT", body: JSON.stringify(prefs) }, true),
+  getPushPreferences: () => apiClient<NotificationPreferences>("/api/v1/settings/push-notifications", { method: "GET" }, true),
+  updatePushPreferences: (prefs: NotificationPreferences) =>
+    apiClient<NotificationPreferences>("/api/v1/settings/push-notifications", { method: "PUT", body: JSON.stringify(prefs) }, true),
   getPricing: () => apiClient<PricingSettings>("/api/v1/settings/pricing", { method: "GET" }, true),
   updateRate: (ratePerInvitee: number): Promise<ApiResponse<PricingSettings>> =>
     apiClient<PricingSettings>("/api/v1/settings/pricing", { method: "PUT", body: JSON.stringify({ ratePerInvitee }) }, true),

@@ -197,7 +197,8 @@ export const templateService = {
     payload: {
       name?: string;
       categoryId?: string;
-      subcategoryId?: string;
+      /** null: no subcategory (the whole category) */
+      subcategoryId?: string | null;
       previewImageKey?: string;
       templateData?: Record<string, any>;
       cardDesign?: CardDesign;
@@ -220,10 +221,24 @@ export const templateService = {
   async saveTextZones(id: string, zones: TextZone[]): Promise<ApiResponse<Template>> {
     return apiClient<Template>(`/api/v1/templates/${id}/text-zones`, { method: "PUT", body: JSON.stringify({ zones }) }, true);
   },
-  async detectText(id: string): Promise<ApiResponse<{ template: Template; detected: boolean; reason?: string }>> {
-    return apiClient<{ template: Template; detected: boolean; reason?: string }>(`/api/v1/templates/${id}/detect-text`, { method: "POST" }, true);
+  /** The card these areas would produce with sample details, as a PNG, to compare with the original design (nothing is saved) */
+  async previewTextZones(id: string, zones: TextZone[]): Promise<{ ok: true; blob: Blob } | { ok: false; message: string }> {
+    const token = tokenStorage.getAccessToken();
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/templates/${id}/text-zones/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ zones }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return { ok: false, message: body?.message || `The image could not be created (${res.status}).` };
+      }
+      return { ok: true, blob: await res.blob() };
+    } catch {
+      return { ok: false, message: "Network error. Please check your connection and try again." };
+    }
   },
-
   async deleteTemplate(id: string): Promise<ApiResponse<Template>> {
     return apiClient<Template>(
       `/api/v1/templates/${id}`,

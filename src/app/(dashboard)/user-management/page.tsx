@@ -16,6 +16,7 @@ import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
 import { useEventSessions } from "@/hooks/useEventSessions";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
+import { scopeForSession, sessionsToSave } from "@/utils/assignScope";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { assignableEvents, describeAssignResult, eligibleSelection, selectionLabel } from "@/utils/bulkAssign";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
@@ -316,7 +317,9 @@ export default function AllUsersPage() {
         const person = users.find((u) => u.id === userId);
         const existing = person?.assignments.find((a) => a.eventId === selectedEventId);
         try {
-          const res = await assignmentService.saveAssignment(selectedEventId, userId, sessionScope ?? [], existing?.assignmentId);
+          // (one person's popup already shows what they have, so it is saved as shown)
+          const toSave = sessionsToSave(sessionScope, existing ? existing.sessions.map((x) => x.id) : null, addingToSession && ids.length > 1);
+          const res = await assignmentService.saveAssignment(selectedEventId, userId, toSave, existing?.assignmentId);
           if (!res.success) failures.push({ name: person?.name || "User", message: res.message || "Assignment failed." });
         } catch (err) {
           failures.push({ name: person?.name || "User", message: err instanceof Error ? err.message : "Assignment failed." });
@@ -347,14 +350,14 @@ export default function AllUsersPage() {
   const [filterSession, setFilterSession] = useState("");
   const eventFilterOptions = (() => {
     const seen = new Map<string, string>();
+    // open events can be picked even before anyone is assigned to them
+    assignableEvents(eventsList).forEach((e) => seen.set(e.id, e.name));
     users.forEach((u) => u.assignments.forEach((a) => { if (a.eventId && !seen.has(a.eventId)) seen.set(a.eventId, a.eventName); }));
     return [{ value: "", label: "All events" }, ...[...seen].map(([value, label]) => ({ value, label })).sort((x, y) => x.label.localeCompare(y.label))];
   })();
-  const sessionFilterOptions = (() => {
-    const seen = new Map<string, string>();
-    if (filterEvent) users.forEach((u) => u.assignments.filter((a) => a.eventId === filterEvent).forEach((a) => a.sessions.forEach((x) => { if (!seen.has(x.id)) seen.set(x.id, x.name); })));
-    return [{ value: "", label: "All sessions" }, ...[...seen].map(([value, label]) => ({ value, label }))];
-  })();
+  // every session of the event, whether or not anyone is assigned to it
+  const { sessions: filterSessions } = useEventSessions(filterEvent);
+  const sessionFilterOptions = [{ value: "", label: "All sessions" }, ...filterSessions.map((x) => ({ value: x.id, label: x.name }))];
   // Filters & Sorting (the same choices as the mobile app): status, activity and sort order, set in a panel and applied together
   type UsersFilters = { status: "ALL" | "ASSIGNED" | "UNASSIGNED"; activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
   const DEFAULT_FILTERS: UsersFilters = { status: "ALL", activity: null, sort: "RECENT" };
@@ -384,6 +387,17 @@ export default function AllUsersPage() {
       default: return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
     }
   });
+  // The Assign popup starts from what is picked on the page: its event, and its session
+  const [addingToSession, setAddingToSession] = useState(false);
+  const openAssign = () => {
+    setErrorFeedback(null);
+    const target = assignableEvents(eventsList).some((e) => e.id === filterEvent) ? filterEvent : "";
+    if (target) setSelectedEventId(target);
+    const only = selectedIds.length === 1 ? users.find((u) => u.id === selectedIds[0])?.assignments.find((a) => a.eventId === target) : undefined;
+    setSessionScope(target && filterSession ? scopeForSession(filterSession, only ? only.sessions.map((x) => x.id) : null) : null);
+    setAddingToSession(!!(target && filterSession));
+    setIsAssignModalOpen(true);
+  };
   const radio = (selected: boolean) => `size-6 shrink-0 rounded-full border-2 ${selected ? "border-[#1A9242] border-[7px]" : "border-[#C9C9C9]"}`;
   const option = (label: string, selected: boolean, onPick: () => void) => (
     <button key={label} type="button" role="radio" aria-checked={selected} onClick={onPick} className="flex w-full items-center gap-3 py-2.5 text-left text-base text-[#15191C] cursor-pointer hover:bg-gray-50 rounded-md">
@@ -665,7 +679,7 @@ aria-label={`Select ${u.name}`}
             </button>
             <button
               type="button"
-              onClick={() => { setErrorFeedback(null); setIsAssignModalOpen(true); }}
+              onClick={() => openAssign()}
               disabled={selectedIds.length === 0}
               className="order-first inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#1A56DB] disabled:cursor-not-allowed"
             >
@@ -773,12 +787,15 @@ aria-label={`Select ${u.name}`}
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
-                  onChange={(v) => { setSelectedEventId(v); setSessionScope(null); }}
+                  onChange={(v) => { setSelectedEventId(v); setSessionScope(null); setAddingToSession(false); }}
                   options={assignableEvents(eventsList).map((evt) => ({ value: evt.id, label: evt.name }))}
                   ariaLabel="Select event"
                 />
               </div>
 
+              {addingToSession && selectedIds.length > 1 && (
+                <p role="status" className="text-xs text-[#4B4F52] bg-[#EAF1FF] border border-[#D6E4FF] rounded-md p-3">The users are added to the ticked sessions and keep any sessions they already have on this event.</p>
+              )}
               <SessionScopePicker
                 sessions={eventSessionsList}
                 loading={loadingSessions}

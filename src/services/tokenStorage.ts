@@ -12,6 +12,8 @@ export interface UserData {
   isPhoneVerified?: boolean;
   /** the server can send those codes (given with the profile) */
   phoneVerificationAvailable?: boolean;
+  /** an account an administrator created that its owner has still to verify (given with the profile) */
+  verificationPending?: { email: boolean; phone: boolean } | null;
   avatarUrl?: string | null;
   profile?: { organizationName?: string; avatarKey?: string; avatarUrl?: string | null; [key: string]: unknown };
 }

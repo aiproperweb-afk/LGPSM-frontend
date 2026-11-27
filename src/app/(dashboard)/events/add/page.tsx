@@ -40,6 +40,21 @@ function AddEventContent() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // "Add Event" beside an organizer opens the form already made out to them
+  const askedFor = searchParams.get("organizer") || "";
+  const organizerParam = user?.role === "ADMIN" && /^[0-9a-f]{24}$/i.test(askedFor) ? askedFor : "";
+  const organizerChosen = !!draftState.value.organizerChosen;
+  const appliedOrganizer = useRef<string | null>(null);
+  useEffect(() => {
+    // applied once, and again if the draft is discarded (the fresh one has not been made out to anyone)
+    if (!hydrated || !organizerParam || (appliedOrganizer.current === organizerParam && organizerChosen)) return;
+    appliedOrganizer.current = organizerParam;
+    update((prev: EventDraft) => prev.organizerIds[0] === organizerParam
+      ? { ...prev, organizerChosen: true }
+      // a template chosen for someone else may not be this organizer's to use: it is chosen again
+      : { ...prev, organizerIds: [organizerParam], organizerChosen: true, template: null });
+  }, [hydrated, organizerParam, organizerChosen, update]);
+
   // "Create an Event" from the Templates page preselects that template (applied once the draft is loaded)
   const templateParam = searchParams.get("template");
   const appliedTemplate = useRef<string | null>(null);
@@ -105,7 +120,7 @@ function AddEventContent() {
   return (
     <EventWizard
       heading="Add Event"
-      draftHydrated={draftState.hydrated && !templateLoading}
+      draftHydrated={draftState.hydrated && !templateLoading && !(organizerParam && !organizerChosen)}
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}

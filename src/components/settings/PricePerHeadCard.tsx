@@ -104,7 +104,7 @@ export default function PricePerHeadCard({
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || !changed || !valid}
+              disabled={saving || !valid}
               className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#1F65FF] text-white text-sm font-semibold rounded-md hover:bg-[#1A56DB] transition-colors shrink-0"
             >
               {saving ? "Saving..." : "Save"}

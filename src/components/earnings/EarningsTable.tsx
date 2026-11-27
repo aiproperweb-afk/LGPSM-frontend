@@ -210,7 +210,7 @@ export default function EarningsTable({
                 </td>
                 <td className="py-4 px-4 text-gray-600">{r.dateOfPayment}</td>
                 <td className="py-4 px-4 text-gray-900 font-semibold">{r.invites}</td>
-                <td className="py-4 px-4 text-gray-600">{r.rate === null ? "Not set" : formatMoney(r.rate)}</td>
+                <td className="py-4 px-4 text-gray-600">{r.mixedRates ? <span title="This organizer's events are charged at different rates. See the By Event tab.">Varies by event</span> : r.rate === null ? "Not set" : formatMoney(r.rate)}</td>
                 <td className="py-4 px-4 text-emerald-700 font-bold">{formatMoney(r.amount)}</td>
                 <td className="py-4 px-4 text-right">
                   {/* was an inert "⋯"; event rows can open their event, and any row can be hidden from this view */}

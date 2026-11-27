@@ -19,6 +19,7 @@ import EventHeader from "@/components/events/EventHeader";
 import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
 import PageHeader from "@/components/common/PageHeader";
+import { scopeForSession, sessionsToSave } from "@/utils/assignScope";
 import { getAssignedCountText, SystemUserRow, filterSystemUsers, USERS_ON_EVENT, ALL_SYSTEM_USERS } from "@/utils/systemUserRows";
 import { useAlert } from "@/context/AlertContext";
 import { TableSkeleton } from "@/components/common/Skeleton";
@@ -60,6 +61,8 @@ export default function EventAssignUsersPage() {
   const [isAssignSuccessModalOpen, setIsAssignSuccessModalOpen] = useState(false);
   // null = all sessions of this event
   const [sessionScope, setSessionScope] = useState<string[] | null>(null);
+  // opened with a session picked on the page: people are added to it and keep the sessions they already have
+  const [addingToSession, setAddingToSession] = useState(false);
   // staff who are already on another of this organizer's events running at the same time, by user id
   // Every assignment each person holds on the organizer's OTHER events, with whether it overlaps this event in time. The count,
   // the expanded list and the "already on … at the same time" note all come from this one source, so they cannot disagree.
@@ -200,7 +203,12 @@ export default function EventAssignUsersPage() {
     setErrorFeedback(null);
     const only = selectedUserIds.length === 1 ? users.find((u) => u.id === selectedUserIds[0]) : undefined;
     const current = only?.assignments.find((a) => a.eventId === eventId);
-    setSessionScope(current && current.sessions.length > 0 ? current.sessions.map((s) => s.id) : null);
+    // a session picked on the page is the one the popup starts with
+    const picked = effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS ? effectiveFilter : "";
+    setSessionScope(picked
+      ? scopeForSession(picked, current ? current.sessions.map((s) => s.id) : null)
+      : current && current.sessions.length > 0 ? current.sessions.map((s) => s.id) : null);
+    setAddingToSession(!!picked);
     setSelectionBeforeRowAction(null); // the bottom button works on the ticks as they are
     setIsAssignModalOpen(true);
   };
@@ -243,6 +251,7 @@ export default function EventAssignUsersPage() {
     setSelectionBeforeRowAction(selectedUserIds);
     setSelectedUserIds([userId]);
     setSessionScope(current && current.sessions.length > 0 ? current.sessions.map((s) => s.id) : null);
+    setAddingToSession(false); // this one changes that person's sessions
     setIsAssignModalOpen(true);
   };
 
@@ -291,7 +300,9 @@ export default function EventAssignUsersPage() {
         const existing = users
           .find((u) => u.id === targetUserId)
           ?.assignments.find((a) => a.eventId === eventId);
-        const res = await assignmentService.saveAssignment(eventId, targetUserId, sessionScope ?? [], existing?.assignmentId);
+        // (one person's popup already shows what they have, so it is saved as shown)
+        const toSave = sessionsToSave(sessionScope, existing ? existing.sessions.map((s) => s.id) : null, addingToSession && selectedUserIds.length > 1);
+        const res = await assignmentService.saveAssignment(eventId, targetUserId, toSave, existing?.assignmentId);
 
         if (!res.success) {
           errors.push(res.message || "Assignment failed.");
@@ -732,7 +743,10 @@ export default function EventAssignUsersPage() {
             </div>
 
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
-              {alreadyOnEvent > 0 && (
+              {addingToSession && selectedUserIds.length > 1 && (
+                <p role="status" className="text-xs text-[#4B4F52] bg-[#EAF1FF] border border-[#D6E4FF] rounded-md p-3">The users are added to the ticked sessions and keep any sessions they already have on this event.</p>
+              )}
+              {alreadyOnEvent > 0 && !(addingToSession && selectedUserIds.length > 1) && (
                 <p className="p-3 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] text-xs text-[#4B4F52]">
                   {allAlreadyOnEvent
                     ? `${selectedRows.length === 1 ? "This user is" : "These users are"} already assigned to this event, so nothing is added twice. Pick the sessions ${selectedRows.length === 1 ? "they" : "they each"} should cover; this replaces the current choice.`

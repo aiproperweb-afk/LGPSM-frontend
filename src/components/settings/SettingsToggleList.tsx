@@ -11,11 +11,15 @@ interface SettingsToggleListProps<K extends string> {
   items: { key: K; label: string; help?: string }[];
   load: () => Promise<ApiResponse<Record<K, boolean>>>;
   save: (values: Record<K, boolean>) => Promise<ApiResponse<Record<K, boolean>>>;
+  /** Fills its column instead of the usual 576px (two lists side by side) */
+  fill?: boolean;
 }
 
 // Loads boolean settings from the API, edits them locally, and saves them back.
 // The "Saved" message only appears after the backend confirms the change.
-export default function SettingsToggleList<K extends string>({ title, description, items, load, save }: SettingsToggleListProps<K>) {
+export default function SettingsToggleList<K extends string>({ title, description, items, load, save, fill = false }: SettingsToggleListProps<K>) {
+  // two lists on one page keep their own ids
+  const titleId = React.useId();
   const [saved, setSaved] = useState<Record<K, boolean> | null>(null);
   const [values, setValues] = useState<Record<K, boolean> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -59,10 +63,10 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
 
   return (
     // Figma settings frames (2074:297, 2083:364): a 576px bordered card holding the title and plain label/toggle rows
-    <section className="max-w-[576px] space-y-6" aria-labelledby="settings-list-title">
-      <div className="border border-[#E0E0E0] rounded-lg p-5 pb-8 space-y-5">
+    <section className={fill ? "min-w-0 flex flex-col gap-6" : "max-w-[576px] space-y-6"} aria-labelledby={titleId}>
+      <div className={`border border-[#E0E0E0] rounded-lg p-5 pb-8 space-y-5 ${fill ? "flex-1" : ""}`}>
       <div>
-        <h2 id="settings-list-title" className="text-[22px] font-medium text-[#15191C]">{title}</h2>
+        <h2 id={titleId} className="text-[22px] font-medium text-[#15191C]">{title}</h2>
         {description && <p className="text-xs text-[#6B6B6B] mt-1">{description}</p>}
       </div>
       <PopupMessage message={loadError} action={{ label: "Try again", onClick: fetchSettings }} />
@@ -71,7 +75,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
       ) : (
           <ul className="space-y-[18px]">
             {items.map((item) => {
-              const id = `setting-${item.key}`;
+              const id = `${titleId}-${item.key}`;
               return (
                 <li key={item.key} className="flex items-center justify-between gap-4">
                   <label htmlFor={id} title={item.help} className="min-w-0 cursor-pointer text-sm text-[#4B4F52]">

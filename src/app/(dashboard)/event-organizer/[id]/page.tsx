@@ -15,6 +15,8 @@ import { eventDisplayStatus } from "@/utils/eventUtils";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { formatEventId } from "@/utils/formatId";
 import SetRateModal from "@/components/organizers/SetRateModal";
+import { useOrganizerActions } from "@/components/organizers/useOrganizerActions";
+import type { UserData } from "@/services/tokenStorage";
 import { usePageTitle } from "@/context/PageTitleContext";
 import { Skeleton, SkeletonRegion, TableSkeleton } from "@/components/common/Skeleton";
 import { formatDate, formatDateTime } from "@/utils/dateTime";
@@ -60,6 +62,7 @@ export default function OrganizerDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [account, setAccount] = useState<UserData | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
@@ -73,8 +76,8 @@ export default function OrganizerDetailsPage() {
       if (!quiet) setLoading(true);
       if (!quiet) setLoadError(null);
 
-      // 1. Organizer account (only active organizers are returned by the backend)
-      const usersRes = await userService.getUsers("ORGANIZER");
+      // 1. Organizer account (deactivated ones too, so they can be activated or deleted)
+      const usersRes = await userService.getUsers("ORGANIZER", undefined, { includeInactive: true });
       if (!usersRes.success) {
         if (quiet) return;
         setLoadError(usersRes.message || "Failed to load organizer.");
@@ -88,7 +91,7 @@ export default function OrganizerDetailsPage() {
 
       if (!matched) {
         if (quiet && !organizer) return;
-        setLoadError("Organizer not found or already deactivated.");
+        setLoadError("Organizer not found.");
         setOrganizer(null);
         setLoading(false);
         return;
@@ -96,13 +99,14 @@ export default function OrganizerDetailsPage() {
 
       const foundOrg: OrganizerDetail = {
         id: matched._id || matched.id,
-        name: matched.profile?.organizationName || "Organisation not set",
+        name: matched.profile?.organizationName || matched.fullName || "Organisation not set",
         email: matched.email || "—",
         phone: matched.phone || "—",
         logoUrl: matched.avatarUrl || matched.profile?.avatarUrl,
         status: matched.isActive === false ? "Deactivate" : "Active",
       };
       setOrganizer(foundOrg);
+      setAccount({ ...matched, _id: foundOrg.id });
       setIsDeactivated(foundOrg.status !== "Active");
 
       // 2. Events owned by this organizer (admin read access)
@@ -157,6 +161,8 @@ export default function OrganizerDetailsPage() {
     setOrganizer((prev) => (prev ? { ...prev, status: "Deactivate" } : null));
     setIsDeactivateModalOpen(false);
   };
+
+  const actions = useOrganizerActions({ changed: () => setLiveTick((n) => n + 1), erased: () => router.push("/event-organizer") });
 
   // Filter panel: category, status and a start-date window. Changes are drafted in the panel and applied with "Apply".
   const [filterOpen, setFilterOpen] = useState(false);
@@ -266,24 +272,29 @@ export default function OrganizerDetailsPage() {
               </div>
             </div>
 
-            {/* Action Buttons: Deactivate & Edit */}
-            <div className="flex items-center gap-3 shrink-0">
+            {/* Action buttons */}
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 onClick={() => setIsRateOpen(true)}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#EAF1FF] hover:bg-[#D6E4FF] text-[#1F65FF] text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
                 <span>Set Rate</span>
               </button>
+              <button type="button" onClick={() => account && actions.edit(account)} className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer bg-white border border-[#DDD] text-[#15191C] hover:bg-gray-50">Edit</button>
+              {isDeactivated ? (
+                <button type="button" onClick={() => account && void actions.setActive(account, true)} className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-700">Activate</button>
+              ) : (
               <button
                 onClick={() => setIsDeactivateModalOpen(true)}
-                disabled={isDeactivated}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FDE2E1] hover:bg-[#FAD0CE] text-[#B42318] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FDE2E1] hover:bg-[#FAD0CE] text-[#B42318] text-xs font-semibold rounded-md transition-colors cursor-pointer "
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
                 </svg>
-                <span>{isDeactivated ? "Deactivated" : "Deactivate"}</span>
+                <span>Deactivate</span>
               </button>
+              )}
+              <button type="button" onClick={() => account && actions.erase(account)} className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer bg-[#D92D20] hover:bg-[#B42318] text-white">Delete</button>
             </div>
           </div>
 
@@ -403,8 +414,9 @@ export default function OrganizerDetailsPage() {
                     </div>
                   )}
                 </div>
+                {!isDeactivated && (
                 <Link
-                  href="/events/add"
+                  href={`/events/add?organizer=${organizer.id}`}
                   className={`${addButtonClass} cursor-pointer`}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,6 +424,7 @@ export default function OrganizerDetailsPage() {
                   </svg>
                   <span>Add Event</span>
                 </Link>
+                )}
               </div>
             </div>
 
@@ -472,6 +485,8 @@ export default function OrganizerDetailsPage() {
             </div>
           </div>
         </div>
+
+      {actions.dialogs}
 
       {/* Deactivate Organizer Modal (Image 4) */}
       {isDeactivateModalOpen && (

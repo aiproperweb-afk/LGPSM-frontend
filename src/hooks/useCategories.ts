@@ -7,8 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 export interface CategoryOption {
   value: string;
   label: string;
-  /** the organizer's own custom entry, which they may delete */
+  /** the organizer's own custom entry */
   custom?: boolean;
+  /** an entry this person may delete: an organizer their own, an administrator any on the platform's list */
+  removable?: boolean;
 }
 
 // Several parts of a screen hold their own copy of the list (the Add Event form, the template window, the upload dialog). When one of
@@ -79,20 +81,20 @@ export function useCategories(extra?: ExtraCategory | null) {
   );
 
   const removeCategory = useCallback(async (categoryId: string): Promise<{ ok: true } | { ok: false; message: string }> => {
-    const res = await categoryService.deleteCustomCategory(categoryId);
+    const res = await (isOrganizer ? categoryService.deleteCustomCategory(categoryId) : categoryService.deleteCategory(categoryId));
     if (!res.success) return { ok: false, message: res.message || "Failed to delete the category." };
     setCategories((prev) => prev.filter((c) => c._id !== categoryId));
     announceChange();
     return { ok: true };
-  }, []);
+  }, [isOrganizer]);
 
   const removeSubcategory = useCallback(async (categoryId: string, subcategoryId: string): Promise<{ ok: true } | { ok: false; message: string }> => {
-    const res = await categoryService.deleteCustomSubcategory(categoryId, subcategoryId);
+    const res = await (isOrganizer ? categoryService.deleteCustomSubcategory(categoryId, subcategoryId) : categoryService.deleteSubcategory(categoryId, subcategoryId));
     if (!res.success) return { ok: false, message: res.message || "Failed to delete the subcategory." };
     setCategories((prev) => prev.map((c) => (c._id === categoryId ? { ...c, subcategories: c.subcategories.filter((s) => s._id !== subcategoryId) } : c)));
     announceChange();
     return { ok: true };
-  }, []);
+  }, [isOrganizer]);
 
   const extraId = extra?.id;
   const extraName = extra?.name;
@@ -110,11 +112,12 @@ export function useCategories(extra?: ExtraCategory | null) {
     return loaded.map((c) => (c._id === extraId ? { ...c, subcategories: [...(c.subcategories || []).filter((s) => s._id !== sub._id), sub] } : c));
   }, [loaded, extraId, extraName, extraCustom, extraSubId, extraSubName, extraSubCustom]);
 
-  const categoryOptions: CategoryOption[] = categories.map((c) => ({ value: c._id, label: c.isCustom ? `${c.name} (custom)` : c.name, custom: !!c.isCustom && !c.fromEvent }));
+  const mayRemove = (entry: { isCustom?: boolean; fromEvent?: boolean }) => !entry.fromEvent && (isOrganizer ? !!entry.isCustom : !entry.isCustom);
+  const categoryOptions: CategoryOption[] = categories.map((c) => ({ value: c._id, label: c.isCustom ? `${c.name} (custom)` : c.name, custom: !!c.isCustom && !c.fromEvent, removable: mayRemove(c) }));
   const subcategoryOptionsFor = (categoryId: string): CategoryOption[] =>
     (categories.find((c) => c._id === categoryId)?.subcategories || [])
       .filter((s) => s._id && s.isActive !== false)
-      .map((s) => ({ value: s._id as string, label: s.isCustom ? `${s.name} (custom)` : s.name, custom: !!s.isCustom && !s.fromEvent }));
+      .map((s) => ({ value: s._id as string, label: s.isCustom ? `${s.name} (custom)` : s.name, custom: !!s.isCustom && !s.fromEvent, removable: mayRemove(s) }));
   const categoryName = (id?: string | null) => categories.find((c) => c._id === id)?.name || "";
   const subcategoryName = (categoryId?: string | null, subId?: string | null) =>
     categories.find((c) => c._id === categoryId)?.subcategories.find((s) => s._id === subId)?.name || "";
