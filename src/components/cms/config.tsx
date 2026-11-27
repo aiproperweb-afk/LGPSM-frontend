@@ -1,3 +1,10 @@
+import ClientPage from "@/components/clients/ClientPage";
+import FeaturesPage from "@/components/features/FeaturesPage";
+import HowItWorksPage from "@/components/how-it-works/HowItWorksPage";
+import Testimonials from "@/components/landing/Testimonials";
+import { CLIENT_CATEGORIES, getClientCategory } from "@/constants/clients";
+import { marketingFields } from "./marketingFields";
+import { clientCopy, featuresCopy, howItWorksCopy, testimonialsCopy } from "./marketingContent";
 import type { Config, SelectField, TextField, TextareaField } from "@puckeditor/core";
 import ContactContent from "@/components/landing/ContactContent";
 import { contactCopy } from "./contactContent";
@@ -24,9 +31,38 @@ const sectionCopy = { heading: text, description: paragraph };
 const button = { buttonLabel: text, buttonHref: destination };
 const image = { image: imageReferenceField, imageAlt: { ...text, label: "Image alt text" } };
 
+const clientDefaults = clientCopy(CLIENT_CATEGORIES[0]);
+
 export const cmsConfig: Config<CmsComponents> = {
   root: { fields: {} },
   components: {
+    FeaturesContent: {
+      label: "Features page",
+      defaultProps: featuresCopy,
+      fields: marketingFields(featuresCopy),
+      render: (copy) => <FeaturesPage copy={copy} />,
+    },
+    HowItWorksContent: {
+      label: "How it works page",
+      defaultProps: howItWorksCopy,
+      fields: marketingFields(howItWorksCopy),
+      render: (copy) => <HowItWorksPage copy={copy} />,
+    },
+    ClientContent: {
+      label: "Client category page",
+      defaultProps: clientDefaults,
+      fields: marketingFields(clientDefaults),
+      render: ({ id, ...copy }) => {
+        const category = getClientCategory(id.replace(/^clients-/, "")) ?? CLIENT_CATEGORIES[0];
+        return <ClientPage category={category} copy={copy} />;
+      },
+    },
+    Testimonials: {
+      label: "Testimonials",
+      defaultProps: testimonialsCopy,
+      fields: marketingFields(testimonialsCopy),
+      render: (copy) => <Testimonials copy={copy} />,
+    },
     ContactContent: {
       label: "Contact page",
       fields: { pageHeading: text, informationHeading: text, formHeading: text, introduction: paragraph, submitLabel: text },

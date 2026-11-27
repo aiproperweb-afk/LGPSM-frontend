@@ -3,9 +3,17 @@ import type { HomeContent } from "./homeContent";
 
 import type { ContactCopy } from "./contactContent";
 
-export type CmsComponents = HomeContent & { ContactContent: ContactCopy };
+import type { ClientCopy, TestimonialsCopy, featuresCopy, howItWorksCopy } from "./marketingContent";
+
+export type CmsComponents = HomeContent & {
+  ContactContent: ContactCopy;
+  FeaturesContent: typeof featuresCopy;
+  HowItWorksContent: typeof howItWorksCopy;
+  ClientContent: ClientCopy;
+  Testimonials: TestimonialsCopy;
+};
 export type CmsPageData = Data<CmsComponents>;
-export type CmsSlug = "home" | "contact";
+export type CmsSlug = "home" | "contact" | "features" | "how-it-works" | `clients-${string}`;
 
 export interface CmsPageSummary {
   _id: string;

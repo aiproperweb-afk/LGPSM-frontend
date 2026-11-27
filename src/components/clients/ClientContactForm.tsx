@@ -61,7 +61,7 @@ function Select({ id, value, options, placeholder, disabled, onChange }: { id: s
   );
 }
 
-export default function ClientContactForm({ category, eventTypes }: { category: string; eventTypes: string[] }) {
+export default function ClientContactForm({ category, eventTypes, heading, description, submitLabel }: { category: string; eventTypes: string[]; heading: string; description: string; submitLabel: string }) {
   const [v, setV] = useState({ ...EMPTY_CONTACT_FORM, company: "", eventType: "", guests: "" });
   const [errors, setErrors] = useState<ContactFieldErrors>({});
   const [sending, setSending] = useState(false);
@@ -104,8 +104,8 @@ export default function ClientContactForm({ category, eventTypes }: { category: 
       <ClientBackdrop lowGlowTop={589} />
       <Container className="relative grid items-start gap-10 lg:grid-cols-[400px_1fr] lg:gap-16">
         <div className="flex flex-col items-start gap-5 lg:pt-3">
-          <h2 className={`${DM} text-[34px] leading-[1.12] tracking-[-0.8px] text-white sm:text-[44px]`}>Let&apos;s plan your next {category === "Business & Corporate" ? "business " : ""}event</h2>
-          <p className="text-[16px] leading-[1.65] text-[#A9B4CF] sm:text-[17px]">Tell us about your event and our team will get back to you within one working day.</p>
+          <h2 className={`${DM} text-[34px] leading-[1.12] tracking-[-0.8px] text-white sm:text-[44px]`}>{heading}</h2>
+          <p className="text-[16px] leading-[1.65] text-[#A9B4CF] sm:text-[17px]">{description}</p>
           <a href={`mailto:${CONTACT_ENQUIRY_EMAIL}`} style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-12 items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{CONTACT_ENQUIRY_EMAIL}</a>
         </div>
 
@@ -133,7 +133,7 @@ export default function ClientContactForm({ category, eventTypes }: { category: 
             {err("message")}
           </div>
           <p className="text-[12px] leading-[1.5] text-[#828282]">Event type options: {options.join(" · ")}</p>
-          <button type="submit" disabled={sending} style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] w-full items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70">{sending ? "Sending…" : "Submit request"}</button>
+          <button type="submit" disabled={sending} style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] w-full items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white transition hover:brightness-95 disabled:opacity-70">{sending ? "Sending…" : submitLabel}</button>
           {feedback ? <p role={feedback.ok ? "status" : "alert"} className={`text-[14px] ${feedback.ok ? "text-[#1F7A45]" : "text-[#B3261E]"}`}>{feedback.text}</p> : null}
         </form>
       </Container>
