@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { createUsePuck, Puck, type Overrides } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import { cmsService } from "@/services/cmsService";
@@ -20,10 +20,23 @@ import Tools from "./Tools";
 const useCanvasState = createUsePuck();
 const Canvas = ({ children }: { children: ReactNode }) => {
   const data = useCanvasState(state => state.appState.data) as BuilderData;
+  const dispatch = useCanvasState(state => state.dispatch);
+  const getSelectorForId = useCanvasState(state => state.getSelectorForId);
+  const previewMode = useCanvasState(state => state.appState.ui.previewMode);
   const fonts = typeof document === "undefined" ? undefined : Object.fromEntries(
     ["--font-dm-sans", "--font-inter", "--font-space-grotesk", "--font-caveat"].map(name => [name, getComputedStyle(document.documentElement).getPropertyValue(name)])
   );
-  return <div className="cb-root cb-page" style={fonts} onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }}>
+  function selectElement(event: MouseEvent<HTMLDivElement>) {
+    if (previewMode !== "edit") return;
+    const target = event.target as Element;
+    if (target.closest?.("[data-contact-resize], [data-puck-overlay]")) return;
+    const id = target.closest?.("[data-cb]")?.getAttribute("data-cb");
+    const selector = id ? getSelectorForId(id) : undefined;
+    if (!selector) return;
+    // Resolve the actual Contact element after Puck's preview and inline controls handle the click.
+    queueMicrotask(() => dispatch({ type: "setUi", ui: { itemSelector: selector } }));
+  }
+  return <div className="cb-root cb-page" style={fonts} onClickCapture={selectElement} onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }}>
     <style>{BASE_CSS + buildCss(data, resolveImageUrl, true)}</style>{children}
   </div>;
 };
