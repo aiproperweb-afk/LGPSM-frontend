@@ -32,7 +32,7 @@ function loadGoogleScript(): Promise<void> {
 }
 
 /**
- * "Sign in with Google" for organizers (sign-in and sign-up), one half of the row above the form. Google draws its own button (its rules
+ * "Sign in with Google" for organizers (sign-in and sign-up), across the row above the form. Google draws its own button (its rules
  * require that); `onCredential` receives the signed ID token, which the server verifies. Until a client id is configured
  * (NEXT_PUBLIC_GOOGLE_CLIENT_ID) a button of the same size says that Google sign-in is not set up yet when it is pressed.
  */
@@ -63,8 +63,8 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false 
           shape: "rectangular",
           text: mode === "signup" ? "signup_with" : "signin_with",
           logo_alignment: "center",
-          // as wide as its half of the row (Google accepts 200 to 400px, and shrinks the label to fit a narrower box)
-          width: Math.min(400, slot.current.parentElement?.clientWidth || 182),
+          // as wide as the row: Google accepts 200 to 400px, and a button wider than its box would have its side borders cut off
+          width: Math.min(400, slot.current.parentElement?.clientWidth || 320),
         });
         setReady(true);
       })
@@ -85,10 +85,11 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false 
           type="button"
           aria-label={mode === "signup" ? "Sign up with Google" : "Sign in with Google"}
           onClick={() => setProblem("Google sign-in is not set up yet. Please use your email and password for now.")}
-          className="flex h-11 w-full items-center justify-center rounded-lg border border-[#E0E0E0] bg-white hover:bg-[#F8F9FA] cursor-pointer"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#E0E0E0] bg-white text-sm font-medium text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer"
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- static icon */}
           <img src="/images/auth/signin/google.svg" alt="" width={20} height={20} />
+          {mode === "signup" ? "Sign up with Google" : "Sign in with Google"}
         </button>
       )}
       <PopupMessage message={problem} title="Google sign-in" />
