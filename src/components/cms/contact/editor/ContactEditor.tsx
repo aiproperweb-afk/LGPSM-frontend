@@ -34,7 +34,7 @@ const Canvas = ({ children }: { children: ReactNode }) => {
     const selector = id ? getSelectorForId(id) : undefined;
     if (!selector) return;
     // Resolve the actual Contact element after Puck's preview and inline controls handle the click.
-    queueMicrotask(() => dispatch({ type: "setUi", ui: { itemSelector: selector } }));
+    queueMicrotask(() => dispatch({ type: "setUi", ui: { itemSelector: selector, rightSideBarVisible: true } }));
   }
   return <div className="cb-root cb-page" style={fonts} onClickCapture={selectElement} onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }}>
     <style>{BASE_CSS + buildCss(data, resolveImageUrl, true)}</style>{children}
@@ -173,7 +173,7 @@ export default function ContactEditor() {
     {initial && <ResizeGrid.Provider value={grid}>
       <UploadActivity.Provider value={delta => { uploading.current += delta; setUploads(uploading.current); }}>
         <div className="min-h-0 flex-1" inert={pending || uploads > 0}>
-          <Puck key={generation} config={contactEditorConfig} data={initial} height="100%" headerTitle="Contact Us"
+          <Puck key={generation} config={contactEditorConfig} data={initial} height="100%" headerTitle="Contact Us (v2.1)"
             viewports={[{ width: 390, label: "Mobile", icon: "Smartphone" }, { width: 768, label: "Tablet", icon: "Tablet" }, { width: 1280, label: "Desktop", icon: "Monitor" }]}
             overrides={overrides}
             onChange={data => { latest.current = data as BuilderData; setDirty(fingerprint(data as BuilderData) !== saved.current); }} />

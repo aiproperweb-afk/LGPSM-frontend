@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePuck } from "@puckeditor/core";
 import { buildBlankPage, buildDefaultPage, PRESETS, TEMPLATES, withIds } from "../defaults.ts";
-import { type BuilderData, type BuilderNode, type StyleSet } from "../schema.ts";
+import { visitNodes, type BuilderData, type BuilderNode, type StyleSet } from "../schema.ts";
 import { displayName, findNode, insertNodes, pasteNodes, randomId, removeNode, resetNode, updateNode } from "../tree.ts";
 
 export default function Tools({ save, disabled }: { save: () => void; disabled: boolean }) {
@@ -14,6 +14,10 @@ export default function Tools({ save, disabled }: { save: () => void; disabled: 
   const selected = selectedItem?.props.id;
   const current = selected ? findNode(data, selected) : null;
   const locked = !!current?.node.props.locked;
+  const layers: { id: string; label: string }[] = [];
+  visitNodes(data.content, (node, ancestors) => {
+    layers.push({ id: node.props.id, label: [...ancestors, node].map(displayName).join(" / ") });
+  });
   const apply = (next: BuilderData) => dispatch({ type: "setData", data: next });
   const update = (props: Record<string, unknown>) => {
     if (selected) apply(updateNode(data, selected, node => ({ ...node, props: { ...node.props, ...props } })));
@@ -49,6 +53,13 @@ export default function Tools({ save, disabled }: { save: () => void; disabled: 
   });
 
   return <div className="flex flex-wrap items-center gap-2 text-xs" aria-label="Contact editor actions">
+    <label>Layers <select className="max-w-64" value={selected ?? ""} disabled={disabled} onChange={event => {
+      const selector = event.target.value ? getSelectorForId(event.target.value) : null;
+      dispatch({ type: "setUi", ui: { itemSelector: selector ?? null, previewMode: "edit", rightSideBarVisible: true } });
+    }}>
+      <option value="">Select a section or element</option>
+      {layers.map(layer => <option key={layer.id} value={layer.id}>{layer.label}</option>)}
+    </select></label>
     <button type="button" disabled={!history.hasPast || disabled} onClick={history.back}>Undo</button>
     <button type="button" disabled={!history.hasFuture || disabled} onClick={history.forward}>Redo</button>
     <label>Template <select value="" disabled={disabled} onChange={event => {
