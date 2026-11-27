@@ -627,7 +627,7 @@ export default function EventSessionsPage() {
                   <div className="min-w-0">
                     <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
                       <span>Access Control</span>
-                      <InfoTip label="About access control" text="Each guest's QR code admits as many people as their No of Guests, in every session. This holds for both choices." />
+                      <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                     </label>
                     <CustomDropdown
                       compact
@@ -694,7 +694,7 @@ export default function EventSessionsPage() {
                     <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#1A56DB] cursor-pointer">
                       Download Excel Sample
                     </button>
-                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are four main columns - Name, Email, Mobile and No of Guests (how many people the guest's QR code admits). Name, Mobile and No of Guests are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
+                    <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
                   </div>
                 </div>
                 )}

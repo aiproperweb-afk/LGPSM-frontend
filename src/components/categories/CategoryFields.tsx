@@ -49,13 +49,13 @@ export default function CategoryFields({
   const subOptions = categoryId ? api.subcategoryOptionsFor(categoryId) : [];
   const subcategoryIsOptional = !required || subcategoryOptional || (!!categoryId && subOptions.length === 0);
 
-  // Organizers can remove their own custom entries from these lists, administrators any platform entry. Nothing that already uses one is
-  // harmed: see the message.
+  // Organizers can remove their own custom entries from these lists. Nothing that already uses one is harmed: see the message.
+  const removable = canManage && api.isOrganizer;
   const stripCustom = (label: string) => label.replace(/ \(custom\)$/, "");
   const deleteCategory = async (option: CategoryOption) => {
     const yes = await confirm({
-      title: api.isOrganizer ? "Delete custom category" : "Delete category",
-      message: `Delete "${stripCustom(option.label)}"${api.isOrganizer ? "" : " and its subcategories"}? It will no longer be offered for new events${api.isOrganizer ? "" : " to anyone"}. Events that already use it keep it, and ${api.isOrganizer ? "your " : ""}templates under it become general templates. Adding the same name again brings it back.`,
+      title: "Delete custom category",
+      message: `Delete "${stripCustom(option.label)}"? It will no longer be offered for new events. Events that already use it keep it, and your templates under it become general templates. Adding the same name again brings it back.`,
       confirmText: "Delete",
       tone: "danger",
     });
@@ -66,8 +66,8 @@ export default function CategoryFields({
   };
   const deleteSubcategory = async (option: CategoryOption) => {
     const yes = await confirm({
-      title: api.isOrganizer ? "Delete custom subcategory" : "Delete subcategory",
-      message: `Delete "${stripCustom(option.label)}"? It will no longer be offered for new events${api.isOrganizer ? "" : " to anyone"}. Events that already use it keep it, and ${api.isOrganizer ? "your " : ""}templates under it stay in the category. Adding the same name again brings it back.`,
+      title: "Delete custom subcategory",
+      message: `Delete "${stripCustom(option.label)}"? It will no longer be offered for new events. Events that already use it keep it, and your templates under it stay in the category. Adding the same name again brings it back.`,
       confirmText: "Delete",
       tone: "danger",
     });
@@ -77,7 +77,7 @@ export default function CategoryFields({
     if (subcategoryId === option.value) onChange({ categoryId, subcategoryId: "" });
   };
   const withDelete = (options: CategoryOption[], remove: (o: CategoryOption) => Promise<void>) =>
-    canManage ? options.map((o) => (o.removable ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
+    removable ? options.map((o) => (o.custom ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
   const starMark = <span className="text-red-500 ml-0.5">*</span>;
   const star = required ? starMark : null;
   // A subcategory can only be required once the chosen category has some; before that (or when it has none) the star would promise a rule that cannot apply

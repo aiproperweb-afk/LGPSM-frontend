@@ -19,7 +19,6 @@ import { isOrganizationAccount } from "@/utils/accountType";
 import PhoneInput from "@/components/common/PhoneInput";
 import ChangeEmailModal from "@/components/settings/modals/ChangeEmailModal";
 import VerifyPhoneModal from "@/components/settings/modals/VerifyPhoneModal";
-import VerifyEmailModal from "@/components/settings/modals/VerifyEmailModal";
 
 
 export default function AccountSettingsPage() {
@@ -36,8 +35,6 @@ export default function AccountSettingsPage() {
   const phone = typedPhone ?? savedPhone;
   const [emailOpen, setEmailOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
-  const [verifyEmailOpen, setVerifyEmailOpen] = useState(false);
-  const emailPending = !!user?.verificationPending?.email;
   // an account that signs in with Google keeps Google's address
   const googleAccount = user?.authProvider === "GOOGLE";
   const [password, setPassword] = useState("••••••••••••••••");
@@ -195,15 +192,7 @@ export default function AccountSettingsPage() {
             </span>
             <div className="min-w-0 space-y-1.5">
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
-              <p className="flex flex-wrap items-center gap-2 text-xl text-black">
-                <span className="break-all">{email}</span>
-                {emailPending && (
-                  <>
-                    <span className="inline-flex rounded-full bg-[#FFF3C4] px-2.5 py-0.5 text-xs font-medium text-[#8A6A00]">Unverified</span>
-                    <button type="button" onClick={() => setVerifyEmailOpen(true)} className="text-sm font-semibold text-[#1F65FF] hover:underline cursor-pointer">Verify</button>
-                  </>
-                )}
-              </p>
+              <p className="text-xl text-black break-all">{email}</p>
               {isOrganizer && (
                 <p className="flex flex-wrap items-center gap-2 text-base text-[#4B4F52]">
                   Mobile: <span className="font-medium text-black">{savedPhone ? `+91 ${savedPhone}` : "Not added"}</span>
@@ -213,7 +202,6 @@ export default function AccountSettingsPage() {
                   )}
                 </p>
               )}
-              {isOrganizer && user?.verificationPending?.phone && !savedPhone && <p className="text-sm text-[#854D0E]">Add your mobile number with Edit Profile, then verify it here.</p>}
               {isOrganizer && <p className="text-base text-[#4B4F52]">Account type: <span className="font-medium text-black">{accountType}</span></p>}
               {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
               <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">
@@ -306,17 +294,6 @@ export default function AccountSettingsPage() {
             setEmail(next);
             setEmailOpen(false);
             showAlert(`Your sign-in email is now ${next}.`, "success");
-          }}
-        />
-      )}
-      {verifyEmailOpen && (
-        <VerifyEmailModal
-          email={user?.email || ""}
-          onClose={() => setVerifyEmailOpen(false)}
-          onVerified={async () => {
-            await refreshUser();
-            setVerifyEmailOpen(false);
-            showAlert("Your email address is verified.", "success");
           }}
         />
       )}

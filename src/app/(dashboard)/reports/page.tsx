@@ -45,7 +45,7 @@ export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [tableSearch, setTableSearch] = useState("");
 
-  const [organizerOptions, setOrganizerOptions] = useState<{ value: string; label: string; hint?: string }[]>([
+  const [organizerOptions, setOrganizerOptions] = useState<{ value: string; label: string }[]>([
     { value: "", label: "All Organizers" },
   ]);
   const [allEventsList, setAllEventsList] = useState<any[]>([]);
@@ -89,7 +89,7 @@ export default function ReportsPage() {
           { value: "", label: "All Organizers" },
           ...res.data
             .filter((u) => u.role === "ORGANIZER")
-            .map((u) => ({ value: u._id, label: u.profile?.organizationName || u.fullName || u.email, hint: [u.fullName, u.email].filter(Boolean).join(" · ") })),
+            .map((u) => ({ value: u._id, label: u.fullName || u.email })),
         ]);
       }
     });
@@ -211,7 +211,6 @@ export default function ReportsPage() {
             : "TBD",
           invitees: s.invitedCount ?? 0,
           attendees: s.attendeeCount ?? s.checkInCount ?? 0,
-          guestsIn: s.admittedCount === undefined ? "—" : `${s.admittedCount} of ${s.expectedGuests ?? 0}`,
           accessControl: ACCESS_CONTROL_LABELS[s.accessControl || ""] || s.accessControl || "—",
           systemUsers: String(s.systemUsers ?? 0),
         }))
@@ -267,8 +266,6 @@ export default function ReportsPage() {
           id,
           name: inv.name || "",
           mobile: inv.mobile || "—",
-          guestCount: inv.guestCount || 1,
-          guestsIn: records.reduce((most, r) => Math.max(most, r.admitted ?? 1), 0),
           invitationStatus: invitationStatus === "SENT" ? "Sent" : invitationStatus === "FAILED" ? "Failed" : "Pending",
           rsvpStatus: !rsvpEnabled ? "Not requested" : rsvp === "ACCEPTED" ? "Accepted" : rsvp === "DECLINED" ? "Declined" : "Pending",
           checkInStatus: records.length === 0 ? "Not Checked-in" : sessionCount > 0 && attendedSessions > 0 && attendedSessions < sessionCount ? "Partially Checked-in" : "Checked-in",
@@ -339,14 +336,12 @@ export default function ReportsPage() {
   const downloadReportCSV = () => {
     let content = "";
     if (activeTab === "checkins") {
-      content = "Invitee,Session,Guests In,No of Guests,Check-In Method,Check-In Time,Checked In By,RSVP Status\n" +
+      content = "Invitee,Session,Check-In Method,Check-In Time,Checked In By,RSVP Status\n" +
         checkInLogs.map(log => {
           const staff = typeof log.checkedInBy === "object" ? log.checkedInBy?.fullName || log.checkedInBy?.email : log.checkedInBy;
           return [
             log.invitee?.name,
             log.session?.name || "Event entry",
-            log.admitted ?? 1,
-            log.guestCount ?? 1,
             log.checkInMethod,
             formatDateTime(log.checkInAt, ""),
             staff,
@@ -356,17 +351,17 @@ export default function ReportsPage() {
     } else if (activeTab === "invitees") {
       // the card's additional information, only what this event uses
       const extra = additionalColumns((allEventsList.find((e) => (e._id || e.id) === selectedEventId) as { cardInfo?: Parameters<typeof additionalColumns>[0] } | undefined)?.cardInfo);
-      content = ["Invitee Name", "Mobile No.", "No of Guests", "Guests In", ...extra.map((c) => c.header), "Invitation Status", "RSVP Status", "Check-in Status", "Last Check-in Time", ...sessionColumns.map((c) => c.name)].map(csvCell).join(",") + "\n" +
+      content = ["Invitee Name", "Mobile No.", ...extra.map((c) => c.header), "Invitation Status", "RSVP Status", "Check-in Status", "Last Check-in Time", ...sessionColumns.map((c) => c.name)].map(csvCell).join(",") + "\n" +
         inviteeLogs.map(i => [
-          i.name, i.mobile, i.guestCount, i.guestsIn, ...extra.map((c) => i.details?.[c.key] || ""), i.invitationStatus, i.rsvpStatus, i.checkInStatus, i.lastCheckInTime,
+          i.name, i.mobile, ...extra.map((c) => i.details?.[c.key] || ""), i.invitationStatus, i.rsvpStatus, i.checkInStatus, i.lastCheckInTime,
           ...sessionColumns.map((c) => (i.sessionCheckIns[c.id] ? "Yes" : "No")),
         ].map(csvCell).join(",")).join("\n");
     } else if (activeTab === "access") {
       content = "Organizer ID,Organizer / Organisation,User Type,Date & Time,Action,Status\n" +
         accessLogs.map(a => [a.organizerCode, a.organizerName, a.userType, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
     } else {
-      content = "#,Session Name,Date & Time,Invitees,Attendees,Guests In,Access Control,System Users\n" +
-        sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.guestsIn, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");
+      content = "#,Session Name,Date & Time,Invitees,Attendees,Access Control,System Users\n" +
+        sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");
     }
 
     const blob = csvBlob(content);

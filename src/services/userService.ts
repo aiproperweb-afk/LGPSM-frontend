@@ -11,8 +11,6 @@ export interface UpdateProfilePayload {
   organization?: { name: string; phone?: string; whatsapp?: string; email?: string; address?: string; website?: string; /** optional and not verified yet; omitted = leave the saved one */ gstNumber?: string };
 }
 
-export interface OrganizerEraseSummary { name: string; email: string; events: number; openEvents: number; invitees: number; checkIns: number; invoices: number; systemUsers: number; templates: number; amountDue: number; currency: string }
-
 export interface OrganizerRate { customRate: number | null; defaultRate: number | null; effectiveRate: number | null; currency: string }
 
 export const userService = {
@@ -73,9 +71,6 @@ export const userService = {
   /** A code to the profile's mobile number, and typing it in */
   sendPhoneCode: () => apiClient<{ sent: boolean }>("/api/users/me/phone/send", { method: "POST", body: "{}" }, true),
   verifyPhone: (code: string) => apiClient<{ verified: boolean }>("/api/users/me/phone/verify", { method: "POST", body: JSON.stringify({ code }) }, true),
-  /** Verifying the sign-in email of an account an administrator created: a code to it, and typing it in */
-  sendEmailCode: () => apiClient<{ sentTo: string }>("/api/users/me/email/verify/send", { method: "POST", body: "{}" }, true),
-  verifyEmail: (code: string) => apiClient<{ verified: boolean }>("/api/users/me/email/verify/confirm", { method: "POST", body: JSON.stringify({ code }) }, true),
   /** Changing the sign-in email: the password and the new address, then the code sent there */
   requestEmailChange: (newEmail: string, password: string) => apiClient<{ sentTo: string }>("/api/users/me/email", { method: "POST", body: JSON.stringify({ newEmail, password }) }, true),
   confirmEmailChange: (code: string) => apiClient<{ email: string }>("/api/users/me/email/confirm", { method: "POST", body: JSON.stringify({ code }) }, true),
@@ -135,14 +130,9 @@ export const userService = {
     return apiClient<any>(`/api/users/${userId}`, { method: "DELETE" }, true);
   },
 
-  /** Admin: what deleting an organizer would erase, for the warning shown first */
-  getEraseSummary: (id: string) => apiClient<OrganizerEraseSummary>(`/api/users/${id}/erase-summary`, { method: "GET" }, true),
-  /** Admin: delete an organizer permanently, with their events, invitees, check-ins and invoices */
-  eraseOrganizer: (id: string) => apiClient<OrganizerEraseSummary>(`/api/users/${id}/erase`, { method: "POST", body: JSON.stringify({ confirm: true }) }, true),
-
   async updateUser(
     userId: string,
-    payload: { fullName?: string; email?: string; phone?: string; password?: string; isActive?: boolean; profile?: { organizationName?: string; organizationType?: "INDIVIDUAL" | "ORGANIZATION" } }
+    payload: { fullName?: string; email?: string; phone?: string; password?: string }
   ): Promise<ApiResponse<UserData>> {
     return apiClient<UserData>(
       `/api/users/${userId}`,

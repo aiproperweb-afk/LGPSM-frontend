@@ -36,7 +36,6 @@ export const NAV_ENTRIES: NavEntry[] = [
       { key: "add-event", label: "Add New Event", href: "/events/add", roles: ["ADMIN"] },
       { key: "events-list", label: "Events", href: "/events", roles: ["ADMIN"] },
       { key: "add-invitees", label: "Add Invitees", href: "/events/select/invitees?from=sidebar", roles: ["ADMIN"] },
-      { key: "all-invitees", label: "All Invitees", href: "/events/all-invitees", roles: ["ADMIN"] },
       { key: "assign-system-users", label: "Assign System Users", href: "/user-management/assign", roles: ["ADMIN"] },
       { key: "add-user", label: "Add User", href: "/user-management/add", roles: ["ADMIN"] },
       { key: "all-users", label: "All Users", href: "/user-management", roles: ["ADMIN"] },
@@ -48,7 +47,6 @@ export const NAV_ENTRIES: NavEntry[] = [
   // group they used to sit in was removed at the client's request). The keys are unchanged, so active-state matching still works.
   { key: "event-management", label: "Event Management", icon: "event", href: "/events", roles: ["ORGANIZER"] },
   { key: "invitees-management", label: "Invitees Management", icon: "people", href: "/events/select/invitees?from=sidebar", roles: ["ORGANIZER"] },
-  { key: "all-invitees", label: "All Invitees", icon: "people", href: "/events/all-invitees", roles: ["ORGANIZER"] },
   // Hidden for now: organizers choose, upload and delete their templates in the template window while creating an event.
   // Uncomment to bring the page back.
   // { key: "org-templates", label: "Templates", icon: "templates", href: "/templates", roles: ["ORGANIZER"] },

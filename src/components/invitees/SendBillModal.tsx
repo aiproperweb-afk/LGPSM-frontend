@@ -103,12 +103,12 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
             {!messages
               ? <>Printed cards are charged. A guest already paid for on WhatsApp is not charged again.</>
               : !admin
-                ? <>This payment is for WhatsApp invitations, including when you choose All (Email + WhatsApp).</>
+                ? <>WhatsApp invitations are charged, including when you choose All (Email + WhatsApp). Email invitations are free.</>
                 : settling
                   ? <>Records everything <b className="break-words">{organizer}</b> owes on this event so far{settleOnly ? "" : ", including these guests"}. Guests added later are charged again.</>
                   : choice === "later"
                     ? <>The invitations go out now. <b className="break-words">{organizer}</b> must pay by <b>{deadline}</b>, and is reminded 3 days and 1 day before, and if it is overdue.</>
-                    : <>WhatsApp invitations are charged to <b className="break-words">{organizer}</b>. Nothing goes out on WhatsApp until they pay from their Billing page.</>}
+                    : <>WhatsApp invitations are charged to <b className="break-words">{organizer}</b>. Nothing goes out on WhatsApp until they pay from their Billing page. Email invitations are free.</>}
           </p>
           <p className="py-4 text-base font-medium text-[#15191C] border-b border-[#EAEAEA]">Payment Info</p>
           <div className="border-b border-dashed border-black/15 text-sm font-medium text-[#15191C]/50">
@@ -154,7 +154,7 @@ export default function SendBillModal({ quote, kind = "send", busy, error, onCan
 
         <div className="flex flex-wrap items-center justify-end gap-3 p-4 border-t border-[#E5E5E5]">
           {onEmailInstead && (
-            <button type="button" onClick={onEmailInstead} disabled={busy} className="w-full text-center text-sm font-semibold text-[#1F65FF] underline cursor-pointer disabled:opacity-50">Send by email only</button>
+            <button type="button" onClick={onEmailInstead} disabled={busy} className="w-full text-center text-sm font-semibold text-[#1F65FF] underline cursor-pointer disabled:opacity-50">Send by email only (free)</button>
           )}
           <button type="button" onClick={onCancel} disabled={busy} className="px-6 py-[11px] bg-white border border-[#DDD] rounded-lg text-base font-semibold text-black cursor-pointer disabled:opacity-50">Cancel</button>
           <button

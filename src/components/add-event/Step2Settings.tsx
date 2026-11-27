@@ -1,6 +1,5 @@
 "use client";
 
-import { FOOD_TITLE_MAX_LENGTH, FOOD_OPTION_MAX_LENGTH } from "@/utils/eventLimits.mjs";
 import { CARD_DISPLAY_DEFAULTS, CARD_DISPLAY_OPTIONS, CARD_INFO_OPTIONS, CUSTOM_DETAIL, EMPLOYEE_ID, EMPLOYEE_ID_LABEL, customFieldFor, customShowKey, customTitleKey, detailKind, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
 import PopupMessage from "@/components/common/PopupMessage";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -255,19 +254,15 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       </button>
                     )}
                   </div>
-                  <div className="max-w-md">
-                    <input
-                      id={`pref-title-${category.id}`}
-                      type="text"
-                      value={category.title}
-                      maxLength={FOOD_TITLE_MAX_LENGTH}
-                      aria-describedby={`pref-title-count-${category.id}`}
-                      onChange={(e) => updateCategory(category.id, { title: e.target.value })}
-                      placeholder="Dietary Preference"
-                      className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-black"
-                    />
-                    <p id={`pref-title-count-${category.id}`} className="mt-1 text-right text-xs text-[#6B6B6B]">{category.title.length}/{FOOD_TITLE_MAX_LENGTH}</p>
-                  </div>
+                  <input
+                    id={`pref-title-${category.id}`}
+                    type="text"
+                    value={category.title}
+                    maxLength={100}
+                    onChange={(e) => updateCategory(category.id, { title: e.target.value })}
+                    placeholder="Dietary Preference"
+                    className="w-full max-w-md px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-black"
+                  />
                   <ul className="space-y-2.5">
                     {category.options.map((opt, optIdx) => (
                       <li key={optIdx} className="flex items-center gap-2.5">
@@ -277,12 +272,11 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                           id={`pref-opt-${category.id}-${optIdx}`}
                           aria-label={`Option ${optIdx + 1}`}
                           value={opt}
-                          maxLength={FOOD_OPTION_MAX_LENGTH}
+                          maxLength={60}
                           onChange={(e) => updateCategory(category.id, { options: category.options.map((o, i) => (i === optIdx ? e.target.value : o)) })}
                           placeholder={optIdx === 0 ? "Option 1 (stays selected by default for invitees)" : `Option ${optIdx + 1}`}
                           className={`flex-1 ${optIdx === 0 ? "max-w-sm" : "max-w-xs"} border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent`}
                         />
-                        <span className="shrink-0 w-12 text-right text-xs text-[#6B6B6B]">{opt.length}/{FOOD_OPTION_MAX_LENGTH}</span>
                         {category.options.length > 1 && (
                           <button
                             type="button"

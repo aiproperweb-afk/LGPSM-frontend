@@ -4,7 +4,7 @@
 import { checkCardTitles } from "@/utils/cardTitleRules";
 import { addHours, isAfter, isValidIso, nextWholeHourIso, parseIso } from "@/utils/dateTime";
 import { resolveImageUrl } from "@/utils/mediaUrl";
-import { EVENT_TITLE_MAX_LENGTH, EVENT_DESCRIPTION_MAX_LENGTH, EVENT_LOCATION_MAX_LENGTH, FOOD_TITLE_MAX_LENGTH, FOOD_OPTION_MAX_LENGTH } from "@/utils/eventLimits.mjs";
+import { EVENT_TITLE_MAX_LENGTH, EVENT_DESCRIPTION_MAX_LENGTH, EVENT_LOCATION_MAX_LENGTH } from "@/utils/eventLimits.mjs";
 import type { CreateEventRequest, UpdateEventRequest } from "@/services/eventService";
 import type { SessionRequest } from "@/services/sessionService";
 
@@ -171,8 +171,6 @@ export const CARD_DISPLAY_OPTIONS: { key: keyof CardDisplay; label: string }[] =
 
 export interface EventDraft {
   organizerIds: string[];
-  /** Administrator: "who is this event for" has been answered (an organizer, or their own account with no organizer) */
-  organizerChosen?: boolean;
   title: string;
   description: string;
   categoryId: string;
@@ -366,9 +364,6 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
     const hasBlankOption = draft.preferenceCategories.some((category) => category.options.some((option) => !option.trim()));
     if (hasMissingOptions) errors.dietaryPreference = "Add at least one dietary option for each question before continuing.";
     else if (hasBlankOption) errors.dietaryPreference = "Fill in or remove each empty option before continuing.";
-    // (an event saved before the limits may hold longer text: it is shortened when the event is next edited)
-    else if (draft.preferenceCategories.some((c) => c.title.trim().length > FOOD_TITLE_MAX_LENGTH)) errors.dietaryPreference = `Keep each question title to ${FOOD_TITLE_MAX_LENGTH} characters.`;
-    else if (draft.preferenceCategories.some((c) => c.options.some((o) => o.trim().length > FOOD_OPTION_MAX_LENGTH))) errors.dietaryPreference = `Keep each food option to ${FOOD_OPTION_MAX_LENGTH} characters.`;
   }
 
   if (draft.cardInfo && !draft.template?.staticCard) {

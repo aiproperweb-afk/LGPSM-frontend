@@ -34,8 +34,6 @@ import { openRazorpayCheckout } from "@/utils/razorpayCheckout";
 import SendSuccessModal from "@/components/invitees/SendSuccessModal";
 import { asInvitationChannel } from "@/utils/invitationChannel";
 import PageHeader from "@/components/common/PageHeader";
-import ColumnPicker from "@/components/common/ColumnPicker";
-import { allowedIn } from "@/utils/sessionAccess";
 import ButtonIcon from "@/components/common/ButtonIcons";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import EventHeader from "@/components/events/EventHeader";
@@ -60,6 +58,9 @@ import { dietaryAnswer, dietaryQuestionOptions, dietaryQuestionTitles } from "@/
 import { summarizeDelivery, type DeliveryOutcome } from "@/utils/deliverySummary.mjs";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import Icon from "@/components/icons/Icon";
+import PassActionModal from "@/components/invitees/PassActionModal";
+import { credentialService, CredentialHistoryRow, CredentialStatus } from "@/services/credentialService";
+import { STATUS_PILL, hasUnknown, hasUnsent, historyReason, historyTitle, noticeText, passRef, reasonLabel } from "@/utils/credentialUi";
 
 interface Invitee {
   _id: string;
@@ -75,8 +76,9 @@ interface Invitee {
   invitationStatus: "PENDING" | "SENT" | "FAILED";
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   sessionAccess?: { sessionId: string; allowed: boolean }[];
-  /** how many people this guest's QR code admits */
-  guestCount?: number;
+  // access pass: its own status, separate from delivery and RSVP
+  credentialStatus?: CredentialStatus;
+  credentialRevocation?: { category?: string; at?: string } | null;
 }
 
 const INVITEE_PAGE_SIZE = 50;
@@ -84,6 +86,14 @@ const INVITEE_PAGE_SIZE = 50;
 type Feedback = { type: "success" | "error" | "info"; message: string; details?: string[] } | null;
 
 const pill = (cls: string, text: string) => <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${cls}`}>{text}</span>;
+
+// Access follows the source session for sessions that keep another session's invitees
+function allowedIn(inv: Invitee, session: SessionData): boolean {
+  if (!inv.sessionAccess || inv.sessionAccess.length === 0) return true;
+  const target = session.inviteeSource === "COPY_SESSION" && session.sourceSessionId ? session.sourceSessionId : session._id;
+  const entry = inv.sessionAccess.find((a) => String(a.sessionId) === String(target));
+  return !!entry && entry.allowed !== false;
+}
 
 // Status column (Figma 217:20587): delivery state, or the guest's answer once they have replied
 function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus: Invitee["invitationStatus"]; rsvpStatus: Invitee["rsvpStatus"] }) {
@@ -168,9 +178,6 @@ export default function InviteesManagementPage() {
   const [inviteePage, setInviteePage] = useState(1);
   const [search, setSearch] = useState("");
   const [sessionFilter, setSessionFilter] = useState("");
-  // (a choice made in a column header lasts until the page's session changes)
-  const [accessView, setAccessView] = useState<{ session: string; filter: string }>({ session: "", filter: "" });
-  const [foodView, setFoodView] = useState("");
   const [invitationFilter, setInvitationFilter] = useState<"" | "SENT" | "NOT_SENT">("");
   const [channel, setChannel] = useState<Channel>("BOTH");
   // shown after a send or resend that reached at least one guest
@@ -185,7 +192,12 @@ export default function InviteesManagementPage() {
   // bumped when guests are added from inside the list windows, so those lists refresh
   const [listsReload, setListsReload] = useState(0);
   const [listsOpen, setListsOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string; guestCount?: number } | null>(null);
+  const [passAction, setPassAction] = useState<{ action: "REVOKE" | "REPLACE"; invitee: Invitee; needsReview?: boolean } | null>(null);
+  const [passHistory, setPassHistory] = useState<CredentialHistoryRow[] | null>(null);
+  const [passHistoryError, setPassHistoryError] = useState<string | null>(null);
+  const [ackDuplicate, setAckDuplicate] = useState(false);
+  const [retryingNotices, setRetryingNotices] = useState(false);
+  const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showChooser, setShowChooser] = useState(false);
   // the event list opened by "Select Event" when no event is chosen yet (an organizer's own events; an administrator sees all)
@@ -267,6 +279,25 @@ export default function InviteesManagementPage() {
   // guests, their delivery state, RSVPs and check-ins follow what happens elsewhere (scans at the door, other devices)
   useLiveRefresh(() => { quietRef.current = true; return load(); }, 20_000, !!eventId);
 
+  const loadPassHistory = useCallback(async () => {
+    try {
+      const res = await credentialService.history(eventId);
+      if (res.success && Array.isArray(res.data)) { setPassHistory(res.data); setPassHistoryError(null); }
+      else setPassHistoryError(res.message || "The pass history could not be loaded.");
+    } catch (e) {
+      setPassHistoryError(e instanceof Error ? e.message : "The pass history could not be loaded.");
+    }
+  }, [eventId]);
+  useEffect(() => { if (showHistory) void Promise.resolve().then(loadPassHistory); }, [showHistory, loadPassHistory]);
+
+  const retryPassNotices = async (includeUnknown: boolean) => {
+    setRetryingNotices(true);
+    await credentialService.retryNotices(eventId, { includeUnknown }).catch(() => undefined);
+    setAckDuplicate(false);
+    await loadPassHistory();
+    setRetryingNotices(false);
+  };
+
   // Super Admin frame 2114:6535 shows RSVP as its own column; "--" when the event does not ask guests to respond
   const rsvpEnabled = (event as { rsvp?: { enabled?: boolean } } | null)?.rsvp?.enabled !== false;
   const categoryName = event && typeof event.categoryId === "object" ? event.categoryId?.name || "" : "";
@@ -309,12 +340,8 @@ export default function InviteesManagementPage() {
   const targetListId = listIdFor(sessionPickOptions, targetSessionId);
 
   const filterSession = sessions.find((s) => s._id === sessionFilter);
-  const openChooser = () => {
-    setTargetSessionId(filterSession && sessionPickOptions.some((o) => o.id === filterSession._id) ? filterSession._id! : "");
-    setShowChooser(true);
-  };
-  // the Access Control column shows one session: the one picked in its header, else the page's session, else the first
-  const accessSession = sessions.find((x) => accessView.filter === sessionFilter && x._id === accessView.session) || filterSession || sessions[0];
+  // the session columns: only the chosen session when one is picked in the dropdown, every session when "All" is
+  const shownSessions = filterSession ? [filterSession] : sessions;
   // how this event's cards reach guests: sent digitally, printed (downloaded as PDFs), or both. Events made before the choice existed are digital.
   const invitationType = event?.invitationType || "DIGITAL";
   const digitalInvites = invitationType !== "PRINT";
@@ -516,7 +543,7 @@ export default function InviteesManagementPage() {
     const asked = ++noteAsked.current;
     setBillNote(null);
     if (ids.length === 0 || (mode === "download" && isAdmin)) return;
-    if (mode !== "download" && via === "EMAIL") return; // nothing to pay, so nothing is said about money
+    if (mode !== "download" && via === "EMAIL") { setBillNote("Email invitations are free."); return; }
     const res = await billingService.quote(eventId, ids, mode === "download" ? { purpose: "CARDS" } : { channel: via }).catch(() => null);
     const q = res?.success ? res.data : null;
     if (!q || asked !== noteAsked.current) return;
@@ -525,8 +552,8 @@ export default function InviteesManagementPage() {
     setBillNote(
       q.whatsappUnavailable ? "WhatsApp is not set up on the server yet, so nothing is charged and no WhatsApp message will go out."
         : q.rate === null ? "No price is set for this event, so there is nothing to pay."
-        : q.payable && isAdmin ? `WhatsApp invitations are charged to ${q.organizerName || "the organizer"}: ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}.`
-        : q.payable ? `${mode === "download" ? "" : "This is for the WhatsApp invitations. "}Next you will pay ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}.`
+        : q.payable && isAdmin ? `WhatsApp invitations are charged to ${q.organizerName || "the organizer"}: ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}. Email is free.`
+        : q.payable ? `${mode === "download" ? "" : "WhatsApp invitations are charged; email is free. "}Next you will pay ${formatMoney(q.total)} (including ${q.gstPercent}% GST) for ${count}.`
         : "There is nothing to pay for these guests."
     );
   };
@@ -735,8 +762,8 @@ export default function InviteesManagementPage() {
     }
   };
 
-  const saveEdit = async (row: { id: string; name: string; email: string; phone: string; guestCount?: number }) => {
-    const res = await inviteeService.updateInvitee(row.id, { name: row.name, email: row.email, mobile: row.phone, guestCount: row.guestCount });
+  const saveEdit = async (row: { id: string; name: string; email: string; phone: string }) => {
+    const res = await inviteeService.updateInvitee(row.id, { name: row.name, email: row.email, mobile: row.phone });
     if (!res.success) {
       showAlert(res.message || "Failed to update invitee.", "error");
       return;
@@ -763,33 +790,6 @@ export default function InviteesManagementPage() {
     showAlert(`Invitee removed.${noticeSummary((res.data as { notice?: { email: string; whatsapp: string; reasons?: string[] } } | undefined)?.notice)}`, "success");
     await load();
     notifyDbUpdate();
-  };
-
-  // With a session picked on the page, "delete" means "take out of this session": guests who also attend other sessions stay in those, and
-  // only the ones who are in no other session are deleted (through the usual delete window).
-  const askRemove = async (ids: string[], usual: () => void) => {
-    if (!filterSession || sessions.length < 2) return usual();
-    const elsewhere = invitees.filter((i) => ids.includes(i._id) && sessions.some((x) => x._id !== filterSession._id && allowedIn(i, x)));
-    if (elsewhere.length === 0) return usual();
-    const only = ids.length - elsewhere.length;
-    const many = (n: number) => `${n} ${n === 1 ? "guest" : "guests"}`;
-    const yes = await confirm({
-      title: `Remove from ${filterSession.name}?`,
-      message: `${elsewhere.length === 1 && ids.length === 1 ? `${elsewhere[0].name} will be removed from "${filterSession.name}" only and stays in their other sessions.` : `${many(elsewhere.length)} will be removed from "${filterSession.name}" only and stay in their other sessions.`}${only ? ` ${many(only)} attend no other session: you will be asked about deleting them next.` : ""}`,
-      confirmText: "Remove from this session",
-      tone: "danger",
-    });
-    if (!yes) return;
-    setBulkDeleting(true);
-    const res = await inviteeService.removeFromSession(eventId, filterSession._id!, ids);
-    setBulkDeleting(false);
-    if (!res.success || !res.data) return showAlert(res.message || "The guests could not be removed from this session.", "error");
-    const rest = res.data.onlyThisSession;
-    setSelectedIds(rest);
-    await load();
-    notifyDbUpdate();
-    if (rest.length) setBulkOpen(true);
-    else showAlert(`${many(res.data.removed)} removed from ${filterSession.name}.`, "success");
   };
 
   // Delete selected: every ticked guest at once. For a guest already invited the server keeps their history and stops their pass.
@@ -820,15 +820,14 @@ export default function InviteesManagementPage() {
     { key: "preview", icon: <ButtonIcon name="eye" />, label: "Preview List", onClick: () => setShowListPreview(true), disabled: invitees.length === 0 },
     { key: "lists", icon: <ButtonIcon name="history" />, label: "Uploaded Lists", onClick: () => setListsOpen(true), hidden: !canManageInviteeLists(user?.role), title: "Every Excel file you upload becomes a list: how many guests came from it and whether invitations were sent" },
     { key: "resend", icon: <ButtonIcon name="resend" />, label: `Resend Invitation${resendTargets.length ? ` (${resendTargets.length})` : ""}`, onClick: () => askResend(), disabled: !canIssue || busy !== null || resendTargets.length === 0, hidden: !digitalInvites || !(notInvited.length > 0 || !lifecycleStarted), title: !canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent" },
-    { key: "history", icon: <ButtonIcon name="history" />, label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 },
+    { key: "history", icon: <ButtonIcon name="history" />, label: "History", onClick: () => setShowHistory(true), disabled: visibleHistory.length === 0 && !invitees.some((i) => i.credentialStatus && i.credentialStatus !== "NOT_ISSUED") },
   ];
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
   const sampleColumns = excelColumnsFor(fieldConfig);
   const showCompany = fieldConfig.company;
-  // The food questions the event asks (shown whenever food preference is switched on for it); one column, the question picked in its header
-  const dietaryTitles = dietaryQuestionTitles(event?.dietaryPreference);
-  const foodTitle = dietaryTitles.includes(foodView) ? foodView : dietaryTitles[0] || "";
+  // One column per question asked on the digital access card, filled from what each guest chose there
+  const dietaryTitles = lifecycleStarted ? dietaryQuestionTitles(event?.dietaryPreference) : [];
 
   return (
     <div className="w-full min-h-full bg-white">
@@ -947,7 +946,7 @@ export default function InviteesManagementPage() {
                   {activeFilterCount(filtersInForce) > 0 && <span className="absolute -top-2 -right-2 size-5 rounded-full bg-[#1F65FF] text-white text-[11px] flex items-center justify-center">{activeFilterCount(filtersInForce)}</span>}
                 </button>
                 {!historical && (
-                <button type="button" onClick={() => openChooser()} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-4 2xl:px-6 py-[11px] whitespace-nowrap bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
+                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-4 2xl:px-6 py-[11px] whitespace-nowrap bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -983,7 +982,7 @@ export default function InviteesManagementPage() {
                   </label>
                 )}
                 {!historical && selectedIds.length > 0 && (
-                  <button type="button" onClick={() => void askRemove(selectedIds, () => setBulkOpen(true))} disabled={bulkDeleting || busy !== null} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 cursor-pointer disabled:opacity-50">
+                  <button type="button" onClick={() => setBulkOpen(true)} disabled={bulkDeleting || busy !== null} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 cursor-pointer disabled:opacity-50">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
                     {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.length})`}
                   </button>
@@ -1039,7 +1038,7 @@ export default function InviteesManagementPage() {
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
                 <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
-                <button type="button" onClick={() => openChooser()} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -1056,17 +1055,9 @@ export default function InviteesManagementPage() {
                       {showCompany && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Company Name</th>}
                       <th className="h-[46px] px-2.5 font-medium">Status</th>
                       {isAdmin && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">RSVP Status</th>}
-                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">No of Guests</th>
-                      {accessSession && (
-                        <th className="h-[46px] px-2.5 py-1 font-medium whitespace-nowrap align-middle">
-                          <ColumnPicker label="Access Control" ariaLabel="Session shown in the Access Control column" value={accessSession._id!} options={sessions.map((x) => ({ value: x._id!, label: x.name }))} onChange={(v) => setAccessView({ session: v, filter: sessionFilter })} />
-                        </th>
-                      )}
-                      {foodTitle && (
-                        <th className="h-[46px] px-2.5 py-1 font-medium whitespace-nowrap align-middle">
-                          <ColumnPicker label="Food Preference" ariaLabel="Food question shown in the Food Preference column" value={foodTitle} options={dietaryTitles.map((t) => ({ value: t, label: t }))} onChange={setFoodView} />
-                        </th>
-                      )}
+                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Access Pass</th>
+                      {dietaryTitles.map((title) => <th key={title} className="h-[46px] px-2.5 font-medium text-center min-w-[96px] max-w-[130px] leading-tight break-words">{title}</th>)}
+                      {shownSessions.map((sess) => <th key={sess._id} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{sess.name.replace(/\s+session$/i, "")}</th>)}
                       <th className="h-[46px] px-2.5 font-medium text-right sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">Action</th>
                     </tr>
                   </thead>
@@ -1107,34 +1098,39 @@ export default function InviteesManagementPage() {
                                 : pill("bg-[#FFF3C4] text-[#B38A00]", "Pending")}
                             </td>
                           )}
-                          <td className="py-3 px-2.5">{i.guestCount || 1}</td>
-                          {accessSession && (
-                            <td className="py-3 px-2.5 whitespace-nowrap">
-                              {allowedIn(i, accessSession)
-                                ? <span aria-label={`Has access to ${accessSession.name}`} className="inline-flex items-center gap-1.5 text-[#0F7A33]"><b aria-hidden>✓</b>Allowed</span>
-                                : <span aria-label={`No access to ${accessSession.name}`} className="inline-flex items-center gap-1.5 text-[#6B6B6B]"><b aria-hidden>✕</b>No access</span>}
+                          <td className="py-3 px-2.5">
+                            {i.credentialStatus
+                              ? <span title={i.credentialStatus === "REVOKED" ? `Revoked: ${reasonLabel(i.credentialRevocation?.category)}` : undefined}>{pill(STATUS_PILL[i.credentialStatus].cls, STATUS_PILL[i.credentialStatus].label)}</span>
+                              : <span className="text-[#6B6B6B]">—</span>}
+                          </td>
+                          {dietaryTitles.map((title) => {
+                            const answer = dietaryAnswer(i, title, dietaryTitles);
+                            return (
+                              <td key={title} className="py-3 px-2.5 text-center whitespace-nowrap">
+                                {answer ? <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-[#D3D3D3] rounded-full text-xs"><span className="size-1 rounded-full bg-[#15191C]" />{answer}</span> : "--"}
+                              </td>
+                            );
+                          })}
+                          {shownSessions.map((sess) => (
+                            <td key={sess._id} className="py-3 px-2.5">
+                              {allowedIn(i, sess)
+                                ? <span role="img" aria-label={`Has access to ${sess.name}`} className="text-[#0F7A33] font-bold">✓</span>
+                                : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#1F65FF] font-bold">✕</span>}
                             </td>
-                          )}
-                          {foodTitle && (
-                            <td className="py-3 px-2.5 whitespace-nowrap">
-                              {dietaryAnswer(i, foodTitle, dietaryTitles)
-                                ? <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-[#D3D3D3] rounded-full text-xs"><span className="size-1 rounded-full bg-[#15191C]" />{dietaryAnswer(i, foodTitle, dietaryTitles)}</span>
-                                : "--"}
-                            </td>
-                          )}
+                          ))}
                           <td className="py-3 px-2.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                             <InviteeRowMenu
                               name={i.name}
-                              onEdit={historical || (i.invitationStatus !== "PENDING" && i.invitationStatus !== "FAILED") ? undefined : () => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "", guestCount: i.guestCount })}
+                              onEdit={historical || (i.invitationStatus !== "PENDING" && i.invitationStatus !== "FAILED") ? undefined : () => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "" })}
                               onResend={digitalInvites && canIssue && sentRecord?._id && i.invitationStatus === "FAILED" ? () => askResend([sentRecord]) : undefined}
-                              onRemove={historical ? undefined : () => void askRemove([i._id], () => setDeletingId(i._id))}
+                              onRemove={historical ? undefined : () => setDeletingId(i._id)}
                             />
                           </td>
                         </tr>
                       );
                     })}
                     {visible.length === 0 && (
-                      <tr><td colSpan={11} className="py-10 text-center text-[#6B6B6B]">No invitees match the current filters.</td></tr>
+                      <tr><td colSpan={10 + shownSessions.length + dietaryTitles.length} className="py-10 text-center text-[#6B6B6B]">No invitees match the current filters.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -1157,10 +1153,10 @@ export default function InviteesManagementPage() {
 
       {/* The two list windows come first: whatever they open (add invitees, the file preview, the import choice) must appear above them */}
       {showListPreview && (
-        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => openChooser()} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
+        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
       )}
       {listsOpen && (
-        <InviteeListsModal eventId={eventId} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => openChooser()} onClose={() => setListsOpen(false)} onChanged={async () => { await load(); notifyDbUpdate(); }} />
+        <InviteeListsModal eventId={eventId} reloadSignal={listsReload + invitees.length} onAddInvitees={historical ? undefined : () => setShowChooser(true)} onClose={() => setListsOpen(false)} onChanged={async () => { await load(); notifyDbUpdate(); }} />
       )}
       {importChoice && (
         <ImportModeDialog
@@ -1268,6 +1264,16 @@ export default function InviteesManagementPage() {
       {recordOpen && owed && (
         <SendBillModal quote={owed} settleOnly busy={billBusy} error={billError} onCancel={() => setRecordOpen(false)} onFinish={() => undefined} onSettle={(note) => void recordPayment(note)} />
       )}
+      {passAction && (
+        <PassActionModal
+          key={`${passAction.action}-${passAction.invitee._id}`}
+          action={passAction.action}
+          invitee={passAction.invitee}
+          needsReview={passAction.needsReview}
+          onClose={() => setPassAction(null)}
+          onDone={async (message) => { setPassAction(null); setFeedback({ type: "success", message }); await load(); await loadPassHistory(); }}
+        />
+      )}
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={saveEdit} />
       <DeleteInviteeModal isOpen={!!deletingId} askReason={needsReason(deletingId ? [deletingId] : [])} defaultChannels={removalDefaults(deletingId ? [deletingId] : [])} onClose={() => setDeletingId(null)} onConfirm={confirmDelete} />
       <DeleteInviteeModal isOpen={bulkOpen} askReason={needsReason(selectedIds)} defaultChannels={removalDefaults(selectedIds)} count={selectedIds.length} onClose={() => setBulkOpen(false)} onConfirm={deleteSelected} />
@@ -1338,6 +1344,47 @@ export default function InviteesManagementPage() {
                 </tbody>
               </table>
 
+              {/* Access Pass History: credential events only. Message delivery states above and pass states here are never mixed. */}
+              <section aria-labelledby="pass-history-title" className="mt-8 pt-6 border-t border-[#E5E5E5]">
+                <h3 id="pass-history-title" className="text-base font-medium text-gray-900">Access Pass History</h3>
+                <p className="mt-1 text-xs text-[#6B6B6B]">Passes issued, replaced and revoked, with the reason and what happened to the message sent to the guest. “Accepted by the provider” is not proof of delivery.</p>
+                <PopupMessage message={passHistoryError} />
+                {!passHistory && !passHistoryError && <p className="mt-3 text-sm text-[#6B6B6B]">Loading…</p>}
+                {passHistory && passHistory.length === 0 && <p className="mt-3 text-sm text-[#6B6B6B]">No access pass has been issued, replaced or revoked yet.</p>}
+                {passHistory && passHistory.length > 0 && (
+                  <>
+                    <table className="mt-3 w-full text-left text-sm min-w-[560px]">
+                      <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">What happened</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 pr-3 font-medium">Message to the guest</th><th className="py-2 font-medium">When</th></tr></thead>
+                      <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
+                        {passHistory.map((r) => (
+                          <tr key={r._id} className="align-top">
+                            <td className="py-2.5 pr-3 text-gray-900">{r.inviteeName}</td>
+                            <td className="py-2.5 pr-3">{historyTitle(r)}{passRef(r.credentialId) ? <span className="block text-xs text-[#6B6B6B]" title="Reference of this pass (not its code)">pass {passRef(r.credentialId)}{r.previousCredentialId ? ` replaced ${passRef(r.previousCredentialId)}` : ""}</span> : null}{r.derived ? <span className="block text-xs text-[#6B6B6B]">follows from the event, not an action</span> : null}{r.actor ? <span className="block text-xs text-[#6B6B6B]">by {r.actor}</span> : null}</td>
+                            <td className="py-2.5 pr-3 text-xs break-words max-w-[200px]">{historyReason(r)}{r.note ? <span className="block text-[#6B6B6B]">{r.note}</span> : null}{r.reviewConfirmed ? <span className="block text-[#6B6B6B]">Reviewed before replacing</span> : null}</td>
+                            <td className="py-2.5 pr-3 text-xs">
+                              {[noticeText("Email", r.notice?.email), noticeText("WhatsApp", r.notice?.whatsapp)].filter(Boolean).map((t) => <span key={t} className="block">{t}</span>) }
+                              {!r.notice && "—"}
+                            </td>
+                            <td className="py-2.5 text-xs whitespace-nowrap">{formatDateTime(r.at, "—")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="mt-4 flex flex-wrap items-start gap-4">
+                      {hasUnsent(passHistory) && (
+                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
+                      )}
+                      {hasUnknown(passHistory) && (
+                        <div role="group" aria-label="Messages with an unknown outcome" className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 space-y-2 max-w-md">
+                          <p>For some messages the app does not know whether they were sent. The guest may already have received them; retrying can send a second one.</p>
+                          <label className="flex items-start gap-2 cursor-pointer"><input type="checkbox" checked={ackDuplicate} onChange={(e) => setAckDuplicate(e.target.checked)} className="mt-0.5 size-4 accent-rose-600" /><span>I understand a guest may receive a message twice.</span></label>
+                          <button type="button" onClick={() => retryPassNotices(true)} disabled={retryingNotices || !ackDuplicate} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-100 rounded-md text-sm font-medium cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Retry these anyway</button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </section>
             </div>
           </div>
         </div>

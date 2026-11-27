@@ -3,7 +3,7 @@
 
 import { meaningOf } from "./columnMeaning.ts";
 
-export type InviteeFieldKey = "name" | "email" | "mobile" | "guests" | "company" | "identity" | "identity2";
+export type InviteeFieldKey = "name" | "email" | "mobile" | "company" | "identity" | "identity2";
 
 export interface InviteeFieldConfig {
   /** Company chosen under Additional Information (the event's category does not add it) */
@@ -26,7 +26,6 @@ export const EXCEL_HEADER: Record<InviteeFieldKey, string> = {
   name: "Name",
   email: "Email",
   mobile: "Mobile",
-  guests: "No of Guests",
   company: "Company Name",
   identity: "Professional Identity",
   identity2: "Second Identity",
@@ -36,7 +35,6 @@ export const EXCEL_EXAMPLE: Record<InviteeFieldKey, string> = {
   name: "Guest Name",
   email: "guest@example.com",
   mobile: "+919876543210",
-  guests: "1",
   company: "Company",
   identity: "Employee ID: 4521",
   identity2: "Sample value",
@@ -70,9 +68,8 @@ export function inviteeConfigFor(opts: { cardInfo?: CardInfoLike | null; dietary
 
 export function inviteeFieldsFor(config: InviteeFieldConfig): InviteeFieldKey[] {
   return [
-    // the four every list has
-    "name", "email", "mobile", "guests",
-    // what the organizer chose to print on the card comes straight after them
+    "name", "email", "mobile",
+    // what the organizer chose to print on the card comes straight after the three standard columns
     ...(config.identity ? (["identity"] as const) : []),
     ...(config.identity2 ? (["identity2"] as const) : []),
     ...(config.company ? (["company"] as const) : []),

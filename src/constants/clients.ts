@@ -266,7 +266,7 @@ export const CLIENT_CATEGORIES: ClientCategory[] = [
       { label: "Branded invitations:", text: "Your show or venue design on every pass, sent by email and WhatsApp." },
       { label: "VIP and general entry:", text: "Separate guest lists and gates for VIP, guests and the press." },
       { label: "Show-wise sessions:", text: "Set a list and an entry rule for each show, stall area or night." },
-      { label: "Codes that cannot be shared:", text: "A pass admits only as many people as the guest list says, in each session." },
+      { label: "Codes that cannot be shared:", text: "Use Only Once access so one pass lets in one person." },
       { label: "Fast gate check-in:", text: "Door staff scan QR codes on their phones, so the line keeps moving." },
       { label: "Attendance reports:", text: "Invited versus attended, ready for sponsors and partners." },
     ],

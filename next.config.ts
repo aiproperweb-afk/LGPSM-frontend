@@ -75,10 +75,6 @@ const nextConfig: NextConfig = {
         source: "/admin/pages/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
       },
-      {
-        source: "/admin/pages/contact/edit",
-        headers: [{ key: "X-Contact-Editor-Version", value: "2.1" }],
-      },
       // The files in public/ keep the same names when they change, so they cannot be cached forever; a week, then reuse
       // while the fresh copy is fetched in the background. Without this, browsers re-check each one on every visit.
       {

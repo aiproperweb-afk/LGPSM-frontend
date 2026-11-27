@@ -6,7 +6,6 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import ModalClose from "@/components/common/ModalClose";
 import { templateService, type TextZone, type TextZoneRole } from "@/services/templateService";
 import { resolveImageUrl } from "@/utils/mediaUrl";
-import { movedBox, resizedBox } from "@/utils/areaBox";
 
 const ROLES: { value: TextZoneRole; label: string; wording: boolean }[] = [
   { value: "title", label: "Event name", wording: true },
@@ -39,9 +38,9 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
   const [imageKey, setImageKey] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<null | "save" | "download">(null);
+  const [busy, setBusy] = useState<null | "save" | "detect">(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice] = useState<string | null>(intro ? (intro.detected ? "The wording in your design was found. Check each area, then save." : `${intro.reason || "The wording could not be found."} Mark the areas yourself below.`) : null);
+  const [notice, setNotice] = useState<string | null>(intro ? (intro.detected ? "The wording in your design was found. Check each area, then save." : `${intro.reason || "The wording could not be found."} Mark the areas yourself below.`) : null);
   const [changed, setChanged] = useState(false);
   // an organizer's own design is the card as it is: only the places for the QR code and the guest's details are set; an admin's also has the event's wording
   const [dynamic, setDynamic] = useState(true);
@@ -71,10 +70,9 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
     if (!d || !canvas) return;
     const k = scale();
     const dx = (e.clientX - d.px) / k, dy = (e.clientY - d.py) / k;
-    // a click on a box (to select it) moves nothing
-    if (Math.abs(e.clientX - d.px) < 2 && Math.abs(e.clientY - d.py) < 2) return;
-    // every box stays in the middle of the card's width, wherever it is dragged
-    update(d.index, d.mode === "move" ? movedBox(d.start, dy, canvas) : resizedBox(d.start, dx, dy, canvas, d.start.role === "qr"));
+    if (d.mode === "move") update(d.index, { x: Math.round(Math.min(Math.max(0, d.start.x + dx), canvas.width - d.start.w)), y: Math.round(Math.min(Math.max(0, d.start.y + dy), canvas.height - d.start.h)) });
+    else if (d.start.role === "qr") { const side = Math.round(Math.min(Math.max(60, d.start.w + Math.max(dx, dy)), canvas.width - d.start.x, canvas.height - d.start.y)); update(d.index, { w: side, h: side }); }
+    else update(d.index, { w: Math.round(Math.min(Math.max(20, d.start.w + dx), canvas.width - d.start.x)), h: Math.round(Math.min(Math.max(16, d.start.h + dy), canvas.height - d.start.y)) });
   };
   const end = () => { drag.current = null; };
 
@@ -102,21 +100,15 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
     if (res.success) onClose(true);
     else setError(res.message || "The text areas could not be saved. Please try again.");
   };
-  // the card as these areas would draw it, with sample details, to lay beside the original design
-  const download = async () => {
-    setBusy("download");
+  const detect = async () => {
+    setBusy("detect");
     setError(null);
-    const res = await templateService.previewTextZones(templateId, zones);
+    const res = await templateService.detectText(templateId);
     setBusy(null);
-    if (!res.ok) return setError(res.message);
-    const url = URL.createObjectURL(res.blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "card-areas-preview.png";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    if (!res.success || !res.data) return setError(res.message || "The picture could not be read. Please try again.");
+    await load();
+    setChanged(true);
+    setNotice(res.data.detected ? "The wording in your design was found again. Check each area, then save." : `${res.data.reason || "The wording could not be found."} Mark the areas yourself.`);
   };
 
   const sel = selected !== null ? zones[selected] : null;
@@ -127,7 +119,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
         <ModalClose onClick={() => onClose(changed)} />
         <div className="px-6 pt-5 pb-3 pr-14">
           <h2 id="areas-title" className="text-base font-medium text-gray-900">Where the event&apos;s details go on your design</h2>
-          <p className="mt-1 text-sm text-[#4B4F52]">Drag a box up or down over the event name, the date and time, the venue and the logo in your picture; boxes stay centred across the card. Each event&apos;s own details and logo appear there, and the picture around them stays as it is. Download a preview to compare it with your design.</p>
+          <p className="mt-1 text-sm text-[#4B4F52]">Drag a box over the event name, the date and time, the venue and the logo in your picture. Each event&apos;s own details and logo appear there in the same place, and the picture around them stays as it is.</p>
         </div>
         {notice && <p role="status" className="mx-6 mb-2 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] px-3 py-2 text-sm text-[#0F3A99]">{notice}</p>}
         <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-[minmax(0,320px)_1fr] gap-6 items-start">
@@ -156,10 +148,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
               {ROLES.filter((r) => dynamic || !r.wording).map((r) => (
                 <button key={r.value} type="button" disabled={zones.some((z) => z.role === r.value) || loading} onClick={() => add(r.value)} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#DDD] hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+ {r.label}</button>
               ))}
-              <button type="button" onClick={download} disabled={busy !== null || loading} title="Download the card as these areas would draw it, with sample details, to compare with your design" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] cursor-pointer disabled:opacity-60">
-                <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
-                {busy === "download" ? "Preparing…" : "Download preview"}
-              </button>
+              <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] cursor-pointer disabled:opacity-60">{busy === "detect" ? "Looking…" : "Find the wording again"}</button>
             </div>
 
             {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. {dynamic ? "Add the event name, the date and time and the venue, then drag each box over the wording in your picture." : "Add the QR code, then drag it to the place your design has for it."}</p>}

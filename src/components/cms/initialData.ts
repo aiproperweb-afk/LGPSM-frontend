@@ -49,9 +49,9 @@ export const cmsPageDescriptors = [
   { name: "Footer", slug: "footer", route: "/#footer" },
   { name: "Features", slug: "features", route: "/features" },
   { name: "How it works", slug: "how-it-works", route: "/how-it-works" },
-  ...clientPages.map(({ name, slug, route }) => ({ name, slug, route, editable: false as const })),
+  ...clientPages.map(({ name, slug, route }) => ({ name, slug, route })),
 ];
 
-export function isEditableCmsSlug(value: string): value is CmsSlug {
-  return cmsPageDescriptors.some(page => page.slug === value && !("editable" in page && page.editable === false));
+export function isCmsSlug(value: string): value is CmsSlug {
+  return Object.hasOwn(initialPageData, value);
 }

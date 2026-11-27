@@ -96,12 +96,6 @@ export const categoryService = {
     );
   },
 
-  /** Admin: stops offering one subcategory; events that already use it keep it */
-  async deleteSubcategory(categoryId: string, subcategoryId: string): Promise<ApiResponse<Category>> {
-    return apiClient<Category>(`/api/v1/categories/${categoryId}/subcategories/${subcategoryId}`, { method: "DELETE" }, true);
-  },
-
-  /** Admin: stops offering a category; events that already use it keep it */
   async deleteCategory(id: string): Promise<ApiResponse<Category>> {
     return apiClient<Category>(
       `/api/v1/categories/${id}`,

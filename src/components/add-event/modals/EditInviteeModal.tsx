@@ -2,7 +2,6 @@
 
 import PhoneInput from "@/components/common/PhoneInput";
 import React, { useState, useEffect, useRef } from "react";
-import { MAX_GUESTS_PER_PASS, parseGuestCount } from "@/utils/guestCount";
 import { gsap } from "gsap";
 
 interface InviteeRow {
@@ -10,7 +9,6 @@ interface InviteeRow {
   name: string;
   email: string;
   phone: string;
-  guestCount?: number;
 }
 
 interface EditInviteeModalProps {
@@ -32,14 +30,12 @@ export default function EditInviteeModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [guests, setGuests] = useState("1");
 
   useEffect(() => {
     if (invitee) {
       setName(invitee.name);
       setEmail(invitee.email);
       setPhone(invitee.phone);
-      setGuests(String(invitee.guestCount || 1));
     }
   }, [invitee]);
 
@@ -61,9 +57,7 @@ export default function EditInviteeModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const count = parseGuestCount(guests);
-    if (count === null) return;
-    onSave({ ...invitee, name, email, phone, guestCount: count });
+    onSave({ ...invitee, name, email, phone });
     onClose();
   };
 
@@ -125,23 +119,6 @@ export default function EditInviteeModal({
               required
               value={phone}
               onValueChange={(v) => setPhone(v)}
-              className="w-full px-3.5 py-2.5 bg-[#F9FAFB] border border-gray-200 rounded-md text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="edit-invitee-guests" className="block text-xs font-semibold text-gray-700 mb-1.5">
-              No of Guests<span className="text-red-500 ml-0.5">*</span>
-            </label>
-            <input
-              id="edit-invitee-guests"
-              type="number"
-              required
-              min={1}
-              max={MAX_GUESTS_PER_PASS}
-              step={1}
-              value={guests}
-              onChange={(e) => setGuests(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-[#F9FAFB] border border-gray-200 rounded-md text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
             />
           </div>

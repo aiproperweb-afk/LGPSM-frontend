@@ -9,9 +9,7 @@ import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
 import { useAuth } from "@/context/AuthContext";
 import { TableSkeletonRows } from "@/components/common/Skeleton";
-import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
-import { useOrganizerActions } from "@/components/organizers/useOrganizerActions";
-import type { UserData } from "@/services/tokenStorage";
+import RowMenu from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
 import Pagination from "@/components/common/Pagination";
 import { paginate } from "@/utils/pagination.mjs";
@@ -24,8 +22,7 @@ interface OrganizerRow {
   type: string;
   email: string;
   phone: string;
-  status: "Active" | "In Active";
-  account: UserData;
+  status: "Active" | "In Active" | "Deactivate";
 }
 
 export default function AllOrganizersPage() {
@@ -52,8 +49,7 @@ export default function AllOrganizersPage() {
       let failed = false;
 
       try {
-        // deactivated organizers are listed too, so they can be activated or deleted
-        const res = await userService.getUsers("ORGANIZER", undefined, { includeInactive: true });
+        const res = await userService.getUsers("ORGANIZER");
         if (!res?.success) {
           failed = true;
           if (!quiet) setLoadError(res?.message || "Failed to load organizers.");
@@ -68,8 +64,7 @@ export default function AllOrganizersPage() {
             accountName: u.fullName || u.name || "Event Organizer",
             email: u.email || "--",
             phone: u.phone || u.contactNo || "--",
-            status: (u.isActive === false ? "In Active" : "Active") as OrganizerRow["status"],
-            account: { ...u, _id: String(u._id || u.id) } as UserData,
+            status: (u.isActive === false ? "In Active" : "Active") as any,
           }));
 
           list = apiOrgs;
@@ -85,9 +80,6 @@ export default function AllOrganizersPage() {
 
     loadOrganizers();
   }, [liveTick]);
-
-  const reload = () => setLiveTick((n) => n + 1);
-  const actions = useOrganizerActions({ changed: reload, erased: reload });
 
   const toggleSelectAll = () => {
     if (selectedIds.length === organizers.length) {
@@ -214,7 +206,7 @@ aria-label="Select all"
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
                   {loading && (
-                    <TableSkeletonRows rows={5} cols={7} />
+                    <TableSkeletonRows rows={5} cols={6} />
                   )}
                   {!loading && loadError && (
                     <tr><td colSpan={7} className="py-12 text-center text-rose-600 text-sm">{loadError}</td></tr>
@@ -283,26 +275,16 @@ aria-label={`Select ${org.name}`}
                               In Active
                             </span>
                           )}
+                          {org.status === "Deactivate" && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+                              Deactivate
+                            </span>
+                          )}
                         </td>
 
                         {/* Action Column */}
                         <td className="py-4 px-4 text-right">
-                          <span className="inline-flex items-center justify-end gap-2">
-                            {org.status === "Active" ? (
-                              <Link href={`/events/add?organizer=${org.id}`} aria-label={`Add an event for ${org.name}`} className="inline-flex items-center gap-1 rounded-md border border-[#1F65FF] px-3 py-1.5 text-xs font-semibold text-[#1F65FF] hover:bg-[#EEF3FF]">+ Add Event</Link>
-                            ) : (
-                              <span title="Activate the organizer to add an event for them" className="inline-flex items-center gap-1 rounded-md border border-[#DDD] px-3 py-1.5 text-xs font-semibold text-gray-400 cursor-not-allowed">+ Add Event</span>
-                            )}
-                            <RowMenu
-                              label={`Actions for ${org.name}`}
-                              items={[
-                                { label: "View Details", onClick: () => router.push(`/event-organizer/${org.id}`) },
-                                { label: "Edit", icon: EditIcon, onClick: () => actions.edit(org.account) },
-                                { label: org.status === "Active" ? "Deactivate" : "Activate", onClick: () => void actions.setActive(org.account, org.status !== "Active") },
-                                { label: "Delete", icon: TrashIcon, onClick: () => actions.erase(org.account) },
-                              ]}
-                            />
-                          </span>
+                          <RowMenu label={`Actions for ${org.name}`} items={[{ label: "View Details", onClick: () => router.push(`/event-organizer/${org.id}`) }]} />
                         </td>
                       </tr>
                     );
@@ -319,7 +301,6 @@ aria-label={`Select ${org.name}`}
             )}
           </div>
         </div>
-      {actions.dialogs}
     </div>
   );
 }

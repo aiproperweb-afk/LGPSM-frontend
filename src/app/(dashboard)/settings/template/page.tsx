@@ -57,9 +57,8 @@ export default function TemplateSettingsPage() {
   const handleSave = async (t: TemplateItem) => {
     const res = await templateService.updateTemplate(t.id, {
       name: t.name,
-      // none chosen: the template is for the whole category
-      subcategoryId: t.subcategoryId || null,
-      categoryId: t.categoryId || undefined,
+      categoryId: t.categoryId,
+      subcategoryId: t.subcategoryId,
       previewImageKey: t.imageKey || undefined,
       // AI designs are drawn from their stored specification; the design list below never applies to them
       cardDesign: t.cardDesign === "CUSTOM" ? undefined : t.cardDesign,

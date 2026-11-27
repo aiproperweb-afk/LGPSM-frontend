@@ -16,7 +16,6 @@ import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
 import { useEventSessions } from "@/hooks/useEventSessions";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
-import { scopeForSession, sessionsToSave } from "@/utils/assignScope";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
 import { useAlert } from "@/context/AlertContext";
 import { notifyDbUpdate } from "@/components/EventSubNav";
@@ -64,8 +63,6 @@ export default function AssignedSystemUsersPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   // null = all sessions of the selected event
   const [sessionScope, setSessionScope] = useState<string[] | null>(null);
-  // opened with a session picked on the page: people are added to it and keep the sessions they already have
-  const [addingToSession, setAddingToSession] = useState(false);
   const { sessions: eventSessionsList, loading: loadingSessions, error: sessionsError } = useEventSessions(selectedEventId);
   const [submittingAssign, setSubmittingAssign] = useState(false);
   const [submittingUser, setSubmittingUser] = useState(false);
@@ -327,9 +324,7 @@ export default function AssignedSystemUsersPage() {
         const existing = users
           .find((u) => u.id === targetUserId)
           ?.assignments.find((a) => a.eventId === selectedEventId);
-        // (one person's popup already shows what they have, so it is saved as shown)
-        const toSave = sessionsToSave(sessionScope, existing ? existing.sessions.map((x) => x.id) : null, addingToSession && selectedIds.length > 1);
-        const res = await assignmentService.saveAssignment(selectedEventId, targetUserId, toSave, existing?.assignmentId);
+        const res = await assignmentService.saveAssignment(selectedEventId, targetUserId, sessionScope ?? [], existing?.assignmentId);
 
         if (!res.success) {
           errorMessages.push(res.message || "Assignment failed.");
@@ -443,35 +438,22 @@ export default function AssignedSystemUsersPage() {
   const [filterSession, setFilterSession] = useState("");
   const eventFilterOptions = (() => {
     const seen = new Map<string, string>();
-    // open events can be picked even before anyone is assigned to them
-    eventsList.filter(isAssignableEvent).forEach((e) => seen.set(e.id, e.title));
     users.forEach((u) => u.assignments.forEach((a) => { if (a.eventId && !seen.has(a.eventId)) seen.set(a.eventId, a.eventName); }));
     return [{ value: "", label: "All events" }, ...[...seen].map(([value, label]) => ({ value, label })).sort((x, y) => x.label.localeCompare(y.label))];
   })();
-  // every session of the event, whether or not anyone is assigned to it
-  const { sessions: filterSessions } = useEventSessions(filterEvent);
-  const sessionFilterOptions = [{ value: "", label: "All sessions" }, ...filterSessions.map((x) => ({ value: x.id, label: x.name }))];
+  const sessionFilterOptions = (() => {
+    const seen = new Map<string, string>();
+    if (filterEvent) users.forEach((u) => u.assignments.filter((a) => a.eventId === filterEvent).forEach((a) => a.sessions.forEach((x) => { if (!seen.has(x.id)) seen.set(x.id, x.name); })));
+    return [{ value: "", label: "All sessions" }, ...[...seen].map(([value, label]) => ({ value, label }))];
+  })();
   const query = searchQuery.trim().toLowerCase();
   const queryDigits = query.replace(/\D/g, "");
-  // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
-  const searched = users.filter((u) => !query || u.name.toLowerCase().includes(query) || (queryDigits.length > 0 && u.phone.replace(/\D/g, "").includes(queryDigits)));
-  const assignedHere = searched.filter((u) => !filterEvent || u.assignments.some((a) => a.eventId === filterEvent && (!filterSession || a.sessions.length === 0 || a.sessions.some((x) => x.id === filterSession))));
-  // This page assigns people, so a session nobody is on yet must still offer someone to tick: everyone is listed then, or on request
-  const [showEveryone, setShowEveryone] = useState(false);
-  const nobodyYet = !!filterEvent && !isLoading && assignedHere.length === 0;
-  const filteredUsers = filterEvent && (showEveryone || nobodyYet) ? searched : assignedHere;
-  const filterTarget = filterSessions.find((x) => x.id === filterSession)?.name || eventFilterOptions.find((o) => o.value === filterEvent)?.label || "this event";
-
-  // The popup starts from what is picked on the page: its event, and its session
-  const openAssign = (ids: string[]) => {
-    setErrorFeedback(null);
-    const target = assignableEvents.some((e) => e.id === filterEvent) ? filterEvent : "";
-    if (target) setSelectedEventId(target);
-    const only = ids.length === 1 ? users.find((u) => u.id === ids[0])?.assignments.find((a) => a.eventId === target) : undefined;
-    setSessionScope(target && filterSession ? scopeForSession(filterSession, only ? only.sessions.map((x) => x.id) : null) : null);
-    setAddingToSession(!!(target && filterSession));
-    setIsAssignModalOpen(true);
-  };
+  const filteredUsers = users.filter((u) => {
+    // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
+    if (query && !(u.name.toLowerCase().includes(query) || (queryDigits.length > 0 && u.phone.replace(/\D/g, "").includes(queryDigits)))) return false;
+    if (!filterEvent) return true;
+    return u.assignments.some((a) => a.eventId === filterEvent && (!filterSession || a.sessions.length === 0 || a.sessions.some((x) => x.id === filterSession)));
+  });
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
@@ -492,7 +474,7 @@ export default function AssignedSystemUsersPage() {
               setSelectedOrganizerId(value);
             }}
             options={[
-              { value: "all", label: "All Organizers" },
+              { value: "all", label: "All System Users" },
               ...organizers.map((organizer) => ({
                 value: organizer._id,
                 label: `${organizer.fullName}${organizer.profile?.organizationName ? ` · ${organizer.profile.organizationName}` : ""}`,
@@ -504,7 +486,7 @@ export default function AssignedSystemUsersPage() {
 
         <ListControls label="System Users" searchId="assign-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
           {/* the same borderless pickers as the Invitees page: event, then session */}
-          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); setShowEveryone(false); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
+          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
           <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder="Select Session" options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
           <button
             type="button"
@@ -521,15 +503,6 @@ export default function AssignedSystemUsersPage() {
             Add User
           </button>
         </ListControls>
-
-        {filterEvent && (
-          <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#4B4F52]">
-            {nobodyYet ? <>Nobody is assigned to {filterTarget} yet. Tick users below to assign them.</> : showEveryone ? <>Showing every system user. Tick users to assign them to {filterTarget}.</> : <>Showing the users assigned to {filterTarget}.</>}
-            {!nobodyYet && (
-              <button type="button" onClick={() => setShowEveryone((v) => !v)} className="font-semibold text-[#1F65FF] underline cursor-pointer">{showEveryone ? "Show assigned only" : "Show all system users"}</button>
-            )}
-          </p>
-        )}
 
         {/* Custom Green/White Tick Select All Checkbox */}
         <div className="flex items-center gap-2 text-sm text-[#6B6B6B] pt-1">
@@ -732,7 +705,7 @@ aria-label={`Select ${u.name}`}
           </button>
           <button
             type="button"
-            onClick={() => openAssign(selectedIds)}
+            onClick={() => { setSessionScope(null); setErrorFeedback(null); setIsAssignModalOpen(true); }}
             disabled={selectedIds.length === 0}
             className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#1A56DB]"
           >
@@ -948,7 +921,6 @@ aria-label={`Select ${u.name}`}
                   onChange={(v) => {
                     setSelectedEventId(v);
                     setSessionScope(null);
-                    setAddingToSession(false);
                   }}
                   options={assignableEvents.map((evt) => ({ value: evt.id, label: evt.title }))}
                   placeholder="Select an event"
@@ -967,9 +939,6 @@ aria-label={`Select ${u.name}`}
                 <p role="status" className="text-sm text-[#6B6B6B]">No users left to assign. Close this window and tick the organizer&apos;s own system users.</p>
               )}
 
-              {addingToSession && selectedIds.length > 1 && (
-                <p role="status" className="text-xs text-[#4B4F52] bg-[#EAF1FF] border border-[#D6E4FF] rounded-md p-3">The users are added to the ticked sessions and keep any sessions they already have on this event.</p>
-              )}
               <SessionScopePicker
                 sessions={eventSessionsList}
                 loading={loadingSessions}
@@ -1002,7 +971,7 @@ aria-label={`Select ${u.name}`}
             <div className="flex flex-col gap-2.5">
               <button
                 type="button"
-                onClick={() => { setSelectedIds([addedUser.id]); setAddedUser(null); openAssign([addedUser.id]); }}
+                onClick={() => { setSelectedIds([addedUser.id]); setSessionScope(null); setErrorFeedback(null); setAddedUser(null); setIsAssignModalOpen(true); }}
                 className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Assign User

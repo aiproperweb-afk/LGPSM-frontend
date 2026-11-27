@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import CompleteProfileModal from "@/components/auth/CompleteProfileModal";
-import VerificationBanner from "@/components/common/VerificationBanner";
 import BrandLoader from "@/components/common/BrandLoader";
 import { isExplicitLogout, loginRedirectPath } from "@/components/auth/authPortal";
 import { canAccessRoute } from "@/components/sidebar/navConfig";
@@ -103,7 +102,6 @@ export default function DashboardLayout({
     <div className="flex flex-col md:flex-row h-screen h-dvh bg-[#F8F9FA] overflow-clip font-sans">
       {!isPageEditor && <Sidebar />}
       <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
-        <VerificationBanner />
         {children}
       </main>
       {/* an organizer whose profile is incomplete (for example after signing up with Google) must finish it first */}

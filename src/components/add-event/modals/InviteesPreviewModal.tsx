@@ -37,7 +37,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
 
   const commitEdit = () => {
     if (!editing) return;
-    setList((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, name: editing.name.trim(), email: editing.email.trim().toLowerCase(), phone: editing.phone.trim(), guests: (editing.guests || "").trim(), company: editing.company.trim(), identity: (editing.identity || "").trim(), identity2: (editing.identity2 || "").trim() } : r)));
+    setList((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, name: editing.name.trim(), email: editing.email.trim().toLowerCase(), phone: editing.phone.trim(), company: editing.company.trim(), identity: (editing.identity || "").trim(), identity2: (editing.identity2 || "").trim() } : r)));
     setEditing(null);
   };
 
@@ -89,7 +89,6 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                   <th className="py-2.5 pr-3 font-medium">Name</th>
                   <th className="py-2.5 pr-3 font-medium">Email</th>
                   <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
-                  <th className="py-2.5 pr-3 font-medium whitespace-nowrap">No of Guests</th>
                   {showIdentity && <th className="py-2.5 pr-3 font-medium">{identityLabel || "Professional Identity"}</th>}
                   {identity2Label && <th className="py-2.5 pr-3 font-medium">{identity2Label}</th>}
                   {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
@@ -108,7 +107,6 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                           <td className="py-2 pr-2"><input aria-label="Name" className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></td>
                           <td className="py-2 pr-2"><input aria-label="Email" className={inputClass} value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></td>
                           <td className="py-2 pr-2"><input aria-label="Mobile" className={inputClass} value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></td>
-                          <td className="py-2 pr-2 w-24"><input aria-label="No of Guests" inputMode="numeric" maxLength={3} className={inputClass} value={editing.guests || ""} onChange={(e) => setEditing({ ...editing, guests: e.target.value.replace(/\D/g, "") })} /></td>
                           {showIdentity && <td className="py-2 pr-2"><input aria-label={identityLabel || "Professional identity"} className={inputClass} value={editing.identity || ""} onChange={(e) => setEditing({ ...editing, identity: e.target.value })} /></td>}
                           {identity2Label && <td className="py-2 pr-2"><input aria-label={identity2Label} className={inputClass} value={editing.identity2 || ""} onChange={(e) => setEditing({ ...editing, identity2: e.target.value })} /></td>}
                           {showCompany && <td className="py-2 pr-2"><input aria-label="Company" className={inputClass} value={editing.company} onChange={(e) => setEditing({ ...editing, company: e.target.value })} /></td>}
@@ -125,7 +123,6 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                           </td>
                           <td className="py-2.5 pr-3 break-all">{row.email || "—"}</td>
                           <td className="py-2.5 pr-3 whitespace-nowrap">{row.phone || "—"}</td>
-                          <td className="py-2.5 pr-3">{row.guests || "—"}</td>
                           {showIdentity && <td className="py-2.5 pr-3 break-words">{row.identity || "—"}</td>}
                           {identity2Label && <td className="py-2.5 pr-3 break-words">{row.identity2 || "—"}</td>}
                           {showCompany && <td className="py-2.5 pr-3 break-words">{row.company || "—"}</td>}
@@ -146,7 +143,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                 })}
                 {visible.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-[#6B6B6B]">No invitees match your search.</td>
+                    <td colSpan={7} className="py-8 text-center text-[#6B6B6B]">No invitees match your search.</td>
                   </tr>
                 )}
               </tbody>

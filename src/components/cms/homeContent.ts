@@ -58,7 +58,7 @@ export const homeContent = {
         tag: "Sessions and access", image: "/images/landing/feature-3.webp", imageAlt: "Add session form with Entry, Lunch and Drinks sessions",
         title: "One event, many sessions, the right guests at each",
         desc: "Split your event into sessions such as Entry, Lunch or the VIP dinner. Each has its own time, guest list and entry rule, so only the people you chose get through each door.",
-        bullets: ["Multiple sessions per event, each with its own time slot", "One QR code can admit a whole family, up to the number on the guest list", "Reuse another session's guest list in one click", "Require a valid entry-session check-in before other sessions open", "Set an overall attendee limit, and decide whether non-responders or declined guests may enter"],
+        bullets: ["Multiple sessions per event, each with its own time slot", "Entry rules: Only Once, or No Restrictions", "Reuse another session's guest list in one click", "Require a valid entry-session check-in before other sessions open", "Set an overall attendee limit, and decide whether non-responders or declined guests may enter"],
       },
       {
         tag: "Guest lists", image: "/images/landing/feature-4.webp", imageAlt: "Invitee list preview with an upload summary of 8 added and 0 rejected",
@@ -127,7 +127,7 @@ export const homeContent = {
       { q: "Do guests need to download an app?", a: "No. Guests open their invitation from the email or WhatsApp message and show the QR code at the entrance. Only your staff use the EventQRapp mobile app to scan guests in." },
       { q: "Can I use my own card design?", a: "Yes. Pick a ready template, or upload your own design as a JPG, PNG or WEBP image (9:16 portrait, up to 5 MB). You see a live phone preview before anything is sent." },
       { q: "What is a session?", a: "A session is one part of your event, such as Entry, Lunch or the VIP dinner. Each session has its own time, guest list and entry rule, so only the people you choose get through each door." },
-      { q: "How many times can one QR code be scanned?", a: "As many times as the number of guests given for that invitee, in each session. A pass for one person is scanned once; a pass for a family of four admits four people." },
+      { q: "What does \"Only Once\" access mean?", a: "With Only Once, a guest's QR code can be used a single time for that session. With No Restrictions, the same guest can be scanned in as often as they like." },
       { q: "How do I add my guest list?", a: "Download the sample Excel sheet, fill in names, emails and mobile numbers, and upload it. You can preview and fix any row before saving, and add more guests to any session later." },
       { q: "How much does it cost?", a: "There is no subscription. You pay per invitee when you send, and you see the exact total, including GST, before any invitation goes out." },
       { q: "Can I edit the event after sending invitations?", a: "You get a clear warning before invitations go out, because the event locks once they are sent so nothing changes under your guests." },

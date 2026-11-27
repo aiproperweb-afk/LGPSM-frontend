@@ -8,7 +8,6 @@ import { useOverlayClose } from "@/hooks/useOverlayClose";
 import { inviteeService, CreateInviteePayload } from "@/services/inviteeService";
 import CustomDropdown, { CustomDropdownOption } from "@/components/common/CustomDropdown";
 import type { InviteeFieldKey } from "@/utils/inviteeFields";
-import { guestCountProblem, MAX_GUESTS_PER_PASS } from "@/utils/guestCount";
 
 interface AddInviteeManualModalProps {
   isOpen: boolean;
@@ -45,7 +44,7 @@ export default function AddInviteeManualModal({
   isOpen,
   eventId,
   existingInvitees = [],
-  fields = ["name", "email", "mobile", "guests"],
+  fields = ["name", "email", "mobile"],
   identityLabel,
   identity2Label,
   sessionOptions = [],
@@ -62,7 +61,6 @@ export default function AddInviteeManualModal({
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [guests, setGuests] = useState("1");
   const [identityType, setIdentityType] = useState("");
   const [identityValue, setIdentityValue] = useState("");
   const [identity2Value, setIdentity2Value] = useState("");
@@ -75,7 +73,6 @@ export default function AddInviteeManualModal({
     setEmail("");
     setMobile("");
     setCompanyName("");
-    setGuests("1");
     setIdentityType("");
     setIdentityValue("");
     setIdentity2Value("");
@@ -114,11 +111,6 @@ export default function AddInviteeManualModal({
       setError("Either an email address or a mobile number is required.");
       return;
     }
-    const guestProblem = guestCountProblem(guests);
-    if (guestProblem) {
-      setError(`${guestProblem}.`);
-      return;
-    }
     const emailKey = email.trim().toLowerCase();
     const phoneKey = mobile.replace(/\D/g, "");
     const existing = existingInvitees.find((item) =>
@@ -132,7 +124,6 @@ export default function AddInviteeManualModal({
 
     const payload: CreateInviteePayload = {
       name: trimmed,
-      guestCount: Number(guests),
       ...(email.trim() && { email: email.trim() }),
       ...(mobile.trim() && { mobile: mobile.trim() }),
       ...(companyName.trim() && { companyName: companyName.trim() }),
@@ -258,15 +249,6 @@ export default function AddInviteeManualModal({
                 className={inputClass}
                 autoComplete="off"
               />
-            </div>
-
-            {/* How many people this guest's pass admits */}
-            <div>
-              <label htmlFor="ai-guests" className={labelClass}>
-                No of Guests <span className="text-rose-500">*</span>
-              </label>
-              <input id="ai-guests" type="text" inputMode="numeric" maxLength={3} value={guests} onChange={(e) => setGuests(e.target.value.replace(/\D/g, ""))} className={inputClass} autoComplete="off" required />
-              <p className="mt-1 text-xs text-[#6B6B6B]">How many people this guest&apos;s QR code admits (1 to {MAX_GUESTS_PER_PASS}).</p>
             </div>
 
             {/* The card's additional-information fields, the same ones the Excel sample has (Professional identity: only when the event's card uses it) */}

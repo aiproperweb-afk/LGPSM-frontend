@@ -3,8 +3,6 @@
 import React from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import Icon from "@/components/icons/Icon";
-import SearchSelect from "@/components/common/SearchSelect";
-import type { SearchOption } from "@/utils/searchOptions";
 
 interface ReportsHeaderControlsProps {
   searchQuery: string;
@@ -14,9 +12,9 @@ interface ReportsHeaderControlsProps {
   selectedEvent: string;
   setSelectedEvent: (val: string) => void;
   onDownloadReport: () => void;
-  organizerOptions?: SearchOption[];
+  organizerOptions?: { value: string; label: string }[];
   eventOptions?: { value: string; label: string }[];
-  /** Organizers search their events and pick one; admins search and pick an organizer, then pick an event */
+  /** Organizers are only offered the event picker, admins also pick an organizer */
   showOrganizer?: boolean;
 }
 
@@ -40,19 +38,6 @@ export default function ReportsHeaderControls({
 }: ReportsHeaderControlsProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
-      {/* an administrator chooses an organizer by typing or picking in one box; an organizer searches their own events */}
-      {showOrganizer ? (
-        <SearchSelect
-          className="flex-1 min-w-[220px]"
-          ariaLabel="Search and select an organizer"
-          placeholder="Search organizers"
-          value={selectedOrganizer}
-          onChange={setSelectedOrganizer}
-          options={organizerOptions}
-          emptyMessage="No organizer matches"
-          icon={<span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]"><Icon name="reports/search" width={18.4} height={18.4} /></span>}
-        />
-      ) : (
       <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 min-w-[220px] items-center gap-2.5 focus-within:border-black transition-colors">
         <span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]">
           <Icon name="reports/search" width={18.4} height={18.4} />
@@ -66,9 +51,26 @@ export default function ReportsHeaderControls({
           className="flex-1 min-w-0 bg-transparent text-xs font-medium text-[#15191C] placeholder-[#828282] focus:outline-none"
         />
       </label>
-      )}
 
       <div className="flex flex-wrap md:flex-nowrap items-center gap-x-3 md:gap-x-0 gap-y-2">
+        {showOrganizer && (
+          <>
+            <div className="min-w-[208px] max-w-[300px] [&_button]:w-full">
+              <CustomDropdown
+                variant="plain"
+                plainTone="ink"
+                caret={caret}
+                value={selectedOrganizer}
+                onChange={setSelectedOrganizer}
+                options={organizerOptions}
+                placeholder="Organizer name here"
+                ariaLabel="Organizer"
+                className="w-full! max-w-none!"
+              />
+            </div>
+            <Divider />
+          </>
+        )}
         <div className="min-w-[208px] max-w-[300px] [&_button]:w-full">
           <CustomDropdown
             variant="plain"

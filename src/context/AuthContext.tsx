@@ -100,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(res.data.user);
       rememberPortal(res.data.user.role);
       markIntroDone(); // signed in: the landing page's opening animation is done with
-      void refreshUser(); // the profile also says what the account has still to verify
     }
     return res;
   };
@@ -111,7 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(res.data.user);
       rememberPortal(res.data.user.role);
       markIntroDone(); // signed in: the landing page's opening animation is done with
-      void refreshUser();
     }
     return res;
   };

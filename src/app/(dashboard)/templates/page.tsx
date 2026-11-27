@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/common/PageHeader";
 import CustomDropdown from "@/components/common/CustomDropdown";
@@ -11,8 +12,6 @@ import TemplateThumb from "@/components/settings/TemplateThumb";
 import { useCategories } from "@/hooks/useCategories";
 import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
 import TextAreasEditor from "@/components/templates/TextAreasEditor";
-import EditTemplateModal from "@/components/settings/modals/EditTemplateModal";
-import type { TemplateItem } from "@/types/settings";
 import { templateService, Template } from "@/services/templateService";
 import { eventService, EventData } from "@/services/eventService";
 import { useAlert } from "@/context/AlertContext";
@@ -38,38 +37,46 @@ interface TemplateCard {
   /** an administrator's upload whose own wording the event's details replace */
   isDynamic: boolean;
   kind: "INVITATION" | "POSTER";
-  /** made by the signed-in user */
+  /** made by the signed-in user: they can publish, unpublish and delete it */
   isMine: boolean;
-  /** what the edit window starts from */
-  item: TemplateItem;
 }
 
-// Browse templates; organizers see published ones (backend-enforced), admins also see drafts and manage them
+// Browse templates; organizers see published ones (backend-enforced), admins also see drafts
 export default function TemplatesPage() {
+  return (
+    <Suspense fallback={<SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}</SkeletonRegion>}>
+      <TemplatesPageContent />
+    </Suspense>
+  );
+}
+
+function TemplatesPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const { showAlert, confirm } = useAlert();
   const categories = useCategories();
   const [result, setResult] = useState<{ key: string; templates: TemplateCard[]; error: string | null } | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [preview, setPreview] = useState<TemplateCard | null>(null);
+  // "My templates" is a link target (the AI studio sends people there after saving)
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [editing, setEditing] = useState<TemplateCard | null>(null);
   const [areasFor, setAreasFor] = useState<string | null>(null);
+  const [view, setView] = useState<"all" | "mine">(searchParams.get("view") === "mine" ? "mine" : "all");
   const [reload, setReload] = useState(0);
   // bumped by the live refresh: the list is fetched again quietly (the request key is unchanged, so no loading state shows)
   const [liveTick, setLiveTick] = useState(0);
   useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
   // the template drawn with the event chosen in the preview panel (null = show the stored sample preview)
   const [livePreview, setLivePreview] = useState<LivePreview | null>(null);
-  const requestKey = `${reload}:${user?._id || ""}`;
+  const requestKey = `${view}:${reload}:${user?._id || ""}`;
   const loading = result?.key !== requestKey;
   const templates = result?.templates ?? [];
   const loadError = result?.key === requestKey ? result.error : null;
 
   useEffect(() => {
     let cancelled = false;
-    const toCard = (t: Template): TemplateCard => ({
+    const toCard = (mine: boolean) => (t: Template): TemplateCard => ({
       id: t._id || t.id || "",
       name: t.name,
       categoryId: typeof t.categoryId === "object" && t.categoryId ? t.categoryId._id : t.categoryId || "",
@@ -80,38 +87,28 @@ export default function TemplatesPage() {
       isUploaded: !!t.templateData?.uploaded,
       isDynamic: !!t.templateData?.dynamicDetails,
       kind: t.kind === "POSTER" ? "POSTER" : "INVITATION",
-      isMine: !!user?._id && t.ownerId === user._id,
-      item: {
-        id: t._id || t.id || "",
-        name: t.name,
-        categoryId: typeof t.categoryId === "object" && t.categoryId ? t.categoryId._id : t.categoryId || "",
-        subcategoryId: t.subcategoryId || "",
-        imageKey: t.previewImageKey || null,
-        status: t.isPublished === false ? "Saved on Draft" : "Published",
-        createdAt: t.createdAt || "",
-        cardDesign: t.cardDesign || "CLASSIC",
-      },
+      isMine: mine || (!!user?._id && t.ownerId === user._id),
     });
-    templateService.getTemplates().then((res) => {
+    templateService.getTemplates(undefined, view === "mine" ? { scope: "mine" } : {}).then((res) => {
       if (cancelled) return;
       setResult(
         res.success && Array.isArray(res.data)
-          ? { key: requestKey, templates: res.data.map(toCard), error: null }
+          ? {
+              key: requestKey,
+              templates: res.data
+                .filter((t: Template) => view !== "mine" || (!!user?._id && t.ownerId === user._id))
+                .map(toCard(view === "mine")),
+              error: null,
+            }
           : { key: requestKey, templates: [], error: res.message || "Failed to load templates." }
       );
     });
     return () => {
       cancelled = true;
     };
-    // requestKey is derived from the two values below
+    // requestKey is derived from the three values below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reload, user?._id, liveTick]);
-
-  const isAdmin = user?.role === "ADMIN";
-  /** an administrator manages every template, anyone else their own */
-  const canManage = (t: TemplateCard) => isAdmin || t.isMine;
-  // every event can fall back on the Master Card, so it is not deleted
-  const isMaster = (t: TemplateCard) => t.item.cardDesign === "MASTER";
+  }, [view, reload, user?._id, liveTick]);
 
   /** An administrator's private card (uploaded during Add Event): publishing it shares it with the organizers and writes event details over it */
   const isPrivateAdminCard = (t: TemplateCard) => user?.role === "ADMIN" && t.isMine && t.isUploaded && !t.isDynamic && t.isDraft;
@@ -129,36 +126,15 @@ export default function TemplatesPage() {
     }
   };
 
-  const deleteById = async (id: string) => {
-    const res = await templateService.deleteTemplate(id);
+  const removeTemplate = async (t: TemplateCard) => {
+    if (!(await confirm({ title: "Delete template", message: `Delete "${t.name}"? Events already using it will switch to the default design for their type.`, confirmText: "Delete", tone: "danger" }))) return;
+    const res = await templateService.deleteTemplate(t.id);
     if (res.success) {
       setPreview(null);
       setReload((n) => n + 1);
     } else {
       showAlert(res.message || "The template could not be deleted.", "error");
     }
-    return !!res.success;
-  };
-  const removeTemplate = async (t: TemplateCard) => {
-    if (!(await confirm({ title: "Delete template", message: `Delete "${t.name}"? ${t.isDraft ? "" : "It will no longer be offered to anyone. "}Events already using it will switch to the default design for their type.`, confirmText: "Delete", tone: "danger" }))) return;
-    await deleteById(t.id);
-  };
-  const saveTemplate = async (t: TemplateCard, next: TemplateItem) => {
-    const res = await templateService.updateTemplate(t.id, {
-      name: next.name,
-      ...(next.categoryId ? { categoryId: next.categoryId, subcategoryId: next.subcategoryId || null } : {}),
-      ...(t.isUploaded ? {} : { previewImageKey: next.imageKey || undefined }),
-      ...(t.isCustom ? {} : { cardDesign: next.cardDesign }),
-      ...(isPrivateAdminCard(t) ? {} : { isPublished: next.status === "Published" }),
-    });
-    if (!res.success) {
-      showAlert(res.message || "The template could not be updated.", "error");
-      return false;
-    }
-    setPreview(null);
-    setReload((n) => n + 1);
-    showAlert("Template updated.", "success");
-    return true;
   };
 
   const visible = templates.filter(
@@ -170,21 +146,34 @@ export default function TemplatesPage() {
   return (
     <div className="w-full min-h-full bg-white">
       <PageHeader title="Templates" actions={
-        // "Design with AI" is switched off for now: bring its link to /templates/ai back here to switch it on
-        <button type="button" onClick={() => setUploadOpen(true)} className="mr-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-[#1F65FF] px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-[#1A56DB] cursor-pointer">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          Add New Template
-        </button>
+        // "Design with AI" is switched off for now: the button is commented out, uncomment it to bring it back
+        /* <Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#1F65FF] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#1A56DB]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link> */
+        undefined
       } icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>} />
       {uploadOpen && (
         <UploadTemplateModal
           publish
-          title="Add New Template"
           onClose={() => setUploadOpen(false)}
-          onCreated={() => { setUploadOpen(false); setReload((n) => n + 1); showAlert(isAdmin ? "The template was published. Every organizer can now use it." : "Your template was saved.", "success"); }}
+          onCreated={() => { setUploadOpen(false); setView("mine"); setReload((n) => n + 1); showAlert(user?.role === "ADMIN" ? "The template was published. Every organizer can now use it." : "Your template was saved under My templates.", "success"); }}
         />
       )}
       <div className="p-4 sm:p-6 w-full space-y-6 pb-24">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Template list" className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
+          {([["all", "All templates"], ["mine", "My templates"]] as const).map(([key, label]) => (
+            <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white font-medium text-gray-900" : "text-gray-600"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {view === "mine" && (
+          <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#1F65FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1A56DB] cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
+            Upload your own template
+          </button>
+        )}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-[18px]">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</label>
@@ -217,7 +206,21 @@ export default function TemplatesPage() {
           <p role="alert" className="py-16 text-center text-sm text-rose-600 break-words">{loadError}</p>
         ) : visible.length === 0 ? (
           <p className="py-16 text-center text-sm text-[#6B6B6B]">
-            {templates.length === 0 ? "No templates are available yet. Use “Add New Template” to add one." : "No templates match the selected category."}
+            {templates.length === 0
+              ? view === "mine"
+                ? "You haven't saved any templates with this account yet. Designs made by an administrator and shared with everyone are listed under All templates, not here."
+                : "No templates are available yet."
+              : "No templates match the selected category."}
+            {templates.length === 0 && view === "mine" && (
+              <>
+                {" "}
+                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#1F65FF] underline cursor-pointer">Upload your own template</button>
+                {/* "Design with AI" is switched off for now: uncomment to bring the link back
+                {" "}
+                <Link href="/templates/ai" className="text-[#1F65FF] underline">Design one with AI</Link>
+                */}
+              </>
+            )}
           </p>
         ) : (
           // Figma Templates: full-width cards (140 x 210 minimum, 2:3), as many per row as fit, with an expand glyph and a
@@ -245,19 +248,6 @@ export default function TemplatesPage() {
         )}
       </div>
 
-      {editing && (
-        <EditTemplateModal
-          key={editing.id}
-          template={editing.item}
-          categories={categories}
-          uploaded={editing.isUploaded}
-          noPublish={isPrivateAdminCard(editing) || isMaster(editing)}
-          noDelete={isMaster(editing)}
-          onClose={() => setEditing(null)}
-          onSave={(next) => saveTemplate(editing, next)}
-          onDelete={deleteById}
-        />
-      )}
       {areasFor && <TextAreasEditor templateId={areasFor} onClose={(changed) => { setAreasFor(null); if (changed) setReload((n) => n + 1); }} />}
 
       {preview && (
@@ -273,9 +263,7 @@ export default function TemplatesPage() {
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               <div className="relative">
-                {preview.isDynamic && !livePreview ? (
-                  <SamplePreview key={preview.id} template={preview} />
-                ) : livePreview?.url ? (
+                {livePreview?.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={livePreview.url} alt={`${preview.name} with ${livePreview.eventTitle}`} className="w-full aspect-[393/682] object-contain rounded-md border border-[#E0E0E0] bg-[#F4F5F8]" />
                 ) : (
@@ -302,7 +290,7 @@ export default function TemplatesPage() {
                 )}
                 {preview.isDraft ? (
                   <p className="text-sm text-[#6B6B6B]">
-                    {isPrivateAdminCard(preview) ? "Your own card: you can use it in Add Event exactly as it is (Digital only). Publish it to share it with all organizers." : "This template is a draft. Publish it before it can be used."}
+                    {isPrivateAdminCard(preview) ? "Your own card: you can use it in Add Event exactly as it is (Digital only). Publish it to share it with all organizers." : preview.isMine ? "This template is a draft. Publish it to use it for your events." : "This template is a draft. Publish it from Template Settings before organizers can use it."}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
@@ -323,20 +311,20 @@ export default function TemplatesPage() {
                     </Link>
                   )}
                   */}
-                  {canManage(preview) && (
-                    <button type="button" onClick={() => setEditing(preview)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">
-                      Edit
-                    </button>
-                  )}
-                  {canManage(preview) && !isMaster(preview) && (isAdmin || preview.isCustom) && (
+                  {preview.isMine && preview.isCustom && (
                     <button type="button" onClick={() => togglePublish(preview)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">
                       {preview.isDraft ? "Publish" : "Unpublish"}
                     </button>
                   )}
-                  {canManage(preview) && !isMaster(preview) && (
+                  {preview.isMine && preview.isCustom && (
                     <button type="button" onClick={() => removeTemplate(preview)} className="px-5 py-2.5 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">
                       Delete
                     </button>
+                  )}
+                  {user?.role === "ADMIN" && !preview.isMine && (
+                    <Link href="/settings/template" className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md">
+                      Manage Templates
+                    </Link>
                   )}
                 </div>
                 {preview.isCustom && <EventRenderPanel key={preview.id} template={preview} onLivePreview={setLivePreview} />}
@@ -458,36 +446,6 @@ function EventRenderPanel({ template, onLivePreview }: { template: TemplateCard;
         ))}
       </div>
       <PopupMessage message={message?.text} type={message?.tone === "error" ? "error" : "info"} />
-    </div>
-  );
-}
-
-// An administrator's uploaded design as an event's card will look: the server draws it with sample details in the marked places
-function SamplePreview({ template }: { template: TemplateCard }) {
-  const [shown, setShown] = useState<{ url: string | null; failed: boolean }>({ url: null, failed: false });
-  useEffect(() => {
-    const abort = new AbortController();
-    let objectUrl: string | null = null;
-    const start = new Date(Date.now() + 30 * 86_400_000);
-    start.setHours(18, 0, 0, 0);
-    templateService
-      .previewCard(template.id, { title: "Sample Event Name", startIso: start.toISOString(), endIso: new Date(start.getTime() + 3 * 3_600_000).toISOString(), venue: "Sample Venue, City", hostName: "Sample Host" }, abort.signal)
-      .then((blob) => { objectUrl = URL.createObjectURL(blob); setShown({ url: objectUrl, failed: false }); })
-      .catch(() => { if (!abort.signal.aborted) setShown({ url: null, failed: true }); });
-    return () => { abort.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [template.id]);
-
-  return (
-    <div>
-      {shown.url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={shown.url} alt={`${template.name} with sample event details`} className="w-full aspect-[393/682] object-contain rounded-md border border-[#E0E0E0] bg-[#F4F5F8]" />
-      ) : (
-        <TemplateThumb imageKey={template.imageKey} name={template.name} className="rounded-md border border-[#E0E0E0]" />
-      )}
-      <p role="status" className="mt-2 text-xs text-[#4B4F52] text-center">
-        {shown.url ? "Shown with sample event details" : shown.failed ? "The preview could not be drawn; this is the picture as uploaded." : "Drawing the preview…"}
-      </p>
     </div>
   );
 }

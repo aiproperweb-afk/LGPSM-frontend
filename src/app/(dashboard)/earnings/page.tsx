@@ -81,7 +81,6 @@ export default function EarningsPage() {
     if (existing) {
       existing.invites += r.invites;
       existing.amount += r.amount;
-      if (existing.rate !== r.rate) existing.mixedRates = true;
       existing.eventName = `${existing.eventName}, ${r.eventName}`;
     } else {
       organizerMap.set(r.organizer, { ...r, id: `org_${r.organizer}` });
@@ -96,8 +95,7 @@ export default function EarningsPage() {
   const organizersBilled = organizerRecords.filter((r) => r.invites > 0).length;
 
   const handleSaveRate = async () => {
-    // saving the rate already in force is allowed: it brings events with nothing sent up to it
-    if (savingRate || !(tempRate >= 1 && tempRate <= 20)) return;
+    if (savingRate || tempRate === rate) return;
     setSavingRate(true);
     const res = await platformSettingsService.updateRate(tempRate);
     setSavingRate(false);
@@ -107,8 +105,7 @@ export default function EarningsPage() {
     }
     setRate(res.data.ratePerInvitee);
     setIsSavedNotice(true);
-    setTimeout(() => setIsSavedNotice(false), 4000);
-    setLiveTick((n) => n + 1); // the rows are read again with the new rate
+    setTimeout(() => setIsSavedNotice(false), 2500);
   };
 
   const toggleSelectAll = () => {
@@ -141,7 +138,7 @@ export default function EarningsPage() {
     const rows = currentRecords
       .map((r) =>
         activeTab === "organizer"
-          ? csvRow([r.organizer, r.eventName, r.dateOfPayment, r.invites, r.mixedRates ? "Varies by event" : r.rate === null ? "Not set" : r.rate, r.amount])
+          ? csvRow([r.organizer, r.eventName, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : r.rate, r.amount])
           : csvRow([r.eventName, r.organizer, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : r.rate, r.amount])
       )
       .join("\n");
@@ -174,8 +171,7 @@ export default function EarningsPage() {
         />
 
         <p className="text-[11px] text-gray-500 font-medium -mt-2">
-          Invite counts are the invitations actually charged for each event. An event with nothing sent yet shows the current rate; once
-          invitations go out it keeps the rate they were sent at. An organizer with a rate of their own is charged that.
+          Invite counts are the invitations actually sent for each event, at the rate locked on that event when it was created.
           These are amounts due, not payments: online payments are not configured.
         </p>
 
