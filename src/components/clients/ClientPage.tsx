@@ -207,7 +207,7 @@ export default function ClientPage({ c }: { c: ClientCategory }) {
 
         <FaqLanding />
       </main>
-      <Footer inner cta={{ title: "Join the organisers who never stress about the guest list", body: "Set up your event today and send your first QR invitations in minutes. You only pay for the guests you invite.", primary: "Create your first event", note: "No credit card needed to start · No subscription" }} />
+      <Footer inner ctaVariant="clients" />
     </div>
   );
 }

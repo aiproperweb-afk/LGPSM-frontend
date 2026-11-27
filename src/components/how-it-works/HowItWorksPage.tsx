@@ -94,7 +94,7 @@ export default function HowItWorksPage() {
         </section>
 
       </main>
-      <Footer inner cta={{ title: "Ready to create your first event?", body: "Set up your event, upload your guests and send QR invitations in minutes. You only pay for the guests you invite.", primary: "Create Your First Event", note: "No credit card needed to start · No subscription" }} />
+      <Footer inner ctaVariant="tutorial" />
     </div>
   );
 }

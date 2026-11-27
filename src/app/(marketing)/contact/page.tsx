@@ -16,7 +16,7 @@ export default async function ContactPage() {
           <PublicPageRenderer data={content} />
         </main>
 
-        <Footer inner cta={{ title: "Prefer to try it yourself first?", body: "Set up your event, upload your guests and send QR invitations in minutes. You only pay for the guests you invite.", primary: "Create your first event", note: "No credit card needed to start · No subscription" }} />
+        <Footer inner ctaVariant="contact" />
       </div>
     </SmoothScroll>
   );

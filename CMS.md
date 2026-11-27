@@ -2,6 +2,10 @@
 
 Administrators open Pages, choose a public page or a signed-in tab, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot.
 
+## Public navbar and footer
+
+Open **Navbar** or **Footer** in Pages to edit shared public text. The Navbar entry covers desktop and mobile navigation, the client-category menu and sign-in buttons. The Footer entry includes group headings, link labels, copyright wording and each page?s closing call to action. Existing destinations and contact details stay configured in the application.
+
 ## Signed-in tabs
 
 The CMS includes the Dashboard and sidebar, Event workflows, Templates, Pages, Event Organizer, Earnings, Reports and the Settings tabs. These documents contain display text. Use **Edit ? Tab text**, search for a field, then save a draft or publish. Sidebar labels are in the Dashboard document. Event detail, edit, invitee, session and assignment screens share text across events, while their records and form behavior stay in the application.
@@ -12,7 +16,7 @@ The signed-in frontend reads published copy through the authenticated workspace 
 
 | Route | Existing components and content | CMS scope |
 | --- | --- | --- |
-| `/` | `HeroSection` and ten landing sections listed below. `Navbar`, `Footer`, `LandingIntro`, `SmoothScroll` and page metadata compose the surrounding page. | The 11 homepage sections are CMS-managed. Shared navigation, footer, intro, and metadata stay in application code. |
+| `/` | `HeroSection` and ten landing sections listed below. `Navbar`, `Footer`, `LandingIntro`, `SmoothScroll` and page metadata compose the surrounding page. | The 11 homepage sections are CMS-managed. Navbar and Footer have separate shared CMS entries. The intro and metadata stay in application code. |
 | `/contact` | `ContactPage` renders information and contact links from `constants/site.ts`, section headings, introductory copy, and a validated contact form with a live submission. | Managed through ContactContent. Page heading, information heading, form heading, introduction and submit label are editable. Contact destinations and form behavior remain application-owned. |
 | `/features` | Redirects to `/#features`. The legacy `FeaturesPage` source contains a headline and feature blocks with tags, titles, descriptions, lists and illustrations. | Edit the canonical homepage `FeatureRows` section. |
 | `/pricing` | Redirects to `/#pricing`. The legacy route source composes `TopBanner`, `PricingSection` and `PricingFaqSection`. | Edit the canonical homepage `PricingLanding` section. |

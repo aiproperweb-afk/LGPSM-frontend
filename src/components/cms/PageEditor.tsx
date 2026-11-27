@@ -157,7 +157,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
             <Puck key={generation}
               config={cmsConfig}
               data={initial}
-              ui={initial.content[0]?.type === "DashboardCopy" ? { itemSelector: { index: 0 } } : undefined}
+              ui={(initial.content[0]?.type === "DashboardCopy" || initial.content[0]?.type === "SiteChromeCopy") ? { itemSelector: { index: 0 } } : undefined}
               headerTitle={page.name}
               height="100%"
               permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}

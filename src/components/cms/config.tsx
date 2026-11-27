@@ -25,21 +25,23 @@ const sectionCopy = { heading: text, description: paragraph };
 const button = { buttonLabel: text, buttonHref: destination };
 const image = { image: imageReferenceField, imageAlt: { ...text, label: "Image alt text" } };
 
+const textCopy = {
+  defaultProps: { labels: {} },
+  fields: {
+    labels: { type: "custom" as const, label: "Editable text", render: (props: Parameters<typeof DashboardLabelsField>[0]) => <DashboardLabelsField {...props} /> },
+  },
+  render: ({ labels }: { labels: Record<string, string> }) => (
+    <section className="mx-auto grid max-w-2xl gap-3 p-6 text-sm">
+      {Object.entries(labels).map(([key, text]) => <p key={key} className="border-b border-gray-100 pb-2">{text}</p>)}
+    </section>
+  ),
+};
+
 export const cmsConfig: Config<CmsComponents> = {
   root: { fields: {} },
   components: {
-    DashboardCopy: {
-      label: "Tab text",
-      defaultProps: { labels: {} },
-      fields: {
-        labels: { type: "custom", label: "Editable text", render: props => <DashboardLabelsField {...props} /> },
-      },
-      render: ({ labels }) => (
-        <section className="mx-auto grid max-w-2xl gap-3 p-6 text-sm">
-          {Object.entries(labels).map(([key, text]) => <p key={key} className="border-b border-gray-100 pb-2">{text}</p>)}
-        </section>
-      ),
-    },
+    DashboardCopy: { ...textCopy, label: "Tab text" },
+    SiteChromeCopy: { ...textCopy, label: "Navbar or footer text" },
     ContactContent: {
       label: "Contact page",
       fields: { pageHeading: text, informationHeading: text, formHeading: text, introduction: paragraph, submitLabel: text },

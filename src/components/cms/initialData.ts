@@ -1,4 +1,5 @@
 import { homeContent, type HomeContent } from "./homeContent";
+import { footerLabels, navbarLabels } from "./siteChromeContent";
 import { dashboardCatalog } from "./dashboardCatalog";
 import { contactCopy } from "./contactContent";
 import type { CmsPageData, CmsSlug } from "./types";
@@ -26,6 +27,8 @@ export const initialHomeData: CmsPageData = {
 
 export const initialPageData: Record<CmsSlug, CmsPageData> = {
   home: initialHomeData,
+  navbar: { root: { props: {} }, content: [{ type: "SiteChromeCopy", props: { id: "navbar", labels: navbarLabels } }] },
+  footer: { root: { props: {} }, content: [{ type: "SiteChromeCopy", props: { id: "footer", labels: footerLabels } }] },
   ...Object.fromEntries(dashboardCatalog.map(({ slug, labels }) => [slug, {
     root: { props: {} },
     content: [{ type: "DashboardCopy", props: { id: slug, labels } }],
@@ -39,6 +42,8 @@ export const initialPageData: Record<CmsSlug, CmsPageData> = {
 export const cmsPageDescriptors = [
   { name: "Homepage", slug: "home", route: "/" },
   { name: "Contact", slug: "contact", route: "/contact" },
+  { name: "Navbar", slug: "navbar", route: "/#navbar" },
+  { name: "Footer", slug: "footer", route: "/#footer" },
   ...dashboardCatalog.map(({ name, slug, route }) => ({ name, slug, route })),
 ];
 

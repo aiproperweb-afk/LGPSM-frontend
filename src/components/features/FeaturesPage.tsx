@@ -123,7 +123,7 @@ export default function FeaturesPage() {
           </Container>
         </section>
       </main>
-      <Footer inner cta={{ title: "Ready to run your smoothest guest list yet?", body: "Set up your event, design your QR invitation and send it to every guest in minutes. You only pay for the people you invite.", primary: "Create your first event", note: "No credit card needed to start · No subscription" }} />
+      <Footer inner ctaVariant="features" />
     </div>
   );
 }
