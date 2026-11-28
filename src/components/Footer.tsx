@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import VisualRenderer from "@/components/cms/VisualRenderer";
@@ -26,9 +27,9 @@ function Squares({ list, className }: { list: [number, number][]; className: str
 // The other pages (Clients, How it works, Features) use the design's longer footer: a Legal group under Product, and the contact details in the
 // bottom bar instead of the two legal links. (The design's phone number is a placeholder, so a number shows only when one is configured.)
 
-export default function Footer({ withCta = true, ctaVariant = "home", inner = false, visualLabels }: { withCta?: boolean; ctaVariant?: FooterCtaVariant; inner?: boolean; visualLabels?: Record<string, string> }) {
+export default function Footer({ withCta = true, ctaVariant = "home", inner = false, visualLabels, branding }: { withCta?: boolean; ctaVariant?: FooterCtaVariant; inner?: boolean; visualLabels?: Record<string, string>; branding?: ReactNode }) {
   const { text, visual } = useSiteChrome("footer", visualLabels);
-  if (visual) return <VisualRenderer data={visual} slug="footer" renderChrome={labels => <Footer withCta={withCta} ctaVariant={ctaVariant} inner={inner} visualLabels={labels} />} />;
+  if (visual) return <VisualRenderer data={visual} slug="footer" renderChrome={(labels, contents) => <Footer withCta={withCta} ctaVariant={ctaVariant} inner={inner} visualLabels={labels} branding={contents} />} />;
   const original = footerCtas[ctaVariant];
   const cta = {
     title: text(ctaVariant + "_cta_title", original.title),
@@ -50,10 +51,12 @@ export default function Footer({ withCta = true, ctaVariant = "home", inner = fa
         <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-[30px] px-4 pb-8 pt-[72px] sm:px-6 lg:px-12">
           <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
             <div className="flex w-full flex-col gap-4 lg:w-[304px] lg:shrink-0">
+              {branding ?? <>
               <Link href="/" aria-label={text("logoLinkLabel", "EventQRapp home")} className="self-start">
                 <Image src="/images/branding/eventqrapp-logo-light.svg" alt="EventQRapp" width={202} height={36} className="h-9 w-auto" />
               </Link>
               <p className="max-w-[280px] text-[15px] leading-[1.35]">{text("description", "EventQRApp helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.")}</p>
+              </>}
             </div>
             <div className="grid flex-1 grid-cols-2 content-start gap-x-6 gap-y-[30px] text-[14px] sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-[30px]">
               {GROUPS.map((g) => (

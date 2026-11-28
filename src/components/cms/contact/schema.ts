@@ -257,6 +257,9 @@ export function isSafeImage(value: string): boolean {
   if (value === "") return true;
   return /^media:[0-9a-fA-F]{24}$/.test(value)
     || /^\/images\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:png|jpe?g|webp)$/i.test(value)
+    || value === "/images/branding/Final-Logo.svg"
+    || value === "/images/branding/eventqrapp-logo-light.svg"
+    || value === "/images/landing/hero-wave-2.svg"
     || isHttpsUrl(value);
 }
 
@@ -441,7 +444,7 @@ const listProps: Record<string, PropRule> = { items: { kind: "array", max: 30, i
 const optionProps: Record<string, PropRule> = { options: { kind: "array", max: 30, item: { label: text } } };
 
 export const COMPONENTS: Record<string, ComponentSpec> = {
-  ExistingSection: { label: "Existing section", category: "layout", props: { source: { kind: "text" } } },
+  ExistingSection: { label: "Existing section", category: "layout", props: { source: { kind: "text" }, visualHero: { kind: "bool" }, hero: slot(GENERAL_CHILDREN.filter(type => !["ExistingSection", "ContactForm"].includes(type))) } },
   Section: container("Section", "layout"),
   Container: container("Container", "layout"),
   Row: container("Row", "layout"),

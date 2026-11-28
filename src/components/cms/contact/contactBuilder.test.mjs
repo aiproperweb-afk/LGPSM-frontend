@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { computeResize, formatLength } from "./resizeMath.ts";
 import { COMPONENTS, validateBuilderData, breakpointForWidth, publishProblems, formFields, visitNodes } from "./schema.ts";
 import { buildDefaultPage, componentDefaults } from "./defaults.ts";
+import { heroBlocks } from "../heroBlocks.ts";
+import { homeContent } from "../homeContent.ts";
 
 const resize = {
   handle: "se",
@@ -68,4 +70,22 @@ test("every registered block initializes and site sections require an approved c
   assert.equal(accepted.ok, true);
   assert.deepEqual(accepted.mediaIds, ["approved-image"]);
   assert.equal(accepted.data.root.props.builder, "visual");
+});
+
+test("migrated Home and shared branding are independently editable and pass validation", () => {
+  const fixtures = [
+    { type: "HeroSection", props: { id: "HeroSection", ...homeContent.HeroSection } },
+    { type: "SiteChromeCopy", props: { id: "footer", labels: { logoLinkLabel: "Homepage", description: "Footer description" } } },
+    { type: "SiteChromeCopy", props: { id: "navbar", labels: { logoLinkLabel: "Homepage" } } },
+  ];
+  for (const section of fixtures) {
+    const hero = heroBlocks(section, section.props.id);
+    const data = {
+      root: { props: { builder: "visual", schemaVersion: 2 } },
+      content: [{ type: "ExistingSection", props: { id: section.props.id, source: section.props.id, copy: section.props, visualHero: true, hero } }],
+    };
+    const checked = validateBuilderData(data, () => []);
+    assert.equal(checked.ok, true, JSON.stringify(checked));
+    assert.equal(checked.data.content[0].props.hero.length, hero.length);
+  }
 });

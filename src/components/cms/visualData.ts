@@ -1,8 +1,9 @@
 import { initialPageData } from "./initialData";
 import { clientPages } from "./marketingContent";
+import { heroBlocks } from "./heroBlocks";
 import { upgradePageData, validatePageData } from "./validatePageData";
 import type { CmsPageData, CmsSlug } from "./types";
-import { BUILDER_SCHEMA_VERSION, toPublicData, validateBuilderData, visitNodes, type BuilderData } from "./contact/schema";
+import { BUILDER_SCHEMA_VERSION, childSlots, toPublicData, validateBuilderData, visitNodes, type BuilderData, type BuilderNode } from "./contact/schema";
 
 export type VisualSlug = Extract<CmsSlug, "home" | "features" | "how-it-works" | "clients" | "navbar" | "footer">;
 
@@ -18,16 +19,34 @@ export function validateVisualData(value: unknown, slug: VisualSlug) {
 
 export function convertVisualDraft(value: unknown, slug: VisualSlug): BuilderData | null {
   const result = validateVisualData(value, slug);
-  if (result.ok) return result.data;
+  if (result.ok) return expandHeroes(result.data, slug);
   const classic = upgradePageData(value, slug);
   if (!validatePageData(classic, slug)) return null;
-  return {
+  return expandHeroes({
     root: { props: { builder: "visual", schemaVersion: BUILDER_SCHEMA_VERSION } },
     content: classic.content.map(section => ({
       type: "ExistingSection",
       props: { id: section.props.id, source: section.props.id, copy: section.props, name: clientPages.find(page => page.slug === section.props.id)?.name ?? section.type },
     })),
+  }, slug);
+}
+
+function expandHeroes(data: BuilderData, slug: VisualSlug): BuilderData {
+  const originals = initialPageData[slug].content;
+  const expand = (node: BuilderNode): BuilderNode => {
+    const props = { ...node.props };
+    for (const slot of childSlots(node)) {
+      // Puck slots can live either on the component or in a repeated item's properties.
+      if (!slot.path.includes(".")) props[slot.path] = slot.nodes.map(expand);
+    }
+    const original = node.type === "ExistingSection" && originals.find(section => section.props.id === props.source);
+    if (original && !Array.isArray(props.hero)) {
+      const hero = heroBlocks({ ...original, props: props.copy } as typeof original, props.id);
+      if (hero) { props.hero = hero; props.visualHero = true; }
+    }
+    return { ...node, props };
   };
+  return { ...data, content: data.content.map(expand) };
 }
 
 export function classicSections(data: BuilderData, slug: VisualSlug): CmsPageData {

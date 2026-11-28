@@ -41,7 +41,7 @@ function Check({ children, white = false }: { children: ReactNode; white?: boole
   );
 }
 
-export default function ClientPage({ category, copy, testimonials, faq, stats }: { category: ClientCategory; copy: ClientCopy; testimonials?: TestimonialsCopy; faq?: HomeContent["FaqLanding"]; stats?: HomeContent["StatsClients"]["stats"] }) {
+export default function ClientPage({ category, copy, testimonials, faq, stats, visualHero }: { visualHero?: ReactNode; category: ClientCategory; copy: ClientCopy; testimonials?: TestimonialsCopy; faq?: HomeContent["FaqLanding"]; stats?: HomeContent["StatsClients"]["stats"] }) {
   const c = { ...category, ...copy };
   const half = Math.ceil(copy.tools.length / 2);
   return (
@@ -51,7 +51,7 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
         {/* hero */}
         <section className="relative overflow-hidden bg-[#F6F6FF] py-14 sm:py-20">
           <div aria-hidden className="pointer-events-none absolute left-[-96px] top-0 hidden h-[681px] w-[1632px] lg:block"><Image src="/images/clients/hero-lines.svg" alt="" fill priority sizes="1632px" className="max-w-none" /></div>
-          <Container className="relative flex flex-col items-center gap-6 text-center">
+          {visualHero ?? (<Container className="relative flex flex-col items-center gap-6 text-center">
             <div className="flex max-w-full items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-[7px] pl-2 pr-3.5">
               <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#EAF1FF]"><Image src="/images/clients/eyebrow-icon.svg" alt="" width={15} height={15} /></span>
               <span className="text-[11px] tracking-[1px] text-[#4A5470] sm:text-[13px]">{c.eyebrow}</span>
@@ -63,7 +63,7 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
               <Link href="/contact" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.demoLabel}</Link>
               <Link href="/how-it-works" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">{copy.tutorialLabel} <Image src="/images/clients/play.svg" alt="" width={24} height={24} /></Link>
             </div>
-          </Container>
+          </Container>)}
         </section>
 
         {/* clients */}

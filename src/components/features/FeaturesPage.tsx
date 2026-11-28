@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { resolveCmsImage } from "@/components/cms/approvedContent";
 import type { featuresCopy } from "@/components/cms/marketingContent";
 import Image from "next/image";
@@ -44,14 +45,14 @@ function Row({ r, panelLeft }: { r: FeatureRow; panelLeft: boolean }) {
   );
 }
 
-export default function FeaturesPage({ copy }: { copy: typeof featuresCopy }) {
+export default function FeaturesPage({ copy, visualHero }: { visualHero?: ReactNode; copy: typeof featuresCopy }) {
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-inter)]">
       <Navbar />
       <main>
         <section className="relative overflow-hidden bg-[#F6F6FF] py-14 sm:py-20">
           <div aria-hidden className="pointer-events-none absolute left-[-96px] top-0 hidden h-[681px] w-[1632px] lg:block"><Image src="/images/how-it-works/hero-lines.svg" alt="" fill priority sizes="1632px" className="max-w-none" /></div>
-          <Container className="relative flex flex-col items-center gap-6 text-center">
+          {visualHero ?? (<Container className="relative flex flex-col items-center gap-6 text-center">
             <div className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-[7px] pl-2 pr-3.5">
               <span className="flex size-[22px] items-center justify-center rounded-full bg-[#EAF1FF]"><Image src={`${IMG}/hero-features.svg`} alt="" width={13} height={13} /></span>
               <span className="text-[15px] text-[#4A5470]">{copy.heroBadge}</span>
@@ -59,7 +60,7 @@ export default function FeaturesPage({ copy }: { copy: typeof featuresCopy }) {
             <h1 className={`${DM} max-w-[1000px] text-[34px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[46px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>{copy.heading}</h1>
             <p className="max-w-[860px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{copy.introduction}</p>
             <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.signupLabel}</Link>
-          </Container>
+          </Container>)}
         </section>
 
         <section className="bg-white py-14 sm:py-20">

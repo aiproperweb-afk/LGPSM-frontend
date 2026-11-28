@@ -9,7 +9,7 @@ import { contactEditorConfig } from "./config";
 
 export function createVisualEditorConfig(slug: VisualSlug): Config {
   const visual = visualPublicConfig(slug, {
-    renderChrome: labels => slug === "navbar" ? <Navbar visualLabels={labels} /> : <Footer visualLabels={labels} />,
+    renderChrome: (labels, branding) => slug === "navbar" ? <Navbar visualLabels={labels} branding={branding} /> : <Footer visualLabels={labels} branding={branding} />,
   });
   const components = { ...contactEditorConfig.components };
   delete components.ContactForm;
@@ -23,10 +23,12 @@ export function createVisualEditorConfig(slug: VisualSlug): Config {
       ExistingSection: {
         ...components.ExistingSection,
         ...visual.components.ExistingSection,
+        fields: components.ExistingSection.fields,
         resolveFields: ({ props }, { fields }) => {
           const legacy = initialPageData[slug].content.find(item => item.props.id === props.source);
           const editable = { ...fields };
           delete editable.source;
+          delete editable.visualHero;
           if (!legacy) return editable;
           return {
             ...editable,
