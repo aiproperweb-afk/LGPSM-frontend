@@ -20,10 +20,10 @@ export const LOGOS = [
 ];
 
 /** The four headline numbers in a row (shared with the Clients pages, Figma 238:28683) */
-export function StatsRow() {
+export function StatsRow({ stats = STATS }: { stats?: HomeContent["StatsClients"]["stats"] } = {}) {
   return (
     <dl className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4">
-      {STATS.map((s, i) => (
+      {stats.map((s, i) => (
         <Reveal key={s.label} variant="up" delay={i * 80} className="flex flex-col gap-1.5">
           <dd className="order-1 font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{s.value}</dd>
           <dt className="order-2 text-[14px] text-[#4A5470] sm:text-[15px]">{s.label}</dt>

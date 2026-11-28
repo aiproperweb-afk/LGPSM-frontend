@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import PreviewDraftContent from "@/components/cms/PreviewDraftContent";
 import ClientPage from "@/components/clients/ClientPage";
-import { CLIENT_CATEGORIES, getClientCategory } from "@/constants/clients";
+import { getPublishedPage } from "@/components/cms/publishedPage";
+import { clientCopy } from "@/components/cms/marketingContent";
+import { getClientCategory } from "@/constants/clients";
 import { publicPageMetadata } from "@/utils/seo";
 
-export function generateStaticParams() {
-  return CLIENT_CATEGORIES.map((c) => ({ slug: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const c = getClientCategory((await params).slug);
@@ -17,5 +18,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const c = getClientCategory((await params).slug);
   if (!c) notFound();
-  return <ClientPage c={c} />;
+  const slug = `clients-${c.slug}` as const;
+  const [data, home] = await Promise.all([getPublishedPage("clients"), getPublishedPage("home")]);
+  const section = data.content.filter(item => item.type === "ClientContent").find(item => item.props.id === slug);
+  const testimonials = home.content.find(item => item.type === "Testimonials");
+  const faq = home.content.find(item => item.type === "FaqLanding");
+  const stats = home.content.find(item => item.type === "StatsClients");
+  const shared = { testimonials: testimonials?.props, faq: faq?.props, stats: stats?.props.stats };
+  return <PreviewDraftContent slug={slug} clientShared={shared}>
+    <ClientPage category={c} copy={section?.props ?? clientCopy(c)} {...shared} />
+  </PreviewDraftContent>;
 }

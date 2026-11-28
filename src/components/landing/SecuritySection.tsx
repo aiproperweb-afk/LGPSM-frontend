@@ -6,7 +6,7 @@ import Reveal from "./Reveal";
 // Figma node 66:6997 (the icons are the design's own files)
 const POINTS = [
   { title: "Unique QR per guest", body: "Each invitation carries its own code, so forwarded or copied cards can't let extra people in.", icon: "/images/landing/sec-1.svg" },
-  { title: "Rules that hold at the door", body: "Only Once access, attendee limits and RSVP rules are applied at every scan.", icon: "/images/landing/sec-2.svg" },
+  { title: "Rules that hold at the door", body: "Guest limits on every pass and RSVP rules are applied at every scan.", icon: "/images/landing/sec-2.svg" },
   { title: "A safety lock before sending", body: "You get a clear warning before invites go out, and the event locks afterwards so nothing changes under your guests.", icon: "/images/landing/sec-3.svg" },
   { title: "Full audit trail", body: "Every invite sent and every access rule changed is logged with the person and time.", icon: "/images/landing/sec-4.svg" },
 ];

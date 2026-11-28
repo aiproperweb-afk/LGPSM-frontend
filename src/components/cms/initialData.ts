@@ -1,5 +1,7 @@
 import { homeContent, type HomeContent } from "./homeContent";
+import { footerLabels, navbarLabels } from "./siteChromeContent";
 import { contactCopy } from "./contactContent";
+import { clientPages, featuresCopy, howItWorksCopy, testimonialsCopy } from "./marketingContent";
 import type { CmsPageData, CmsSlug } from "./types";
 
 function section<K extends keyof HomeContent>(type: K) {
@@ -19,18 +21,39 @@ export const initialHomeData: CmsPageData = {
     section("UseCases"),
     section("PricingLanding"),
     section("SecuritySection"),
+    { type: "Testimonials", props: { ...testimonialsCopy, id: "Testimonials" } },
     section("FaqLanding"),
   ],
 };
 
 export const initialPageData: Record<CmsSlug, CmsPageData> = {
   home: initialHomeData,
+  navbar: { root: { props: {} }, content: [{ type: "SiteChromeCopy", props: { id: "navbar", labels: navbarLabels } }] },
+  footer: { root: { props: {} }, content: [{ type: "SiteChromeCopy", props: { id: "footer", labels: footerLabels } }] },
+  features: { root: { props: {} }, content: [{ type: "FeaturesContent", props: { ...featuresCopy, id: "FeaturesContent" } }] },
+  "how-it-works": { root: { props: {} }, content: [{ type: "HowItWorksContent", props: { ...howItWorksCopy, id: "HowItWorksContent" } }] },
+  clients: { root: { props: {} }, content: clientPages.map(({ slug, data }) => ({ type: "ClientContent", props: { ...data, id: slug } })) },
+  ...Object.fromEntries(clientPages.map(({ slug, data }) => [slug, {
+    root: { props: {} },
+    content: [{ type: "ClientContent", props: { ...data, id: slug } }],
+  }])),
   contact: {
     root: { props: {} },
     content: [{ type: "ContactContent", props: { ...contactCopy, id: "ContactContent" } }],
   },
 };
 
-export function isCmsSlug(value: string): value is CmsSlug {
-  return Object.hasOwn(initialPageData, value);
+export const cmsPageDescriptors = [
+  { name: "Homepage", slug: "home", route: "/" },
+  { name: "Contact", slug: "contact", route: "/contact" },
+  { name: "Navbar", slug: "navbar", route: "/#navbar" },
+  { name: "Footer", slug: "footer", route: "/#footer" },
+  { name: "Features", slug: "features", route: "/features" },
+  { name: "How it works", slug: "how-it-works", route: "/how-it-works" },
+  { name: "Clients", slug: "clients", route: "/clients" },
+  ...clientPages.map(({ name, slug, route }) => ({ name, slug, route, editable: false as const })),
+];
+
+export function isEditableCmsSlug(value: string): value is CmsSlug {
+  return cmsPageDescriptors.some(page => page.slug === value && !("editable" in page && page.editable === false));
 }

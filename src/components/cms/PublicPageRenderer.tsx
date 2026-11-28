@@ -1,24 +1,8 @@
 import { Render } from "@puckeditor/core/rsc";
-import Testimonials from "@/components/landing/Testimonials";
-import { cmsConfig } from "./config";
-import type { CmsPageData } from "./types";
+import PreviewDraftContent from "./PreviewDraftContent";
+import { publicConfig } from "./publicConfig";
+import type { CmsPageData, PublicPageSlug } from "./types";
 
-const publicConfig: typeof cmsConfig = {
-  ...cmsConfig,
-  components: {
-    ...cmsConfig.components,
-    FaqLanding: {
-      ...cmsConfig.components.FaqLanding,
-      render: (props) => (
-        <>
-          <Testimonials />
-          {cmsConfig.components.FaqLanding.render(props)}
-        </>
-      ),
-    },
-  },
-};
-
-export default function PublicPageRenderer({ data }: { data: CmsPageData }) {
-  return <Render config={publicConfig} data={data} />;
+export default function PublicPageRenderer({ data, slug }: { data: CmsPageData; slug: PublicPageSlug }) {
+  return <PreviewDraftContent slug={slug}><Render config={publicConfig} data={data} /></PreviewDraftContent>;
 }
