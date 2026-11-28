@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePuck } from "@puckeditor/core";
-import { buildBlankPage, buildDefaultPage, PRESETS, TEMPLATES, withIds } from "../defaults.ts";
+import { buildBlankPage, buildDefaultPage, componentDefaults, PRESETS, TEMPLATES, withIds } from "../defaults.ts";
 import { visitNodes, type BuilderData, type BuilderNode, type StyleSet } from "../schema.ts";
 import { displayName, findNode, insertNodes, pasteNodes, randomId, removeNode, resetNode, updateNode } from "../tree.ts";
 
@@ -13,6 +13,7 @@ export default function Tools({ save, disabled, contact }: { save: () => void; d
   const data = appState.data as BuilderData;
   const selected = selectedItem?.props.id;
   const current = selected ? findNode(data, selected) : null;
+  const stats = [current?.node, ...(current?.ancestors ?? [])].find(node => node?.type === "ExistingSection" && node.props.source === "StatsClients");
   const locked = !!current?.node.props.locked;
   const layers: { id: string; label: string }[] = [];
   visitNodes(data.content, (node, ancestors) => {
@@ -71,6 +72,13 @@ export default function Tools({ save, disabled, contact }: { save: () => void; d
     }}><option value="">Insert?</option>{TEMPLATES.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     <button type="button" disabled={disabled} onClick={() => { if (window.confirm("Reset the draft to the original design?")) apply(buildDefaultPage()); }}>Reset page</button>
     <button type="button" disabled={disabled} onClick={() => { if (window.confirm("Start a blank draft?")) apply(buildBlankPage()); }}>Blank page</button></>}
+    {stats && <button type="button" disabled={disabled || stats.props.locked === true} onClick={() => {
+      const id = randomId("StatCard");
+      const card: BuilderNode = { type: "StatCard", props: { ...componentDefaults("StatCard"), id } };
+      dispatch({ type: "setData", data: previous => updateNode(previous as BuilderData, stats.props.id, node => ({
+        ...node, props: { ...node.props, statCards: [...(node.props.statCards as BuilderNode[] ?? []), card] },
+      })) });
+    }}>Add statistic</button>}
     {current && <>
       <span className="max-w-64 truncate" title={[...current.ancestors, current.node].map(displayName).join(" / ")}>{[...current.ancestors, current.node].map(displayName).join(" / ")}</span>
       <button type="button" disabled={disabled} onClick={selectParent}>Parent</button>

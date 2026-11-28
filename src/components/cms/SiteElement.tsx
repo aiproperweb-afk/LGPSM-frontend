@@ -10,7 +10,7 @@ type Scope = { owner: string; path: string; edits: ReadonlyMap<string, ElementOv
 
 const SiteScope = createContext<Scope | null>(null);
 
-function elementKey(value: string) {
+export function elementKey(value: string) {
   let high = 0x811c9dc5;
   let low = 0x9e3779b9;
   for (let i = 0; i < value.length; i++) {

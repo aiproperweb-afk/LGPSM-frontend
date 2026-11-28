@@ -16,7 +16,7 @@ export function createVisualEditorConfig(slug: VisualSlug): Config {
   return {
     ...contactEditorConfig,
     categories: Object.fromEntries(Object.entries(contactEditorConfig.categories ?? {}).map(([key, category]) => [
-      key, { ...category, components: category.components?.filter(type => !["ContactForm", "ExistingSection"].includes(type)) },
+      key, { ...category, components: [...(category.components ?? []).filter(type => !["ContactForm", "ExistingSection"].includes(type)), ...(slug === "home" && key === "cards" ? ["StatCard"] : [])] },
     ])),
     components: {
       ...components,
@@ -29,11 +29,14 @@ export function createVisualEditorConfig(slug: VisualSlug): Config {
           const editable = { ...fields };
           delete editable.source;
           delete editable.visualHero;
+          delete editable.visualStats;
           delete editable.elements;
           if (!legacy) return editable;
+          const copyFields = { ...cmsConfig.components[legacy.type].fields } as Fields;
+          if (legacy.type === "StatsClients") delete copyFields.stats;
           return {
             ...editable,
-            copy: { type: "object", label: "Section content", objectFields: (cmsConfig.components[legacy.type].fields ?? {}) as Fields },
+            copy: { type: "object", label: "Section content", objectFields: copyFields },
           };
         },
       },

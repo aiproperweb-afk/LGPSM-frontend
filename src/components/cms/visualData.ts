@@ -1,6 +1,7 @@
 import { initialPageData } from "./initialData";
 import { clientPages } from "./marketingContent";
 import { heroBlocks } from "./heroBlocks";
+import { elementKey, type ElementOverride } from "./SiteElement";
 import { upgradePageData, validatePageData } from "./validatePageData";
 import type { CmsPageData, CmsSlug } from "./types";
 import { BUILDER_SCHEMA_VERSION, childSlots, toPublicData, validateBuilderData, visitNodes, type BuilderData, type BuilderNode } from "./contact/schema";
@@ -44,6 +45,27 @@ function expandHeroes(data: BuilderData, slug: VisualSlug): BuilderData {
       const hero = heroBlocks({ ...original, props: props.copy } as typeof original, props.id);
       if (hero) { props.hero = hero; props.visualHero = true; }
     }
+    if (original && original.type === "StatsClients" && !props.visualStats) {
+      const copy = props.copy as typeof original.props;
+      const edits = (props.elements ?? []) as ElementOverride[];
+      const cards = copy.stats.map((stat, index): BuilderNode => {
+        const prefix = "/StatsClients-6/ui-1/StatsClients-7:" + index;
+        const value = edits.find(edit => edit.key === elementKey(prefix + "/StatsClients-8"));
+        const label = edits.find(edit => edit.key === elementKey(prefix + "/StatsClients-9"));
+        return {
+          type: "StatCard",
+          props: {
+            id: props.id.slice(0, 55) + "-stat-" + (index + 1),
+            value: value?.text ?? stat.value,
+            label: label?.text ?? stat.label,
+            ...(value?.style ? { valueStyle: value.style } : {}),
+            ...(label?.style ? { labelStyle: label.style } : {}),
+          },
+        };
+      });
+      props.statCards = cards;
+      props.visualStats = true;
+    }
     return { ...node, props };
   };
   return { ...data, content: data.content.map(expand) };
@@ -54,7 +76,10 @@ export function classicSections(data: BuilderData, slug: VisualSlug): CmsPageDat
   const copies = new Map<unknown, unknown>();
   visitNodes(toPublicData(data).content, node => {
     if (node.type === "ExistingSection" && !copies.has(node.props.source)) {
-      copies.set(node.props.source, node.props.copy);
+      const stats = node.props.source === "StatsClients" && node.props.visualStats && Array.isArray(node.props.statCards)
+        ? (node.props.statCards as BuilderNode[]).map(({ props }) => ({ value: String(props.value ?? ""), label: String(props.label ?? "") }))
+        : undefined;
+      copies.set(node.props.source, stats ? { ...(node.props.copy as object), stats } : node.props.copy);
     }
   });
   const content = defaults.content.map(section => {

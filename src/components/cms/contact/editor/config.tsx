@@ -9,7 +9,7 @@ import { builderFields, styleField } from "./fields";
 export const contactEditorConfig: Config = {
   root: { fields: { style: styleField } },
   categories: Object.fromEntries(Object.entries(CATEGORY_LABELS).map(([key, title]) => [
-    key, { title, components: Object.keys(COMPONENTS).filter(type => COMPONENTS[type].category === key && type !== "ExistingSection") },
+    key, { title, components: Object.keys(COMPONENTS).filter(type => COMPONENTS[type].category === key && type !== "ExistingSection" && type !== "StatCard") },
   ])),
   components: Object.fromEntries(Object.entries(COMPONENTS).map(([type, spec]) => [type, {
     ...contactPublicConfig.components[type],
@@ -17,6 +17,7 @@ export const contactEditorConfig: Config = {
     defaultProps: componentDefaults(type),
     fields: {
       ...builderFields(spec.props),
+      ...(type === "StatCard" ? { value: { type: "text", label: "Value", contentEditable: true }, label: { type: "text", label: "Label", contentEditable: true } } : {}),
       name: { type: "text", label: "Layer name" },
       anchorId: { type: "text", label: "Anchor ID" },
       ariaLabel: { type: "text", label: "Accessible label" },

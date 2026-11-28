@@ -55,6 +55,7 @@ function standardFields(submitLabel = contactCopy.submitLabel): Draft[] {
 const listItems = (...values: string[]) => values.map(text => ({ text, href: "" }));
 
 const defaults: Record<string, () => Record<string, unknown>> = {
+  StatCard: () => ({ value: "100+", label: "New statistic", style: {} }),
   ExistingSection: () => ({ source: "", style: {} }),
   Section: () => container({ desktop: { ...sides("padding", "48px", "24px"), gap: "16px" }, mobile: sides("padding", "32px", "16px") }, [], { htmlTag: "section" }),
   Container: () => container({ desktop: { gap: "12px" } }),

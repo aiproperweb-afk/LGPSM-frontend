@@ -2,6 +2,7 @@
 
 import { Render, type Config, type SlotComponent } from "@puckeditor/core";
 import type { ReactNode, Ref } from "react";
+import StatsClients from "@/components/landing/StatsClients";
 import HeroSection from "@/components/HeroSection";
 import FeaturesPage from "@/components/features/FeaturesPage";
 import HowItWorksPage from "@/components/how-it-works/HowItWorksPage";
@@ -28,14 +29,16 @@ export function visualPublicConfig(slug: VisualSlug, options: {
       ...contactPublicConfig.components,
       ExistingSection: {
         fields: contactPublicConfig.components.ExistingSection.fields,
-        render: ({ id, source, copy, hero: Hero, visualHero, elements, puck }) => {
+        render: ({ id, source, copy, hero: Hero, visualHero, elements, statCards: StatCards, visualStats, puck }) => {
           const original = initialPageData[slug].content.find(item => item.props.id === source);
           if (!original || !copy) return <></>;
           const category = original.type === "ClientContent" ? getClientCategory(String(source).replace(/^clients-/, "")) : undefined;
           if (options.category && category?.slug !== options.category) return <></>;
           const HeroSlot = Hero as SlotComponent | undefined;
           const hero = visualHero && HeroSlot ? <HeroSlot as="div" className={original.type === "SiteChromeCopy" ? "flex shrink-0 flex-col items-start gap-4" : `relative mx-auto flex w-full max-w-[1200px] flex-col items-center gap-6 px-4 text-center sm:px-6 lg:px-12 ${original.type === "HeroSection" ? "pt-10" : ""}`} minEmptyHeight={80} /> : undefined;
-          const content = original.type === "SiteChromeCopy"
+          const StatsSlot = StatCards as SlotComponent | undefined;
+          const stats = visualStats && StatsSlot ? <StatsSlot as="div" className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4" minEmptyHeight={80} /> : undefined;
+          const content = original.type === "StatsClients" && stats ? <StatsClients {...copy} visualStats={stats} /> : original.type === "SiteChromeCopy"
             ? options.renderChrome?.(copy.labels, hero)
             : original.type === "ClientContent" && category
               ? <ClientPage category={category} copy={copy} visualHero={hero} {...options.clientShared} />

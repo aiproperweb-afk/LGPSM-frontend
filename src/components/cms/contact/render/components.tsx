@@ -142,6 +142,10 @@ const listRender = (tag: "ul" | "ol"): Renderer => (type, p) => element(tag, typ
   )), "cb-list");
 
 const RENDERERS: Record<string, Renderer> = {
+  StatCard: (type, p) => element("div", type, p, <>
+    <div data-cb-part={`${p.id}:value`} className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{node(p.value)}</div>
+    <div data-cb-part={`${p.id}:label`} className="text-[14px] text-[#4A5470] sm:text-[15px]">{node(p.label)}</div>
+  </>, "flex min-w-0 flex-col gap-1.5 text-center"),
   Heading: heading,
   Subheading: heading,
   FormHeading: heading,
