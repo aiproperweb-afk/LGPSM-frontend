@@ -62,7 +62,7 @@ function CssValue({ name, value, kind, onChange, disabled }: {
   </div>;
 }
 
-function StyleControls({ value = {}, onChange, readOnly }: { value?: StyleSet; onChange: (value: StyleSet) => void; readOnly?: boolean }) {
+export function StyleControls({ value = {}, onChange, readOnly }: { value?: StyleSet; onChange: (value: StyleSet) => void; readOnly?: boolean }) {
   const { appState } = usePuck();
   const width = appState.ui.viewports.current.width;
   const viewport = breakpointForWidth(typeof width === "number" ? width : 1280);

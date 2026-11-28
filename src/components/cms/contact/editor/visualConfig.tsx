@@ -29,6 +29,7 @@ export function createVisualEditorConfig(slug: VisualSlug): Config {
           const editable = { ...fields };
           delete editable.source;
           delete editable.visualHero;
+          delete editable.elements;
           if (!legacy) return editable;
           return {
             ...editable,

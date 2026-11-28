@@ -1,3 +1,4 @@
+import { SiteElement } from "@/components/cms/SiteElement";
 import { type HomeContent } from "@/components/cms/homeContent";
 import Image from "next/image";
 import Reveal from "./Reveal";
@@ -24,10 +25,10 @@ export function StatsRow({ stats = STATS }: { stats?: HomeContent["StatsClients"
   return (
     <dl className="grid grid-cols-2 gap-6 text-center lg:grid-cols-4">
       {stats.map((s, i) => (
-        <Reveal key={s.label} variant="up" delay={i * 80} className="flex flex-col gap-1.5">
-          <dd className="order-1 font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{s.value}</dd>
-          <dt className="order-2 text-[14px] text-[#4A5470] sm:text-[15px]">{s.label}</dt>
-        </Reveal>
+        <SiteElement site="StatsClients-1" key={s.label} item={s.label} selectable={false}><Reveal  variant="up" delay={i * 80} className="flex flex-col gap-1.5">
+          <SiteElement site="StatsClients-2"><dd className="order-1 font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{s.value}</dd></SiteElement>
+          <SiteElement site="StatsClients-3"><dt className="order-2 text-[14px] text-[#4A5470] sm:text-[15px]">{s.label}</dt></SiteElement>
+        </Reveal></SiteElement>
       ))}
     </dl>
   );
@@ -36,35 +37,35 @@ export function StatsRow({ stats = STATS }: { stats?: HomeContent["StatsClients"
 /** The clients' logos in a row (shared with the Clients pages) */
 export function LogosRow() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-[60px] gap-y-5">
+    <SiteElement site="StatsClients-4"><div className="flex flex-wrap items-center justify-center gap-x-[60px] gap-y-5">
       {LOGOS.map((l) => (
-        <Image key={l.src} src={l.src} alt={l.alt} width={l.w} height={l.h} style={{ height: l.show, width: "auto" }} className="object-contain" />
+        <SiteElement site="StatsClients-5" key={l.src} item={l.src}><Image  src={l.src} alt={l.alt} width={l.w} height={l.h} style={{ height: l.show, width: "auto" }} className="object-contain" /></SiteElement>
       ))}
-    </div>
+    </div></SiteElement>
   );
 }
 
 export default function StatsClients({ heading, stats }: HomeContent["StatsClients"]) {
   return (
-    <section id="clients" className="scroll-mt-[69px] bg-white py-14 sm:py-20">
+    <SiteElement site="StatsClients-6"><section id="clients" className="scroll-mt-[69px] bg-white py-14 sm:py-20">
       <Container className="flex flex-col gap-11">
         <dl className="grid grid-cols-2 gap-6 text-center sm:gap-6 lg:grid-cols-4">
           {stats.map((s, i) => (
-            <Reveal key={i} variant="up" delay={i * 80} className="flex flex-col gap-1.5">
-              <dd className="order-1 font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{s.value}</dd>
-              <dt className="order-2 text-[14px] text-[#4A5470] sm:text-[15px]">{s.label}</dt>
-            </Reveal>
+            <SiteElement site="StatsClients-7" key={i} item={i} selectable={false}><Reveal  variant="up" delay={i * 80} className="flex flex-col gap-1.5">
+              <SiteElement site="StatsClients-8"><dd className="order-1 font-[family-name:var(--font-dm-sans)] text-[32px] font-medium leading-[1.2] text-black sm:text-[42px]">{s.value}</dd></SiteElement>
+              <SiteElement site="StatsClients-9"><dt className="order-2 text-[14px] text-[#4A5470] sm:text-[15px]">{s.label}</dt></SiteElement>
+            </Reveal></SiteElement>
           ))}
         </dl>
         <Reveal variant="up" delay={120} className="flex flex-col items-center gap-5 border-t border-[#E1E7F2] pt-8">
-          <p className="text-center text-[15px] text-[#4A5470] sm:text-[17px]">{heading}</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-[60px] gap-y-5">
+          <SiteElement site="StatsClients-10"><p className="text-center text-[15px] text-[#4A5470] sm:text-[17px]">{heading}</p></SiteElement>
+          <SiteElement site="StatsClients-11"><div className="flex flex-wrap items-center justify-center gap-x-[60px] gap-y-5">
             {LOGOS.map((l) => (
-              <Image key={l.src} src={l.src} alt={l.alt} width={l.w} height={l.h} style={{ height: l.show, width: "auto" }} className="object-contain" />
+              <SiteElement site="StatsClients-12" key={l.src} item={l.src}><Image  src={l.src} alt={l.alt} width={l.w} height={l.h} style={{ height: l.show, width: "auto" }} className="object-contain" /></SiteElement>
             ))}
-          </div>
+          </div></SiteElement>
         </Reveal>
       </Container>
-    </section>
+    </section></SiteElement>
   );
 }

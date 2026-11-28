@@ -1,3 +1,4 @@
+import { SiteElement } from "@/components/cms/SiteElement";
 import Image from "next/image";
 import { homeContent, type HomeContent } from "@/components/cms/homeContent";
 import { approvedLink } from "@/components/cms/approvedContent";
@@ -17,7 +18,7 @@ const CASES = [
 
 export default function UseCases({ heading, description, buttonLabel, buttonHref }: HomeContent["UseCases"]) {
   return (
-    <section
+    <SiteElement site="UseCases-1"><section
       id="use-cases"
       className="scroll-mt-[69px] border-t border-[#E6EBF5] bg-[#000B2C] py-14 sm:py-20"
       style={{ backgroundImage: "radial-gradient(ellipse 38% 45% at 92% 0%, rgba(88,40,160,0.5), transparent 70%), radial-gradient(ellipse 30% 45% at 14% 100%, rgba(31,101,255,0.28), transparent 70%)" }}
@@ -25,25 +26,25 @@ export default function UseCases({ heading, description, buttonLabel, buttonHref
       <Container className="flex flex-col items-center gap-10 sm:gap-12">
         <Reveal className="flex w-full flex-col items-center gap-4 text-center">
           <Headline className="text-[#F2F2F7]">{heading}</Headline>
-          <p className="max-w-[740px] text-[16px] text-[#BDC6E0] sm:text-[17px]">{description}</p>
+          <SiteElement site="UseCases-2"><p className="max-w-[740px] text-[16px] text-[#BDC6E0] sm:text-[17px]">{description}</p></SiteElement>
         </Reveal>
         {/* six cards in a 3 x 2 grid, one outer rounded frame, hairline dividers (Figma 66:6486) */}
-        <div className="grid w-full grid-cols-1 overflow-hidden rounded-[19px] border border-[#E1E7F2] bg-white sm:grid-cols-2 lg:grid-cols-3">
+        <SiteElement site="UseCases-3"><div className="grid w-full grid-cols-1 overflow-hidden rounded-[19px] border border-[#E1E7F2] bg-white sm:grid-cols-2 lg:grid-cols-3">
           {CASES.map((c, i) => (
-            <Reveal key={c.tag} variant="pop" delay={(i % 3) * 90} className={`flex flex-col gap-[14px] p-6 sm:p-8 lg:min-h-[287px] ${i % 3 !== 0 ? "lg:border-l lg:border-[#E1E7F2]" : ""} ${i >= 3 ? "lg:border-t lg:border-[#E1E7F2]" : ""} ${i > 0 ? "border-t border-[#E1E7F2] sm:border-t-0" : ""} ${i % 2 === 1 ? "sm:border-l sm:border-[#E1E7F2]" : ""} ${i >= 2 ? "sm:border-t sm:border-[#E1E7F2]" : ""}`}>
-              <div className="flex flex-col items-start gap-3">
-                <span className="flex size-12 items-center justify-center rounded-[14px] bg-[#EAF1FF]"><Image src={c.icon} alt="" width={24} height={24} /></span>
-                <p className="text-[15px] font-medium text-[#1F65FF]">{c.tag}</p>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                <h3 className="text-[17px] font-bold leading-[1.2] tracking-[-0.42px] text-[#000B2C]">{c.title}</h3>
-                <p className="text-[16px] leading-[1.4] text-[#4A5470] sm:text-[17px]">{c.body}</p>
-              </div>
-            </Reveal>
+            <SiteElement site="UseCases-4" key={c.tag} item={c.tag} selectable={false}><Reveal  variant="pop" delay={(i % 3) * 90} className={`flex flex-col gap-[14px] p-6 sm:p-8 lg:min-h-[287px] ${i % 3 !== 0 ? "lg:border-l lg:border-[#E1E7F2]" : ""} ${i >= 3 ? "lg:border-t lg:border-[#E1E7F2]" : ""} ${i > 0 ? "border-t border-[#E1E7F2] sm:border-t-0" : ""} ${i % 2 === 1 ? "sm:border-l sm:border-[#E1E7F2]" : ""} ${i >= 2 ? "sm:border-t sm:border-[#E1E7F2]" : ""}`}>
+              <SiteElement site="UseCases-5"><div className="flex flex-col items-start gap-3">
+                <SiteElement site="UseCases-6"><span className="flex size-12 items-center justify-center rounded-[14px] bg-[#EAF1FF]"><SiteElement site="UseCases-7"><Image src={c.icon} alt="" width={24} height={24} /></SiteElement></span></SiteElement>
+                <SiteElement site="UseCases-8"><p className="text-[15px] font-medium text-[#1F65FF]">{c.tag}</p></SiteElement>
+              </div></SiteElement>
+              <SiteElement site="UseCases-9"><div className="flex flex-col gap-2.5">
+                <SiteElement site="UseCases-10"><h3 className="text-[17px] font-bold leading-[1.2] tracking-[-0.42px] text-[#000B2C]">{c.title}</h3></SiteElement>
+                <SiteElement site="UseCases-11"><p className="text-[16px] leading-[1.4] text-[#4A5470] sm:text-[17px]">{c.body}</p></SiteElement>
+              </div></SiteElement>
+            </Reveal></SiteElement>
           ))}
-        </div>
-        <Link href={approvedLink(buttonHref, homeContent.UseCases.buttonHref)} className="inline-flex h-[50px] items-center rounded-xl border border-white px-6 text-[16px] font-semibold text-white hover:bg-white/10 transition-colors">{buttonLabel}</Link>
+        </div></SiteElement>
+        <SiteElement site="UseCases-12"><Link href={approvedLink(buttonHref, homeContent.UseCases.buttonHref)} className="inline-flex h-[50px] items-center rounded-xl border border-white px-6 text-[16px] font-semibold text-white hover:bg-white/10 transition-colors">{buttonLabel}</Link></SiteElement>
       </Container>
-    </section>
+    </section></SiteElement>
   );
 }

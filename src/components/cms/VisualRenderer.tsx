@@ -12,6 +12,7 @@ import { BASE_CSS } from "./contact/baseCss";
 import { contactPublicConfig } from "./contact/publicConfig";
 import { toPublicData, type BuilderData } from "./contact/schema";
 import { buildCss } from "./contact/styleCss";
+import { SiteElementScope, type ElementOverride } from "./SiteElement";
 import { initialPageData } from "./initialData";
 import { publicConfig } from "./publicConfig";
 import type { ClientSharedContent } from "./PreviewRenderer";
@@ -27,7 +28,7 @@ export function visualPublicConfig(slug: VisualSlug, options: {
       ...contactPublicConfig.components,
       ExistingSection: {
         fields: contactPublicConfig.components.ExistingSection.fields,
-        render: ({ id, source, copy, hero: Hero, visualHero, puck }) => {
+        render: ({ id, source, copy, hero: Hero, visualHero, elements, puck }) => {
           const original = initialPageData[slug].content.find(item => item.props.id === source);
           if (!original || !copy) return <></>;
           const category = original.type === "ClientContent" ? getClientCategory(String(source).replace(/^clients-/, "")) : undefined;
@@ -42,7 +43,7 @@ export function visualPublicConfig(slug: VisualSlug, options: {
               : original.type === "HowItWorksContent" && hero ? <HowItWorksPage copy={copy} visualHero={hero} />
               : original.type === "HeroSection" && hero ? <HeroSection {...copy} visualHero={hero} />
               : <Render config={publicConfig} data={{ root: { props: {} }, content: [{ ...original, props: copy }] }} />;
-          return <div data-cb={id} data-cb-type="ExistingSection" ref={puck.dragRef as Ref<HTMLDivElement>}>{content}</div>;
+          return <div data-cb={id} data-cb-type="ExistingSection" ref={puck.dragRef as Ref<HTMLDivElement>}><SiteElementScope owner={id} edits={elements as ElementOverride[] | undefined} editing={puck.isEditing}>{content}</SiteElementScope></div>;
         },
       },
     },

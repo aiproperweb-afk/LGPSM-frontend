@@ -1,4 +1,5 @@
 "use client";
+import { SiteElement } from "@/components/cms/SiteElement";
 
 import { homeContent, type HomeContent } from "@/components/cms/homeContent";
 import { approvedLink } from "@/components/cms/approvedContent";
@@ -55,33 +56,33 @@ export default function FaqLanding({
   }, [follow]);
 
   return (
-    <section id="faq" className="scroll-mt-[69px] bg-white py-14 sm:py-20">
+    <SiteElement site="FaqLanding-1"><section id="faq" className="scroll-mt-[69px] bg-white py-14 sm:py-20">
       <Container className="grid grid-cols-1 gap-8 lg:grid-cols-[360px_1fr] lg:gap-16">
         {/* the heading stays in view while the questions scroll past, and moves on with them to the footer */}
         <Reveal variant="left" className="flex flex-col gap-4 lg:sticky lg:top-[120px] lg:self-start">
           <Headline className="text-[#000B2C]">{heading}</Headline>
-          <p className="text-[15px] leading-[1.6] text-[#4A5470]">Can&apos;t find what you need? <Link href={approvedLink(buttonHref, homeContent.FaqLanding.buttonHref)} className="font-semibold text-[#1F65FF] hover:underline">{buttonLabel}</Link> and we&apos;ll reply within a working day.</p>
+          <SiteElement site="FaqLanding-2"><p className="text-[15px] leading-[1.6] text-[#4A5470]">Can&apos;t find what you need? <SiteElement site="FaqLanding-3"><Link href={approvedLink(buttonHref, homeContent.FaqLanding.buttonHref)} className="font-semibold text-[#1F65FF] hover:underline">{buttonLabel}</Link></SiteElement> and we&apos;ll reply within a working day.</p></SiteElement>
         </Reveal>
         <Reveal variant="right" delay={100} className="border-b border-[#E1EAF8]">
           {questions.map((f, i) => {
             const isOpen = open === i;
             return (
               // on large screens every question has the same room (answer included), so opening one never moves the others
-              <div key={i} ref={(el) => { items.current[i] = el; }} className="border-t border-[#E1EAF8] lg:min-h-[185px]">
-                <h3>
-                  <button type="button" aria-expanded={isOpen} aria-controls={`faq-a-${i}`} onClick={() => setOpen(isOpen ? -1 : i)} className="flex w-full items-center justify-between gap-4 py-4 text-left">
-                    <span className={`text-[15px] font-semibold transition-colors duration-300 ${isOpen ? "text-[#1F65FF]" : "text-[#000B2C]"}`}>{f.q}</span>
+              <SiteElement site="FaqLanding-4" key={i} item={i}><div  ref={(el) => { items.current[i] = el; }} className="border-t border-[#E1EAF8] lg:min-h-[185px]">
+                <SiteElement site="FaqLanding-5"><h3>
+                  <SiteElement site="FaqLanding-6"><button type="button" aria-expanded={isOpen} aria-controls={`faq-a-${i}`} onClick={() => setOpen(isOpen ? -1 : i)} className="flex w-full items-center justify-between gap-4 py-4 text-left">
+                    <SiteElement site="FaqLanding-7"><span className={`text-[15px] font-semibold transition-colors duration-300 ${isOpen ? "text-[#1F65FF]" : "text-[#000B2C]"}`}>{f.q}</span></SiteElement>
                     <span aria-hidden className={`flex size-6 shrink-0 items-center justify-center rounded-full text-lg leading-none transition-colors duration-300 ${isOpen ? "bg-[#EAF1FF] text-[#1F65FF]" : "text-[#000B2C]"}`}>{isOpen ? "−" : "+"}</span>
-                  </button>
-                </h3>
-                <div id={`faq-a-${i}`} role="region" aria-hidden={!isOpen} className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"} ${follow ? "!grid-rows-[1fr]" : ""}`}>
-                  <div className="overflow-hidden"><p className="pb-5 text-[15px] leading-[1.6] text-[#4A5470]">{f.a}</p></div>
-                </div>
-              </div>
+                  </button></SiteElement>
+                </h3></SiteElement>
+                <SiteElement site="FaqLanding-8"><div id={`faq-a-${i}`} role="region" aria-hidden={!isOpen} className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"} ${follow ? "!grid-rows-[1fr]" : ""}`}>
+                  <SiteElement site="FaqLanding-9"><div className="overflow-hidden"><SiteElement site="FaqLanding-10"><p className="pb-5 text-[15px] leading-[1.6] text-[#4A5470]">{f.a}</p></SiteElement></div></SiteElement>
+                </div></SiteElement>
+              </div></SiteElement>
             );
           })}
         </Reveal>
       </Container>
-    </section>
+    </section></SiteElement>
   );
 }

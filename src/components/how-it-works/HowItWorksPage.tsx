@@ -1,3 +1,4 @@
+import { SiteElement, SiteText } from "@/components/cms/SiteElement";
 import type { ReactNode } from "react";
 import { resolveCmsImage } from "@/components/cms/approvedContent";
 import type { howItWorksCopy } from "@/components/cms/marketingContent";
@@ -20,22 +21,22 @@ const GROUPS = [{ from: 1, to: 3, tint: false }, { from: 4, to: 5, tint: true },
 function StepBlock({ s }: { s: Step }) {
   return (
     <Reveal as="article" variant={s.textLeft ? "left" : "right"} className={`grid scroll-mt-[90px] items-center gap-8 lg:justify-between lg:gap-12 ${s.textLeft ? "lg:grid-cols-[382px_570px]" : "lg:grid-cols-[570px_382px]"}`}>
-      <div id={`step-${s.n}`} className={`flex scroll-mt-[90px] flex-col gap-5 ${s.textLeft ? "" : "lg:order-2"}`}>
-        <p className="text-[14px] font-semibold leading-[1.4] tracking-[1.2px] text-[#1F65FF]">Step {s.n}</p>
-        <h3 className={`${DM} text-[26px] leading-[1.18] tracking-[-0.6px] text-[#000B2C] sm:text-[32px]`}>{s.title}</h3>
-        <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{s.intro}</p>
-        <ol className="flex flex-col gap-[18px] pt-1">
+      <SiteElement site="HowItWorksPage-1"><div id={`step-${s.n}`} className={`flex scroll-mt-[90px] flex-col gap-5 ${s.textLeft ? "" : "lg:order-2"}`}>
+        <SiteElement site="HowItWorksPage-2"><p className="text-[14px] font-semibold leading-[1.4] tracking-[1.2px] text-[#1F65FF]">Step {s.n}</p></SiteElement>
+        <SiteElement site="HowItWorksPage-3"><h3 className={`${DM} text-[26px] leading-[1.18] tracking-[-0.6px] text-[#000B2C] sm:text-[32px]`}>{s.title}</h3></SiteElement>
+        <SiteElement site="HowItWorksPage-4"><p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{s.intro}</p></SiteElement>
+        <SiteElement site="HowItWorksPage-5"><ol className="flex flex-col gap-[18px] pt-1">
           {s.points.map((p, i) => (
-            <li key={p.title} className="flex items-start gap-3.5">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#1F65FF] text-[13px] font-semibold text-white">{i + 1}</span>
-              <div className="flex flex-col gap-1"><p className="text-[17px] font-semibold leading-[1.4] text-[#000B2C]">{p.title}</p><p className="text-[16px] leading-[1.6] text-[#4A5470]">{p.text}</p></div>
-            </li>
+            <SiteElement site="HowItWorksPage-6" key={p.title} item={p.title}><li  className="flex items-start gap-3.5">
+              <SiteElement site="HowItWorksPage-7"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#1F65FF] text-[13px] font-semibold text-white">{i + 1}</span></SiteElement>
+              <SiteElement site="HowItWorksPage-8"><div className="flex flex-col gap-1"><SiteElement site="HowItWorksPage-9"><p className="text-[17px] font-semibold leading-[1.4] text-[#000B2C]">{p.title}</p></SiteElement><SiteElement site="HowItWorksPage-10"><p className="text-[16px] leading-[1.6] text-[#4A5470]">{p.text}</p></SiteElement></div></SiteElement>
+            </li></SiteElement>
           ))}
-        </ol>
-      </div>
-      <div className={`relative w-full overflow-hidden rounded-[19px] lg:w-[570px] ${s.textLeft ? "" : "lg:order-1"}`}>
-                  <Image src={resolveCmsImage(s.image) ?? "/images/how-it-works/step-01.png"} unoptimized={s.image.startsWith("media:")} alt={`Step ${s.n}: ${s.chip}`} width={1140} height={880} sizes="(min-width: 1024px) 570px, 100vw" className="h-auto w-full" />
-      </div>
+        </ol></SiteElement>
+      </div></SiteElement>
+      <SiteElement site="HowItWorksPage-11"><div className={`relative w-full overflow-hidden rounded-[19px] lg:w-[570px] ${s.textLeft ? "" : "lg:order-1"}`}>
+                  <SiteElement site="HowItWorksPage-12"><Image src={resolveCmsImage(s.image) ?? "/images/how-it-works/step-01.png"} unoptimized={s.image.startsWith("media:")} alt={`Step ${s.n}: ${s.chip}`} width={1140} height={880} sizes="(min-width: 1024px) 570px, 100vw" className="h-auto w-full" /></SiteElement>
+      </div></SiteElement>
     </Reveal>
   );
 }
@@ -43,62 +44,62 @@ function StepBlock({ s }: { s: Step }) {
 export default function HowItWorksPage({ copy, visualHero }: { visualHero?: ReactNode; copy: typeof howItWorksCopy }) {
   const steps = STEPS.map((step, index) => ({ ...step, ...copy.steps[index] }));
   return (
-    <div className="min-h-screen bg-white font-[family-name:var(--font-inter)]">
+    <SiteElement site="HowItWorksPage-13"><div className="min-h-screen bg-white font-[family-name:var(--font-inter)]">
       <Navbar />
-      <main>
-        <section className="relative overflow-hidden bg-[#F6F6FF] py-14 sm:py-20">
-          <div aria-hidden className="pointer-events-none absolute left-[-96px] top-0 hidden h-[681px] w-[1632px] lg:block"><Image src="/images/how-it-works/hero-lines.svg" alt="" fill priority sizes="1632px" className="max-w-none" /></div>
+      <SiteElement site="HowItWorksPage-14"><main>
+        <SiteElement site="HowItWorksPage-15"><section className="relative overflow-hidden bg-[#F6F6FF] py-14 sm:py-20">
+          <div aria-hidden className="pointer-events-none absolute left-[-96px] top-0 hidden h-[681px] w-[1632px] lg:block"><SiteElement site="HowItWorksPage-16"><Image src="/images/how-it-works/hero-lines.svg" alt="" fill priority sizes="1632px" className="max-w-none" /></SiteElement></div>
           {visualHero ?? (<Container className="relative flex flex-col items-center gap-6 text-center">
-            <div className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-[7px] pl-2 pr-3.5">
-              <span className="flex size-[22px] items-center justify-center rounded-full bg-[#EAF1FF]"><Image src="/images/how-it-works/eyebrow-icon.svg" alt="" width={13} height={13} /></span>
-              <span className="text-[12px] tracking-[1px] text-[#4A5470] sm:text-[15px]">{copy.heroBadge}</span>
-            </div>
-            <h1 className={`${DM} max-w-[1000px] text-[34px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[46px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>{copy.heading}</h1>
-            <p className="max-w-[880px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{copy.introduction}</p>
-            <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-              <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.signupLabel}</Link>
-              <a href="#tutorial" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">{copy.tutorialLabel} <Image src="/images/how-it-works/play.svg" alt="" width={24} height={24} /></a>
-            </div>
+            <SiteElement site="HowItWorksPage-17"><div className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-[7px] pl-2 pr-3.5">
+              <SiteElement site="HowItWorksPage-18"><span className="flex size-[22px] items-center justify-center rounded-full bg-[#EAF1FF]"><SiteElement site="HowItWorksPage-19"><Image src="/images/how-it-works/eyebrow-icon.svg" alt="" width={13} height={13} /></SiteElement></span></SiteElement>
+              <SiteElement site="HowItWorksPage-20"><span className="text-[12px] tracking-[1px] text-[#4A5470] sm:text-[15px]">{copy.heroBadge}</span></SiteElement>
+            </div></SiteElement>
+            <SiteElement site="HowItWorksPage-21"><h1 className={`${DM} max-w-[1000px] text-[34px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[46px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>{copy.heading}</h1></SiteElement>
+            <SiteElement site="HowItWorksPage-22"><p className="max-w-[880px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{copy.introduction}</p></SiteElement>
+            <SiteElement site="HowItWorksPage-23"><div className="flex flex-col items-stretch gap-3 sm:flex-row">
+              <SiteElement site="HowItWorksPage-24"><Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.signupLabel}</Link></SiteElement>
+              <SiteElement site="HowItWorksPage-25"><a href="#tutorial" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]"><SiteText site="HowItWorksPage-25-text-26">{copy.tutorialLabel}</SiteText> <SiteElement site="HowItWorksPage-27"><Image src="/images/how-it-works/play.svg" alt="" width={24} height={24} /></SiteElement></a></SiteElement>
+            </div></SiteElement>
           </Container>)}
-        </section>
+        </section></SiteElement>
 
-        <section className="border-t border-[#EEF2F8] bg-white py-14 sm:py-20">
+        <SiteElement site="HowItWorksPage-28"><section className="border-t border-[#EEF2F8] bg-white py-14 sm:py-20">
           <Container className="flex flex-col items-center gap-12">
-            <div className="flex max-w-[720px] flex-col items-center gap-4 text-center">
-              <h2 className={`${DM} text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.tutorialHeading}</h2>
-              <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.tutorialIntroduction}</p>
-            </div>
+            <SiteElement site="HowItWorksPage-29"><div className="flex max-w-[720px] flex-col items-center gap-4 text-center">
+              <SiteElement site="HowItWorksPage-30"><h2 className={`${DM} text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.tutorialHeading}</h2></SiteElement>
+              <SiteElement site="HowItWorksPage-31"><p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.tutorialIntroduction}</p></SiteElement>
+            </div></SiteElement>
             <TutorialVideo image={copy.tutorialImage} unavailable={copy.tutorialUnavailable} />
           </Container>
-        </section>
+        </section></SiteElement>
 
-        <section className="bg-white pt-6">
+        <SiteElement site="HowItWorksPage-32"><section className="bg-white pt-6">
           <Container className="flex flex-col gap-12 pb-12 sm:pb-16">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <p className="text-[14px] font-semibold tracking-[1.2px] text-[#1F65FF]">{copy.guideLabel}</p>
-              <h2 className={`${DM} max-w-[900px] text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.guideHeading}</h2>
-              <p className="max-w-[720px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.guideIntroduction}</p>
-            </div>
-            <nav aria-label="Jump to a step" className="flex flex-wrap justify-center gap-2.5">
+            <SiteElement site="HowItWorksPage-33"><div className="flex flex-col items-center gap-4 text-center">
+              <SiteElement site="HowItWorksPage-34"><p className="text-[14px] font-semibold tracking-[1.2px] text-[#1F65FF]">{copy.guideLabel}</p></SiteElement>
+              <SiteElement site="HowItWorksPage-35"><h2 className={`${DM} max-w-[900px] text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.guideHeading}</h2></SiteElement>
+              <SiteElement site="HowItWorksPage-36"><p className="max-w-[720px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.guideIntroduction}</p></SiteElement>
+            </div></SiteElement>
+            <SiteElement site="HowItWorksPage-37"><nav aria-label="Jump to a step" className="flex flex-wrap justify-center gap-2.5">
               {steps.map((s) => (
-                <a key={s.n} href={`#step-${s.n}`} className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-2 pl-2.5 pr-3.5 text-[14px] font-medium leading-[1.3] text-[#000B2C] transition-colors hover:border-[#1F65FF] hover:bg-[#F6F9FF]">
-                  <span className="text-[13px] font-semibold text-[#1F65FF]">{s.n}</span>{s.chip}
-                </a>
+                <SiteElement site="HowItWorksPage-38" key={s.n} item={s.n}><a  href={`#step-${s.n}`} className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-2 pl-2.5 pr-3.5 text-[14px] font-medium leading-[1.3] text-[#000B2C] transition-colors hover:border-[#1F65FF] hover:bg-[#F6F9FF]">
+                  <SiteElement site="HowItWorksPage-40"><span className="text-[13px] font-semibold text-[#1F65FF]">{s.n}</span></SiteElement><SiteText site="HowItWorksPage-38-text-39">{s.chip}</SiteText>
+                </a></SiteElement>
               ))}
-            </nav>
+            </nav></SiteElement>
           </Container>
           {/* the design lays steps 04-05 and 09-10 on a pale violet band, the others on white */}
           {GROUPS.map((g) => (
-            <div key={g.from} className={`${g.tint ? "bg-[#F6F6FF]" : "bg-white"} py-10 sm:py-16`}>
+            <SiteElement site="HowItWorksPage-41" key={g.from} item={g.from}><div  className={`${g.tint ? "bg-[#F6F6FF]" : "bg-white"} py-10 sm:py-16`}>
               <Container className="flex flex-col gap-16 sm:gap-24">
-                {steps.slice(g.from - 1, g.to).map((s) => <StepBlock key={s.n} s={s} />)}
+                {steps.slice(g.from - 1, g.to).map((s) => <SiteElement site="HowItWorksPage-42" key={s.n} item={s.n} selectable={false}><StepBlock  s={s} /></SiteElement>)}
               </Container>
-            </div>
+            </div></SiteElement>
           ))}
-        </section>
+        </section></SiteElement>
 
-      </main>
+      </main></SiteElement>
       <Footer inner ctaVariant="tutorial" />
-    </div>
+    </div></SiteElement>
   );
 }

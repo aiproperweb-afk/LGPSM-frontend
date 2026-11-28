@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import { createUsePuck, Puck, type Overrides } from "@puckeditor/core";
 import "@puckeditor/core/no-external.css";
 import "./workspace.css";
@@ -17,15 +17,18 @@ import { isBuilderData, validateBuilderData, publishProblems, type BuilderData }
 import { contactEditorConfig } from "./config";
 import ResizeOverlay, { ResizeGrid } from "./ResizeOverlay";
 import Tools from "./Tools";
+import ElementInspector, { elementSelection, elementSiblings, saveSiblingOrder, ElementSelectionContext, type ElementSelection } from "./ElementInspector";
 import { convertVisualDraft, validateVisualData, type VisualSlug } from "../../visualData";
 import { createVisualEditorConfig } from "./visualConfig";
 
 const useCanvasState = createUsePuck();
 const Canvas = ({ children }: { children: ReactNode }) => {
+  const { selected, select } = useContext(ElementSelectionContext);
   const data = useCanvasState(state => state.appState.data) as BuilderData;
   const dispatch = useCanvasState(state => state.dispatch);
   const getSelectorForId = useCanvasState(state => state.getSelectorForId);
   const previewMode = useCanvasState(state => state.appState.ui.previewMode);
+  const drag = useRef<{ element: Element; owner: string; pointer: number }>(null);
   const fonts = typeof document === "undefined" ? undefined : Object.fromEntries(
     ["--font-dm-sans", "--font-inter", "--font-space-grotesk", "--font-caveat"].map(name => [name, getComputedStyle(document.documentElement).getPropertyValue(name)])
   );
@@ -34,14 +37,48 @@ const Canvas = ({ children }: { children: ReactNode }) => {
     const target = event.target as Element;
     if (target.closest?.("[data-contact-resize], [data-puck-overlay]")) return;
     if (target.closest?.("a[href]")) event.preventDefault();
-    const id = target.closest?.("[data-cb]")?.getAttribute("data-cb");
+    const node = target.closest?.("[data-cms-element], [data-cb]");
+    const managed = node ? elementSelection(node) : null;
+    select(managed);
+    const id = managed?.owner ?? node?.getAttribute("data-cb");
     const selector = id ? getSelectorForId(id) : undefined;
     if (!selector) return;
     // Resolve the actual Contact element after Puck's preview and inline controls handle the click.
     queueMicrotask(() => dispatch({ type: "setUi", ui: { itemSelector: selector, rightSideBarVisible: true } }));
   }
-  return <div className="cb-root cb-page" style={fonts} onClickCapture={selectElement} onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }}>
-    <style>{BASE_CSS + buildCss(data, resolveImageUrl, true)}</style>{children}
+  function startReorder(event: PointerEvent<HTMLDivElement>) {
+    if (!event.altKey || event.button !== 0 || previewMode !== "edit") return;
+    const element = (event.target as Element).closest?.("[data-cms-reorderable]");
+    const owner = element?.getAttribute("data-cms-owner");
+    if (!element || !owner) return;
+    event.preventDefault();
+    event.stopPropagation();
+    drag.current = { element, owner, pointer: event.pointerId };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function finishReorder(event: PointerEvent<HTMLDivElement>) {
+    const active = drag.current;
+    if (!active || active.pointer !== event.pointerId) return;
+    drag.current = null;
+    event.stopPropagation();
+    const parent = active.element.parentElement;
+    const target = event.currentTarget.ownerDocument.elementsFromPoint(event.clientX, event.clientY)
+      .map(element => element.closest("[data-cms-reorderable]"))
+      .find(element => element?.parentElement === parent);
+    if (!target || target === active.element || !parent || target.parentElement !== parent) return;
+    const siblings = elementSiblings(active.element, active.owner);
+    const from = siblings.indexOf(active.element), to = siblings.indexOf(target);
+    if (from < 0 || to < 0) return;
+    siblings.splice(from, 1);
+    siblings.splice(to, 0, active.element);
+    dispatch({ type: "setData", data: previous => saveSiblingOrder(previous as BuilderData, active.owner, siblings) });
+  }
+  return <div className="cb-root cb-page" style={fonts} onPointerDownCapture={startReorder}
+    onPointerUpCapture={finishReorder} onPointerCancelCapture={() => { drag.current = null; }}
+    onClickCapture={selectElement} onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }}>
+    <style>{BASE_CSS + buildCss(data, resolveImageUrl, true)}
+    {previewMode === "edit" && '[data-cms-element]:hover:not(:has([data-cms-element]:hover)){outline:1px solid #4585ff;outline-offset:2px}'}
+    {selected && '[data-cms-owner="' + CSS.escape(selected.owner) + '"][data-cms-element="' + CSS.escape(selected.key) + '"]{outline:2px solid #2563eb;outline-offset:2px}'}</style>{children}
   </div>;
 };
 
@@ -61,6 +98,7 @@ const fingerprint = (data: BuilderData, slug: EditorSlug) => {
 };
 
 export default function ContactEditor({ slug = "contact" }: { slug?: EditorSlug }) {
+  const [selectedElement, selectElement] = useState<ElementSelection | null>(null);
   const [config] = useState(() => slug === "contact" ? contactEditorConfig : createVisualEditorConfig(slug));
   const load = (data: unknown) => slug === "contact" ? readDraft(data) : convertVisualDraft(data, slug);
   const [page, setPage] = useState<CmsPageDetail>();
@@ -149,6 +187,7 @@ export default function ContactEditor({ slug = "contact" }: { slug?: EditorSlug 
   useEffect(() => { saveDraft.current = () => void save("draft"); });
   const [overrides] = useState<Partial<Overrides>>(() => ({
     iframe: Canvas, componentOverlay: ResizeOverlay,
+    fields: ({ children }) => <ElementInspector>{children}</ElementInspector>,
     headerActions: () => <Tools save={() => saveDraft.current()} disabled={false} contact={slug === "contact"} />,
   }));
   const disabled = pending || uploads > 0 || conflict;
@@ -179,7 +218,7 @@ export default function ContactEditor({ slug = "contact" }: { slug?: EditorSlug 
       }}>Reload saved draft</button>}
       <p role="status" className="text-xs text-slate-300">{pending ? "Saving…" : uploads ? "Uploading image…" : message || (dirty ? "Unsaved changes" : !initial ? "Loading Contact page…" : "")}</p>
     </div>
-    {initial && <ResizeGrid.Provider value={grid}>
+    {initial && <ElementSelectionContext.Provider value={{ selected: selectedElement, select: selectElement }}><ResizeGrid.Provider value={grid}>
       <UploadActivity.Provider value={delta => { uploading.current += delta; setUploads(uploading.current); }}>
         <div className="min-h-0 flex-1" inert={pending || uploads > 0}>
           <Puck key={generation} config={config} data={initial} height="100%" headerTitle={page?.name ?? "Page"}
@@ -188,6 +227,6 @@ export default function ContactEditor({ slug = "contact" }: { slug?: EditorSlug 
             onChange={data => { latest.current = data as BuilderData; setDirty(fingerprint(data as BuilderData, slug) !== saved.current); }} />
         </div>
       </UploadActivity.Provider>
-    </ResizeGrid.Provider>}
+    </ResizeGrid.Provider></ElementSelectionContext.Provider>}
   </div>;
 }

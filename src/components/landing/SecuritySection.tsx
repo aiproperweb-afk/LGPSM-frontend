@@ -1,3 +1,4 @@
+import { SiteElement } from "@/components/cms/SiteElement";
 import Image from "next/image";
 import { type HomeContent } from "@/components/cms/homeContent";
 import { Container, Headline } from "./ui";
@@ -13,22 +14,22 @@ const POINTS = [
 
 export default function SecuritySection({ heading, description }: HomeContent["SecuritySection"]) {
   return (
-    <section className="border-t border-[#E6EBF5] bg-white py-14 sm:py-20">
+    <SiteElement site="SecuritySection-1"><section className="border-t border-[#E6EBF5] bg-white py-14 sm:py-20">
       <Container className="flex flex-col items-center gap-10 sm:gap-14">
         <Reveal className="flex w-full flex-col items-center gap-4 text-center">
           <Headline className="max-w-[900px] text-[#000B2C]">{heading}</Headline>
-          <p className="max-w-[640px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{description}</p>
+          <SiteElement site="SecuritySection-2"><p className="max-w-[640px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{description}</p></SiteElement>
         </Reveal>
-        <div className="grid w-full grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+        <SiteElement site="SecuritySection-3"><div className="grid w-full grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {POINTS.map((p, i) => (
-            <Reveal key={p.title} variant="up" delay={i * 90} className={`flex flex-col gap-3 ${i < 3 ? "lg:border-r lg:border-[rgba(60,60,67,0.18)] lg:pr-5" : ""}`}>
-              <Image src={p.icon} alt="" width={30} height={30} />
-              <h3 className="text-[17px] font-semibold text-[#000B2C]">{p.title}</h3>
-              <p className="text-[16px] leading-[1.3] text-[#4A5470] sm:text-[17px]">{p.body}</p>
-            </Reveal>
+            <SiteElement site="SecuritySection-4" key={p.title} item={p.title} selectable={false}><Reveal  variant="up" delay={i * 90} className={`flex flex-col gap-3 ${i < 3 ? "lg:border-r lg:border-[rgba(60,60,67,0.18)] lg:pr-5" : ""}`}>
+              <SiteElement site="SecuritySection-5"><Image src={p.icon} alt="" width={30} height={30} /></SiteElement>
+              <SiteElement site="SecuritySection-6"><h3 className="text-[17px] font-semibold text-[#000B2C]">{p.title}</h3></SiteElement>
+              <SiteElement site="SecuritySection-7"><p className="text-[16px] leading-[1.3] text-[#4A5470] sm:text-[17px]">{p.body}</p></SiteElement>
+            </Reveal></SiteElement>
           ))}
-        </div>
+        </div></SiteElement>
       </Container>
-    </section>
+    </section></SiteElement>
   );
 }
