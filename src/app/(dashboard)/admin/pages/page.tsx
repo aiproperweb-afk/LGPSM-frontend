@@ -5,6 +5,16 @@ import { useEffect, useState } from "react";
 import { cmsService } from "@/services/cmsService";
 import type { CmsPageSummary } from "@/components/cms/types";
 
+const hiddenClientRoutes = new Set([
+  "/clients/business-corporate",
+  "/clients/education-campus",
+  "/clients/entertainment-social",
+  "/clients/festivals-culture",
+  "/clients/personal-family",
+  "/clients/sports-fitness",
+  "/clients/wedding-pre-wedding",
+]);
+
 export default function PagesListing() {
   const [pages, setPages] = useState<CmsPageSummary[]>();
   const [error, setError] = useState("");
@@ -13,7 +23,7 @@ export default function PagesListing() {
     let active = true;
     void cmsService.listPages().then(result => {
       if (!active) return;
-      if (result.success && result.data) setPages(result.data);
+      if (result.success && result.data) setPages(result.data.filter(page => !hiddenClientRoutes.has(page.route)));
       else setError(result.message || "Could not load pages.");
     });
     return () => { active = false; };
