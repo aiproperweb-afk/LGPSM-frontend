@@ -397,7 +397,7 @@ export const FIELD_TYPES = ["TextInput", "EmailInput", "PhoneInput", "NumberInpu
 
 /** What ordinary containers accept: everything except the parts that only make sense inside a form or a column set. */
 export const GENERAL_CHILDREN: readonly string[] = [
-  ...LAYOUT_TYPES, ...TYPOGRAPHY_TYPES, ...MEDIA_TYPES, ...INTERACTIVE_TYPES, ...CARD_TYPES, "ContactForm", "FormHeading", "BusinessHours",
+  ...LAYOUT_TYPES, ...TYPOGRAPHY_TYPES, ...MEDIA_TYPES, ...INTERACTIVE_TYPES, ...CARD_TYPES, "ExistingSection", "ContactForm", "FormHeading", "BusinessHours",
 ];
 export const FORM_CHILDREN: readonly string[] = [
   ...FIELD_TYPES, "SubmitButton", "FormGroup", "FormHeading", "Heading", "Subheading", "Paragraph", "RichText", "Link", "Highlight", "Spacer", "Divider", "Icon", "Image",
@@ -441,6 +441,7 @@ const listProps: Record<string, PropRule> = { items: { kind: "array", max: 30, i
 const optionProps: Record<string, PropRule> = { options: { kind: "array", max: 30, item: { label: text } } };
 
 export const COMPONENTS: Record<string, ComponentSpec> = {
+  ExistingSection: { label: "Existing section", category: "layout", props: { source: { kind: "text" } } },
   Section: container("Section", "layout"),
   Container: container("Container", "layout"),
   Row: container("Row", "layout"),
@@ -554,7 +555,7 @@ export function visitNodes(nodes: BuilderNode[], visit: (node: BuilderNode, ance
 }
 
 export function isBuilderData(value: unknown): value is BuilderData {
-  return isObject(value) && isObject(value.root) && isObject(value.root.props) && value.root.props.builder === BUILDER_ID;
+  return isObject(value) && isObject(value.root) && isObject(value.root.props) && (value.root.props.builder === BUILDER_ID || value.root.props.builder === "visual");
 }
 
 // ─── Validation ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -571,7 +572,9 @@ class Invalid extends Error {
 }
 const fail = (path: string, message: string): never => { throw new Invalid(path, message); };
 
-type Walk = { ids: Set<string>; media: Set<string>; count: number };
+export type ValidateExistingSection = (source: string, copy: unknown) => string[] | false;
+
+type Walk = { ids: Set<string>; media: Set<string>; count: number; existing?: ValidateExistingSection };
 
 function collectMedia(value: string, walk: Walk) {
   if (value.startsWith("media:")) walk.media.add(value.slice(6).toLowerCase());
@@ -670,8 +673,16 @@ function cleanNodes(value: unknown, allow: readonly string[], path: string, walk
     walk.ids.add(id as string);
     const spec = COMPONENTS[type as string];
     const result: BuilderProps = { id: id as string };
+    if (type === "ExistingSection") {
+      const approved = typeof props.source === "string" && walk.existing?.(props.source, props.copy);
+      if (!approved) fail(at, "uses an invalid existing section");
+      for (const id of approved as string[]) walk.media.add(id);
+      result.copy = props.copy;
+    } else if (walk.existing && (type === "ContactForm" || FORM_CHILDREN.includes(type as string) && !GENERAL_CHILDREN.includes(type as string))) {
+      fail(at, "this component is available only on Contact");
+    }
     for (const [key, entry] of Object.entries(props)) {
-      if (key === "id" || entry === undefined || entry === null) continue;
+      if (key === "id" || (type === "ExistingSection" && key === "copy") || entry === undefined || entry === null) continue;
       const rule = Object.hasOwn(spec.props, key) ? spec.props[key] : Object.hasOwn(COMMON_PROPS, key) ? COMMON_PROPS[key] : undefined;
       if (!rule) fail(`${at}.${key}`, "is not a supported property");
       result[key] = cleanValue(entry, rule!, `${at}.${key}`, walk, depth);
@@ -681,17 +692,18 @@ function cleanNodes(value: unknown, allow: readonly string[], path: string, walk
 }
 
 /** Checks a whole saved document and returns a cleaned copy (rich text sanitised, empty values dropped). */
-export function validateBuilderData(input: unknown): ValidationResult {
+export function validateBuilderData(input: unknown, existing?: ValidateExistingSection): ValidationResult {
   try {
     if (!isObject(input) || Object.keys(input).some(key => !["root", "content", "zones"].includes(key))) fail("data", "must contain root and content only");
     const data = input as Record<string, unknown>;
     if (new TextEncoder().encode(JSON.stringify(data)).length > LIMITS.maxBytes) fail("data", "the page is too large to save");
     if (data.zones !== undefined && (!isObject(data.zones) || Object.keys(data.zones).length)) fail("data.zones", "is not supported");
-    if (!isBuilderData(data)) fail("data.root", "is not a Contact builder document");
+    if (!isBuilderData(data)) fail("data.root", "is not a visual builder document");
     const root = (data.root as { props: Record<string, unknown> }).props;
     if (root.schemaVersion !== BUILDER_SCHEMA_VERSION) fail("data.root.props.schemaVersion", "is not supported");
-    const walk: Walk = { ids: new Set(), media: new Set(), count: 0 };
-    const props: Record<string, unknown> = { builder: BUILDER_ID, schemaVersion: BUILDER_SCHEMA_VERSION };
+    if (root.builder !== (existing ? "visual" : BUILDER_ID)) fail("data.root.props.builder", "is not supported for this page");
+    const walk: Walk = { ids: new Set(), media: new Set(), count: 0, existing };
+    const props: Record<string, unknown> = { builder: root.builder, schemaVersion: BUILDER_SCHEMA_VERSION };
     for (const [key, value] of Object.entries(root)) {
       if (key === "builder" || key === "schemaVersion" || value === undefined || value === null) continue;
       // Puck adds an id to the root props while editing; it is not stored.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PublicPageRenderer from "@/components/cms/PublicPageRenderer";
-import { getPublishedPage } from "@/components/cms/publishedPage";
+import VisualRenderer from "@/components/cms/VisualRenderer";
+import { getPublishedDocument } from "@/components/cms/publishedPage";
 import { publicPageMetadata } from "@/utils/seo";
 
 export const dynamic = "force-dynamic";
@@ -12,5 +13,6 @@ export const metadata: Metadata = publicPageMetadata({
 });
 
 export default async function Page() {
-  return <PublicPageRenderer slug="how-it-works" data={await getPublishedPage("how-it-works")} />;
+  const page = await getPublishedDocument("how-it-works");
+  return page.visual ? <VisualRenderer data={page.visual} slug="how-it-works" /> : <PublicPageRenderer slug="how-it-works" data={page.classic} />;
 }

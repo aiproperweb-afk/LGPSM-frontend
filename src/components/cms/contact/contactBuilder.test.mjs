@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeResize, formatLength } from "./resizeMath.ts";
-import { validateBuilderData, breakpointForWidth, publishProblems, formFields, visitNodes } from "./schema.ts";
-import { buildDefaultPage } from "./defaults.ts";
+import { COMPONENTS, validateBuilderData, breakpointForWidth, publishProblems, formFields, visitNodes } from "./schema.ts";
+import { buildDefaultPage, componentDefaults } from "./defaults.ts";
 
 const resize = {
   handle: "se",
@@ -54,4 +54,18 @@ test("the default Contact page passes publishing checks with its original form b
   });
   assert.ok(formId);
   assert.deepEqual(formFields(result.data, formId).map(field => field.binding), ["name", "email", "phone", "message"]);
+});
+
+test("every registered block initializes and site sections require an approved classic contract", () => {
+  for (const type of Object.keys(COMPONENTS)) assert.doesNotThrow(() => componentDefaults(type));
+  const page = {
+    root: { props: { builder: "visual", schemaVersion: 2 } },
+    content: [{ type: "ExistingSection", props: { id: "hero", source: "Hero", copy: { id: "Hero" } } }],
+  };
+  assert.equal(validateBuilderData(page).ok, false);
+  assert.equal(validateBuilderData(page, () => false).ok, false);
+  const accepted = validateBuilderData(page, (source, copy) => source === copy.id && ["approved-image"]);
+  assert.equal(accepted.ok, true);
+  assert.deepEqual(accepted.mediaIds, ["approved-image"]);
+  assert.equal(accepted.data.root.props.builder, "visual");
 });

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { useSiteChromeCopy, type SiteChromeText } from "@/components/cms/useSiteChromeCopy";
+import { useSiteChrome, type SiteChromeText } from "@/components/cms/useSiteChromeCopy";
 import { navbarLinks as LINKS } from "@/components/cms/siteChromeContent";
 import { CLIENT_CATEGORIES } from "@/constants/clients";
 
@@ -93,13 +93,17 @@ function ClientsMenu({ className, underline, pathname, text }: { className: stri
   );
 }
 
+import VisualRenderer from "@/components/cms/VisualRenderer";
+
 const BLUE_GRADIENT = "linear-gradient(180deg, #1F65FF 0%, #2071FF 33%, #2181FF 69%, #1F65FF 100%)";
 
-export default function Navbar() {
-  const text = useSiteChromeCopy("navbar");
+export default function Navbar({ visualLabels }: { visualLabels?: Record<string, string> } = {}) {
+  const { text, visual } = useSiteChrome("navbar", visualLabels);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const current = useCurrentSection();
   const pathname = usePathname();
+
+  if (visual) return <div className="sticky top-0 z-50"><VisualRenderer data={visual} slug="navbar" renderChrome={labels => <Navbar visualLabels={labels} />} /></div>;
 
   return (
     <header id="navbar" className="hero-anim hero-anim-nav w-full sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-[#E1EAF8]">

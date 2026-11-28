@@ -1,8 +1,10 @@
 import PublicPageRenderer from "@/components/cms/PublicPageRenderer";
-import { getPublishedPage } from "@/components/cms/publishedPage";
+import VisualRenderer from "@/components/cms/VisualRenderer";
+import { getPublishedDocument } from "@/components/cms/publishedPage";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  return <PublicPageRenderer slug="features" data={await getPublishedPage("features")} />;
+  const page = await getPublishedDocument("features");
+  return page.visual ? <VisualRenderer data={page.visual} slug="features" /> : <PublicPageRenderer slug="features" data={page.classic} />;
 }

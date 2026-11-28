@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Navbar from "@/app/navbar/Navbar";
 import PublicPageRenderer from "@/components/cms/PublicPageRenderer";
-import { getPublishedPage } from "@/components/cms/publishedPage";
+import VisualRenderer from "@/components/cms/VisualRenderer";
+import { getPublishedDocument } from "@/components/cms/publishedPage";
 import LandingIntro from "@/components/landing/LandingIntro";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
@@ -35,7 +36,7 @@ const structuredData = [
 ];
 
 export default async function Home() {
-  const content = await getPublishedPage("home");
+  const content = await getPublishedDocument("home");
   return (
     <>
       {/* (the script that decides whether the opening animation plays is in the root layout's head) */}
@@ -49,7 +50,7 @@ export default async function Home() {
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1">
-          <PublicPageRenderer data={content} slug="home" />
+          {content.visual ? <VisualRenderer data={content.visual} slug="home" /> : <PublicPageRenderer data={content.classic} slug="home" />}
         </main>
         <Footer />
       </div>

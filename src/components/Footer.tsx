@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSiteChromeCopy } from "@/components/cms/useSiteChromeCopy";
+import VisualRenderer from "@/components/cms/VisualRenderer";
+import { useSiteChrome } from "@/components/cms/useSiteChromeCopy";
 import { footerCtas, footerGroups as GROUPS, footerLegal as LEGAL, footerGroupKey, type FooterCtaVariant } from "@/components/cms/siteChromeContent";
 import FinalCta from "@/components/landing/FinalCta";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/constants/site";
@@ -25,8 +26,9 @@ function Squares({ list, className }: { list: [number, number][]; className: str
 // The other pages (Clients, How it works, Features) use the design's longer footer: a Legal group under Product, and the contact details in the
 // bottom bar instead of the two legal links. (The design's phone number is a placeholder, so a number shows only when one is configured.)
 
-export default function Footer({ withCta = true, ctaVariant = "home", inner = false }: { withCta?: boolean; ctaVariant?: FooterCtaVariant; inner?: boolean }) {
-  const text = useSiteChromeCopy("footer");
+export default function Footer({ withCta = true, ctaVariant = "home", inner = false, visualLabels }: { withCta?: boolean; ctaVariant?: FooterCtaVariant; inner?: boolean; visualLabels?: Record<string, string> }) {
+  const { text, visual } = useSiteChrome("footer", visualLabels);
+  if (visual) return <VisualRenderer data={visual} slug="footer" renderChrome={labels => <Footer withCta={withCta} ctaVariant={ctaVariant} inner={inner} visualLabels={labels} />} />;
   const original = footerCtas[ctaVariant];
   const cta = {
     title: text(ctaVariant + "_cta_title", original.title),
