@@ -1,0 +1,62 @@
+.contact-builder {
+  --puck-color-surface: #16171b;
+  --puck-color-surface-muted: #252830;
+  --puck-color-surface-subtle: #101115;
+  --puck-color-border: #3a3e4a;
+  --puck-color-border-muted: #2d3039;
+  --puck-color-border-hover: #626c82;
+  --puck-color-text: #f4f5f7;
+  --puck-color-text-secondary: #d0d5df;
+  --puck-color-text-muted: #aab2c3;
+  --puck-color-text-subtle: #969eb1;
+  --puck-color-interactive: #2563eb;
+  --puck-color-interactive-neutral-hover: #292f3e;
+  --puck-color-selection-border: #3776fa;
+  --puck-color-selection-bg: rgb(37 99 235 / 10%);
+  --puck-color-line-placeholder: #4585ff;
+  color-scheme: dark;
+  background: #101115;
+  color: #f4f5f7;
+}
+
+.contact-builder-toolbar {
+  border-bottom: 1px solid #30333d;
+}
+
+.contact-builder-toolbar :is(a, button),
+.contact-builder-actions button {
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  white-space: nowrap;
+}
+
+.contact-builder-toolbar :is(a, button):hover,
+.contact-builder-actions button:hover {
+  background: #292f3e;
+}
+
+.contact-builder-toolbar .contact-builder-publish {
+  background: #2359d6;
+  color: white;
+}
+
+.contact-builder-toolbar .contact-builder-publish:hover {
+  background: #1d4ed8;
+}
+
+.contact-builder :is(button, select):disabled {
+  opacity: 0.5;
+}
+
+.contact-builder-actions select,
+.contact-builder-toolbar select {
+  border: 1px solid #3a3e4a;
+  border-radius: 0.4rem;
+  background: #16171b;
+  padding: 0.35rem;
+}
+
+.contact-builder [data-puck-preview] iframe {
+  color-scheme: light;
+  background: white;
+}
