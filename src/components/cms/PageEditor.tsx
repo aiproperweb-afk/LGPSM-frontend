@@ -5,16 +5,22 @@ import "@puckeditor/core/no-external.css";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { cmsService } from "@/services/cmsService";
-import EditorPagePreview, { EditorPreviewContext } from "./EditorPagePreview";
 import { cmsConfig } from "./config";
 import { UploadActivity } from "./UploadActivity";
-import { upgradePageData, validatePageData } from "./validatePageData";
+import { validatePageData } from "./validatePageData";
 import type { CmsPageDetail, CmsPageData, CmsSlug } from "./types";
 
 const overrides: Partial<Overrides<typeof cmsConfig>> = {
   drawer: () => <></>,
   headerActions: () => <></>,
-  preview: EditorPagePreview,
+  iframe: ({ children }) => (
+    <div onSubmitCapture={event => { event.preventDefault(); event.stopPropagation(); }} onClickCapture={event => {
+      if ((event.target as Element).closest?.("a[href], button[type=submit]")) event.preventDefault();
+    }}>
+      <style>{".reveal,.hero-anim{opacity:1!important;transform:none!important;animation:none!important}"}</style>
+      {children}
+    </div>
+  ),
 };
 
 function fingerprint(data: CmsPageData) {
@@ -24,7 +30,6 @@ function fingerprint(data: CmsPageData) {
 export default function PageEditor({ slug }: { slug: CmsSlug }) {
   const [page, setPage] = useState<CmsPageDetail>();
   const [initial, setInitial] = useState<CmsPageData>();
-  const [previewData, setPreviewData] = useState<CmsPageData>();
   const [generation, remount] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [pending, setPending] = useState(false);
@@ -51,15 +56,13 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
       if (!active) return;
       if (!result.success || !result.data) { setMessage(result.message || "Could not load page."); return; }
       const document = result.data;
-      const draft = upgradePageData(document.draftData, slug);
-      if (document.schemaVersion !== 1 || !validatePageData(draft, slug)) {
+      if (document.schemaVersion !== 1 || !validatePageData(document.draftData, slug)) {
         setMessage("This page uses an unsupported CMS document.");
         return;
       }
-      latest.current = draft;
-      saved.current = fingerprint(draft);
-      setInitial(draft);
-      setPreviewData(draft);
+      latest.current = document.draftData;
+      saved.current = fingerprint(document.draftData);
+      setInitial(document.draftData);
       setPage(document);
       setDirty(false);
       setConflict(false);
@@ -95,18 +98,15 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
         return;
       }
       setPage(result.data);
-      const draft = upgradePageData(result.data.draftData, slug);
-      if (validatePageData(draft, slug)) {
-        saved.current = fingerprint(draft);
+      if (validatePageData(result.data.draftData, slug)) {
+        saved.current = fingerprint(result.data.draftData);
         if (action === "discard-draft") {
-          latest.current = draft;
-          setInitial(draft);
-          setPreviewData(draft);
+          latest.current = result.data.draftData;
+          setInitial(result.data.draftData);
           remount(n => n + 1);
         }
         setDirty(latest.current !== null && fingerprint(latest.current) !== saved.current);
       }
-      if (action === "publish") window.dispatchEvent(new Event("cms:published"));
       setMessage(action === "publish" ? "Page published." : action === "draft" ? "Draft saved." : "Draft discarded.");
     } finally {
       busy.current = false;
@@ -142,7 +142,7 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
           <button disabled={pending || !!uploads || conflict} onClick={() => void save("publish")}>Publish</button>
           <button disabled={pending || !!uploads || conflict || !page.publishedAt} onClick={() => void save("discard-draft")}>Discard Draft</button>
           <button onClick={download}>Download JSON</button>
-          {page.publishedAt && !page.route.includes("[id]") && <Link href={page.route} target="_blank" rel="noopener">View Live Page</Link>}
+          {page.publishedAt && <Link href={page.route} target="_blank" rel="noopener">View Live Page</Link>}
         </>}
         {(conflict || (!page && message)) && <button onClick={reload}>Reload saved draft</button>}
         <p role="status">{pending ? "Saving…" : uploads ? "Uploading image…" : message || (!page ? "Loading page…" : dirty ? "Unsaved changes" : "")}</p>
@@ -152,25 +152,20 @@ export default function PageEditor({ slug }: { slug: CmsSlug }) {
           uploadCount.current += delta;
           setUploads(uploadCount.current);
         }}>
-          <EditorPreviewContext.Provider value={{ slug, route: page.route, data: previewData ?? initial }}>
-            <div className="min-h-0 flex-1" inert={pending || uploads > 0} aria-busy={pending || uploads > 0}>
-              <Puck key={generation}
-                config={cmsConfig}
-                iframe={{ enabled: false }}
-                data={initial}
-                ui={{ itemSelector: { index: 0 } }}
-                headerTitle={page.name}
-                height="100%"
-                permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}
-                overrides={overrides}
-                onChange={data => {
-                  latest.current = data;
-                  setPreviewData(data);
-                  setDirty(fingerprint(data) !== saved.current);
-                }}
-              />
-            </div>
-          </EditorPreviewContext.Provider>
+          <div className="min-h-0 flex-1" inert={pending || uploads > 0} aria-busy={pending || uploads > 0}>
+            <Puck key={generation}
+              config={cmsConfig}
+              data={initial}
+              headerTitle={page.name}
+              height="100%"
+              permissions={{ insert: false, delete: false, duplicate: false, drag: false, edit: true }}
+              overrides={overrides}
+              onChange={data => {
+                latest.current = data;
+                setDirty(fingerprint(data) !== saved.current);
+              }}
+            />
+          </div>
         </UploadActivity.Provider>
       )}
     </div>

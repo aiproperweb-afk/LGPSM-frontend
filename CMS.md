@@ -1,26 +1,20 @@
 # EventQRapp Pages CMS
 
-Administrators open Pages, choose a public page, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot. The canvas loads the actual page with its styles and images and applies draft edits as you type. Select a section in Outline for Home and Contact. The preview disables form submissions and operational actions.
-
-## Public navbar and footer
-
-Open **Navbar** or **Footer** in Pages to edit shared public text. The Navbar entry covers desktop and mobile navigation, the client-category menu and sign-in buttons. The Footer entry includes group headings, link labels, copyright wording and each page?s closing call to action. Existing destinations and contact details stay configured in the application.
+Administrators open Pages, choose Home or Contact, and save a draft or publish from the full-width editor. The app reads the draft from Express. Drafts affect only the editor. Publish atomically updates the live snapshot.
 
 ## Public route inventory
 
 | Route | Existing components and content | CMS scope |
 | --- | --- | --- |
-| `/` | `HeroSection` and eleven landing sections listed below. `Navbar`, `Footer`, `LandingIntro`, `SmoothScroll` and page metadata compose the surrounding page. | The 12 homepage sections are CMS-managed. Navbar and Footer have separate shared CMS entries. The intro and metadata stay in application code. |
+| `/` | `HeroSection` and ten landing sections listed below. `Navbar`, `Footer`, `LandingIntro`, `SmoothScroll` and page metadata compose the surrounding page. | The 11 homepage sections are CMS-managed. Shared navigation, footer, intro, and metadata stay in application code. |
 | `/contact` | `ContactPage` renders information and contact links from `constants/site.ts`, section headings, introductory copy, and a validated contact form with a live submission. | Managed through ContactContent. Page heading, information heading, form heading, introduction and submit label are editable. Contact destinations and form behavior remain application-owned. |
-| `/features` | Dedicated Features page. | Edit the hero, platform overview, feature stages, screenshots, security and pricing copy. |
-| `/how-it-works` | Tutorial and step-by-step guide. | Edit headings, tutorial poster and copy, steps, instructions and screenshots. |
-| `/clients/[slug]` | Seven public client-category pages. | Edit each page?s hero, use cases, screenshots, enquiry copy, and calls to action. Shared FAQs, stats, and testimonials come from Home. |
+| `/features` | Redirects to `/#features`. The legacy `FeaturesPage` source contains a headline and feature blocks with tags, titles, descriptions, lists and illustrations. | Edit the canonical homepage `FeatureRows` section. |
 | `/pricing` | Redirects to `/#pricing`. The legacy route source composes `TopBanner`, `PricingSection` and `PricingFaqSection`. | Edit the canonical homepage `PricingLanding` section. |
 | `/signin`, `/signup`, `/forgot-password`, `/verify-email` | Account and credential flows under the auth route group. | Application-owned. |
 | `/invitation/[token]` | Token-based invitation page, invitation artwork, guest and session details, and RSVP. | Application-owned. |
 | Unmatched URLs | `not-found.tsx` provides the system 404 and recovery link. | Application-owned. |
 
-The homepage includes an editable Testimonials section before the FAQ. Older homepage records keep their existing copy and receive default testimonials in the editor until published.
+The homepage also renders the application-owned Testimonials section immediately before the CMS-managed FAQ.
 
 ## Homepage fields
 
@@ -36,13 +30,13 @@ The homepage includes an editable Testimonials section before the FAQ. Older hom
 | `UseCases` | Heading, description and CTA |
 | `PricingLanding` | Heading, description, volume-pricing heading and copy, signup and contact CTAs |
 | `SecuritySection` | Heading and description |
-| `Testimonials` | Heading, quotes, names, roles and initials |\n| `FaqLanding` | Heading, contact CTA and ten questions and answers |
+| `FaqLanding` | Heading, contact CTA and ten questions and answers |
 
 CTA destinations come from an internal allowlist. Image fields accept local PNG, JPEG or WebP assets under `/images/` and existing `media:<id>` references. The editor uses plain text, multiline text and curated links. The current homepage does not need an HTML or rich-text field. The live renderer uses the same components and styles and retains the existing entrance animation. The editor canvas shows section content immediately so scroll-triggered fades do not obstruct editing. The component outline has a fixed section order and Puck disables section insertion, deletion, duplication and drag.
 
 ## Compatibility reconciliation
 
-The original backend allowlist described generic Hero, Heading, Grid and zone blocks. The frontend emits twelve fixed homepage sections with stable IDs equal to their component types. Each remaining public page or shared site section uses its own fixed content block. The generated seed defines those exact shapes. Root props and zones are empty, and images use approved repository paths or CMS media references. Admin URLs use slugs for navigation and MongoDB IDs for API requests. The backend keeps separate schema, publication and edit versions.
+The original backend allowlist described generic Hero, Heading, Grid and zone blocks. The frontend emits eleven fixed homepage sections with stable IDs equal to their component types. Contact emits one fixed ContactContent block. The generated seed defines those exact shapes. Root props and zones are empty, and images use approved repository paths or CMS media references. Admin URLs use slugs for navigation and MongoDB IDs for API requests. The backend keeps separate schema, publication and edit versions.
 
 ## v1 content and API contract
 
@@ -71,4 +65,4 @@ For local testing, set the backend `MEDIA_DIR` to a writable development directo
 2. Deploy the backend first. Set backend `MEDIA_DIR` to the absolute persistent directory physically served by Hostinger and `MEDIA_PUBLIC_URL=https://media.eventqrapp.com`. Use disk outside application releases. If the hosts are separate, arrange a durable writable shared mount. The public URL alone does not copy the files. Confirm the frontend origin is allowed and CORS allows `If-Match`.
 3. Confirm the database target is approved. From the backend, run `npm run seed:cms -- src/validators/cms-pages.v1.json`. An insert-only upsert preserves existing edits, versions, and timestamps.
 4. Verify public API responses for `home` and `contact`, then deploy the frontend using the existing API base variable.
-5. Verify the live pages and an approved draft/publish test. Verify a CMS image loads through the media delivery endpoint. Auth routes, tokenized invitation pages, and system error pages are outside the CMS. Pricing remains a homepage redirect.
+5. Verify the live pages and an approved draft/publish test. Verify a CMS image loads through the media delivery endpoint. Auth routes, tokenized invitation pages, and system error pages are outside the CMS. Features and Pricing remain homepage redirects.

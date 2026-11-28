@@ -1,5 +1,3 @@
-import { resolveCmsImage } from "@/components/cms/approvedContent";
-import type { howItWorksCopy } from "@/components/cms/marketingContent";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/app/navbar/Navbar";
@@ -33,14 +31,13 @@ function StepBlock({ s }: { s: Step }) {
         </ol>
       </div>
       <div className={`relative w-full overflow-hidden rounded-[19px] lg:w-[570px] ${s.textLeft ? "" : "lg:order-1"}`}>
-                  <Image src={resolveCmsImage(s.image) ?? "/images/how-it-works/step-01.png"} unoptimized={s.image.startsWith("media:")} alt={`Step ${s.n}: ${s.chip}`} width={1140} height={880} sizes="(min-width: 1024px) 570px, 100vw" className="h-auto w-full" />
+                  <Image src={`/images/how-it-works/${s.image}`} alt={`Step ${s.n}: ${s.chip}`} width={1140} height={880} sizes="(min-width: 1024px) 570px, 100vw" className="h-auto w-full" />
       </div>
     </Reveal>
   );
 }
 
-export default function HowItWorksPage({ copy }: { copy: typeof howItWorksCopy }) {
-  const steps = STEPS.map((step, index) => ({ ...step, ...copy.steps[index] }));
+export default function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-inter)]">
       <Navbar />
@@ -50,13 +47,13 @@ export default function HowItWorksPage({ copy }: { copy: typeof howItWorksCopy }
           <Container className="relative flex flex-col items-center gap-6 text-center">
             <div className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-[7px] pl-2 pr-3.5">
               <span className="flex size-[22px] items-center justify-center rounded-full bg-[#EAF1FF]"><Image src="/images/how-it-works/eyebrow-icon.svg" alt="" width={13} height={13} /></span>
-              <span className="text-[12px] tracking-[1px] text-[#4A5470] sm:text-[15px]">{copy.heroBadge}</span>
+              <span className="text-[12px] tracking-[1px] text-[#4A5470] sm:text-[15px]">HOW EVENTQRAPP WORKS</span>
             </div>
-            <h1 className={`${DM} max-w-[1000px] text-[34px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[46px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>{copy.heading}</h1>
-            <p className="max-w-[880px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{copy.introduction}</p>
+            <h1 className={`${DM} max-w-[1000px] text-[34px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[46px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>How to Create an Event, Send QR Invitations, and Manage Guest Entry</h1>
+            <p className="max-w-[880px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">Learn how to use EventQRapp, from setting up your account and creating your first event to inviting guests, scanning QR codes, and tracking attendance. Follow each step with simple instructions and short video tutorials.</p>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-              <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.signupLabel}</Link>
-              <a href="#tutorial" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">{copy.tutorialLabel} <Image src="/images/how-it-works/play.svg" alt="" width={24} height={24} /></a>
+              <Link href="/signup" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">Create Your First Event</Link>
+              <a href="#tutorial" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">Watch Full Tutorial <Image src="/images/how-it-works/play.svg" alt="" width={24} height={24} /></a>
             </div>
           </Container>
         </section>
@@ -64,22 +61,22 @@ export default function HowItWorksPage({ copy }: { copy: typeof howItWorksCopy }
         <section className="border-t border-[#EEF2F8] bg-white py-14 sm:py-20">
           <Container className="flex flex-col items-center gap-12">
             <div className="flex max-w-[720px] flex-col items-center gap-4 text-center">
-              <h2 className={`${DM} text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.tutorialHeading}</h2>
-              <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.tutorialIntroduction}</p>
+              <h2 className={`${DM} text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>See How EventQRapp Works in Just 2 Minutes</h2>
+              <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">New to EventQRapp? Watch this quick walkthrough to understand how to set up an event, prepare your guest list, send invitations, and manage entry on event day.</p>
             </div>
-            <TutorialVideo image={copy.tutorialImage} unavailable={copy.tutorialUnavailable} />
+            <TutorialVideo />
           </Container>
         </section>
 
         <section className="bg-white pt-6">
           <Container className="flex flex-col gap-12 pb-12 sm:pb-16">
             <div className="flex flex-col items-center gap-4 text-center">
-              <p className="text-[14px] font-semibold tracking-[1.2px] text-[#1F65FF]">{copy.guideLabel}</p>
-              <h2 className={`${DM} max-w-[900px] text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>{copy.guideHeading}</h2>
-              <p className="max-w-[720px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{copy.guideIntroduction}</p>
+              <p className="text-[14px] font-semibold tracking-[1.2px] text-[#1F65FF]">Step-by-step guide</p>
+              <h2 className={`${DM} max-w-[900px] text-[32px] leading-[1.1] tracking-[-0.9px] text-[#000B2C] sm:text-[40px] lg:text-[48px]`}>Everything you need to know, one step at a time</h2>
+              <p className="max-w-[720px] text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">Follow these short tutorials in order to set up and run your event. Each step explains what to do and includes a picture to help you follow along.</p>
             </div>
             <nav aria-label="Jump to a step" className="flex flex-wrap justify-center gap-2.5">
-              {steps.map((s) => (
+              {STEPS.map((s) => (
                 <a key={s.n} href={`#step-${s.n}`} className="flex items-center gap-2 rounded-full border border-[#E1E7F2] bg-white py-2 pl-2.5 pr-3.5 text-[14px] font-medium leading-[1.3] text-[#000B2C] transition-colors hover:border-[#1F65FF] hover:bg-[#F6F9FF]">
                   <span className="text-[13px] font-semibold text-[#1F65FF]">{s.n}</span>{s.chip}
                 </a>
@@ -90,14 +87,14 @@ export default function HowItWorksPage({ copy }: { copy: typeof howItWorksCopy }
           {GROUPS.map((g) => (
             <div key={g.from} className={`${g.tint ? "bg-[#F6F6FF]" : "bg-white"} py-10 sm:py-16`}>
               <Container className="flex flex-col gap-16 sm:gap-24">
-                {steps.slice(g.from - 1, g.to).map((s) => <StepBlock key={s.n} s={s} />)}
+                {STEPS.slice(g.from - 1, g.to).map((s) => <StepBlock key={s.n} s={s} />)}
               </Container>
             </div>
           ))}
         </section>
 
       </main>
-      <Footer inner ctaVariant="tutorial" />
+      <Footer inner cta={{ title: "Ready to create your first event?", body: "Set up your event, upload your guests and send QR invitations in minutes. You only pay for the guests you invite.", primary: "Create Your First Event", note: "No credit card needed to start · No subscription" }} />
     </div>
   );
 }

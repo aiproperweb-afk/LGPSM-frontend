@@ -470,15 +470,3 @@ html:not([data-intro="play"]) .hero-anim-nav { animation-name: hero-nav-in; anim
 @media (prefers-reduced-motion: reduce) {
   .hero-anim, .hero-anim-stage, .hero-anim-nav { opacity: 1; transform: none; animation: none !important; }
 }
-
-/* Show animated sections immediately in the read-only CMS canvas. */
-[data-cms-preview] .reveal,
-[data-cms-preview] .hero-anim {
-  opacity: 1 !important;
-  transform: none !important;
-  animation: none !important;
-}
-
-[data-cms-preview] .intro-overlay {
-  display: none !important;
-}

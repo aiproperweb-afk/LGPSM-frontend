@@ -29,7 +29,7 @@ const REPORT_ONLY_CSP = [
   `img-src 'self' data: blob: ${apiOrigin} ${[...new Set([HOSTINGER_MEDIA_ORIGIN, mediaOrigin])].join(" ")} https://tile.openstreetmap.org https://*.googleusercontent.com https://*.razorpay.com`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin} https://nominatim.openstreetmap.org https://accounts.google.com/gsi/ https://api.razorpay.com https://lumberjack.razorpay.com`,
-  "frame-src 'self' https://accounts.google.com/gsi/ https://api.razorpay.com https://checkout.razorpay.com",
+  "frame-src https://accounts.google.com/gsi/ https://api.razorpay.com https://checkout.razorpay.com",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");

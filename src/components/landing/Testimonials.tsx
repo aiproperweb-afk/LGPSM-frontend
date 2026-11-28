@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { testimonialsCopy, type TestimonialsCopy } from "@/components/cms/marketingContent";
+import { TESTIMONIALS } from "@/constants/testimonials";
 import Reveal from "./Reveal";
 import { Container, Headline } from "./ui";
 
@@ -17,14 +17,14 @@ function Bleed({ src, className, inset }: { src: string; className: string; inse
   );
 }
 
-export default function Testimonials({ copy = testimonialsCopy }: { copy?: TestimonialsCopy }) {
-  const items = copy.quotes;
+export default function Testimonials() {
+  const items = TESTIMONIALS.slice(0, 3);
   if (items.length === 0) return null;
   return (
     <section className="bg-white py-14 sm:py-20">
       <Container className="flex flex-col gap-10 sm:gap-12">
         <Reveal className="w-full text-center">
-          <Headline className="mx-auto max-w-[820px] text-[#000B2C]">{copy.heading}</Headline>
+          <Headline className="mx-auto max-w-[820px] text-[#000B2C]">Hosts and planners who stopped worrying about the door</Headline>
         </Reveal>
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-3">
           {items.map((t, i) => {
@@ -42,7 +42,7 @@ export default function Testimonials({ copy = testimonialsCopy }: { copy?: Testi
                 <div className="relative flex flex-col gap-6 p-8">
                   <p className={`text-[17px] leading-[1.35] ${ink}`}>“{t.quote}”</p>
                   <div className="flex items-center gap-3">
-                    <span className={`flex size-11 shrink-0 items-center justify-center rounded-full text-[17px] font-bold ${dark ? "bg-[#1F65FF] text-white" : "bg-white text-[#1650D9]"}`}>{t.initials || initialsOf(t.name)}</span>
+                    <span className={`flex size-11 shrink-0 items-center justify-center rounded-full text-[17px] font-bold ${dark ? "bg-[#1F65FF] text-white" : "bg-white text-[#1650D9]"}`}>{t.initials ?? initialsOf(t.name)}</span>
                     <div className={ink}>
                       <p className="text-[17px] font-semibold leading-tight">{t.name}</p>
                       {t.role ? <p className="text-[15px] leading-tight">{t.role}</p> : null}

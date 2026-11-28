@@ -1,6 +1,3 @@
-import type { HomeContent } from "@/components/cms/homeContent";
-import { resolveCmsImage } from "@/components/cms/approvedContent";
-import type { ClientCopy, TestimonialsCopy } from "@/components/cms/marketingContent";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -13,7 +10,7 @@ import Reveal from "@/components/landing/Reveal";
 import Testimonials from "@/components/landing/Testimonials";
 import { LogosRow, StatsRow } from "@/components/landing/StatsClients";
 import { Container, Tick } from "@/components/landing/ui";
-import { type ClientCategory } from "@/constants/clients";
+import { COMMON_TOOLS, ESSENTIALS, type ClientCategory } from "@/constants/clients";
 
 // A Clients page (Figma 228:1029, Business & Corporate; the other categories use the same template).
 const DM = "font-[family-name:var(--font-dm-sans)]";
@@ -41,9 +38,8 @@ function Check({ children, white = false }: { children: ReactNode; white?: boole
   );
 }
 
-export default function ClientPage({ category, copy, testimonials, faq, stats }: { category: ClientCategory; copy: ClientCopy; testimonials?: TestimonialsCopy; faq?: HomeContent["FaqLanding"]; stats?: HomeContent["StatsClients"]["stats"] }) {
-  const c = { ...category, ...copy };
-  const half = Math.ceil(copy.tools.length / 2);
+export default function ClientPage({ c }: { c: ClientCategory }) {
+  const half = Math.ceil(COMMON_TOOLS.length / 2);
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-inter)]">
       <Navbar />
@@ -60,8 +56,8 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
             <h1 className={`${DM} max-w-[1000px] text-[36px] leading-[1.1] tracking-[-1.2px] text-[#000B2C] sm:text-[48px] lg:text-[58px] lg:leading-[64px] lg:tracking-[-2.24px]`}>{c.heading}</h1>
             <p className="max-w-[820px] text-[16px] leading-[1.5] text-[#4A5470] sm:text-[17px]">{c.sub}</p>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-              <Link href="/contact" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.demoLabel}</Link>
-              <Link href="/how-it-works" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">{copy.tutorialLabel} <Image src="/images/clients/play.svg" alt="" width={24} height={24} /></Link>
+              <Link href="/contact" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">Book a demo</Link>
+              <Link href="/how-it-works" className="inline-flex h-[54px] items-center justify-center gap-2 rounded-xl border border-[#000B2C] bg-white px-6 text-[16px] font-semibold text-[#000B2C] hover:bg-[#EAF1FF]">See how it works <Image src="/images/clients/play.svg" alt="" width={24} height={24} /></Link>
             </div>
           </Container>
         </section>
@@ -69,7 +65,7 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
         {/* clients */}
         <section className="bg-white py-12 sm:py-16">
           <Container className="flex flex-col items-center gap-8 text-center">
-            <h2 className={`${DM} text-[26px] leading-[1.15] tracking-[-0.9px] text-[#000B2C] sm:text-[36px] lg:text-[40px]`}>{copy.clientsHeading}</h2>
+            <h2 className={`${DM} text-[26px] leading-[1.15] tracking-[-0.9px] text-[#000B2C] sm:text-[36px] lg:text-[40px]`}>Event planners, agencies and families already on board</h2>
             <LogosRow />
           </Container>
         </section>
@@ -93,9 +89,9 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
             </Reveal>
             <Reveal variant="right" className="relative h-[360px] overflow-hidden rounded-[19px] bg-[#0156D5] sm:h-[480px] lg:h-[593px]">
               {c.slug === "business-corporate" ? (
-                <div className="absolute left-[-229px] top-[-5px] h-[610px] w-[914px]"><Image src={resolveCmsImage(copy.servicesImage) ?? "/images/clients/services-photo.png"} unoptimized={copy.servicesImage.startsWith("media:")} alt="" fill sizes="914px" className="max-w-none object-cover" /></div>
+                <div className="absolute left-[-229px] top-[-5px] h-[610px] w-[914px]"><Image src="/images/clients/services-photo.png" alt="" fill sizes="914px" className="max-w-none object-cover" /></div>
               ) : (
-                <Image src={resolveCmsImage(copy.servicesImage) ?? "/images/landing/dashboard-hero.jpg"} unoptimized={copy.servicesImage.startsWith("media:")} alt="The EventQRapp event dashboard" fill sizes="560px" className="object-cover object-left-top" />
+                <Image src="/images/landing/dashboard-hero.jpg" alt="The EventQRapp event dashboard" fill sizes="560px" className="object-cover object-left-top" />
               )}
             </Reveal>
           </Container>
@@ -109,7 +105,7 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
               {c.types.map((t, i) => (
                 <Reveal key={t.title} variant="up" delay={i * 80} className="relative flex flex-col gap-3 self-stretch rounded-2xl border border-[#E1E7F2] bg-white p-7">
                   <div className="relative h-[120px] w-full overflow-hidden rounded-lg bg-[#EAF1FF]">
-                    {t.image ? <Image src={resolveCmsImage(t.image) ?? "/images/landing/dashboard-hero.jpg"} unoptimized={t.image.startsWith("media:")} alt="" fill sizes="280px" className="object-cover" /> : null}
+                    {t.image ? <Image src={t.image} alt="" fill sizes="280px" className="object-cover" /> : null}
                   </div>
                   <h3 className="text-[18px] font-medium leading-[1.3] text-[#000B2C]">{t.title}</h3>
                   <p className="text-[15px] leading-[1.4] text-[#4A5470]">{t.text}</p>
@@ -124,10 +120,10 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
         <section className="relative overflow-hidden bg-[#000B2C] py-16 sm:py-24">
           <ClientBackdrop />
           <Container className="relative grid items-center gap-10 lg:grid-cols-[360px_1fr] lg:gap-16">
-            <H2 className="text-white lg:text-[44px]">{copy.toolsHeading}</H2>
+            <H2 className="text-white lg:text-[44px]">Channels and tools that work for {c.slug === "business-corporate" ? "business" : "your event"}</H2>
             <div className="grid gap-[18px] rounded-[20px] border border-[#E1E7F2] bg-[#F9F9FA] p-6 sm:grid-cols-2 sm:gap-8 sm:p-10">
-              <ul className="flex flex-col gap-[18px]">{copy.tools.slice(0, half).map((t) => <Check key={t}>{t}</Check>)}</ul>
-              <ul className="flex flex-col gap-[18px]">{copy.tools.slice(half).map((t) => <Check key={t}>{t}</Check>)}</ul>
+              <ul className="flex flex-col gap-[18px]">{COMMON_TOOLS.slice(0, half).map((t) => <Check key={t}>{t}</Check>)}</ul>
+              <ul className="flex flex-col gap-[18px]">{COMMON_TOOLS.slice(half).map((t) => <Check key={t}>{t}</Check>)}</ul>
             </div>
           </Container>
         </section>
@@ -144,9 +140,9 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
               <span className="flex size-14 items-center justify-center rounded-[14px] bg-white/10">
                 <Image src="/images/clients/lock.svg" alt="" width={28} height={28} />
               </span>
-              <h3 className={`${DM} text-[28px] leading-[1.15] tracking-[-0.6px] text-white sm:text-[36px]`}>{copy.privacyHeading}</h3>
-              <p className="text-[16px] leading-[1.65] text-[#D6DDF0] sm:text-[17px]">{copy.privacyDescription}</p>
-              <Link href="/contact" className="mt-auto inline-flex h-[50px] items-center justify-center rounded-md bg-white px-6 text-[16px] font-semibold text-black hover:bg-[#EAF1FF]">{copy.callbackLabel}</Link>
+              <h3 className={`${DM} text-[28px] leading-[1.15] tracking-[-0.6px] text-white sm:text-[36px]`}>Your guest list stays protected</h3>
+              <p className="text-[16px] leading-[1.65] text-[#D6DDF0] sm:text-[17px]">Codes can&apos;t be shared to sneak extra people in, every scan is logged, and only the staff you assign can check guests in.</p>
+              <Link href="/contact" className="mt-auto inline-flex h-[50px] items-center justify-center rounded-md bg-white px-6 text-[16px] font-semibold text-black hover:bg-[#EAF1FF]">Request a callback</Link>
             </Reveal>
           </Container>
         </section>
@@ -160,14 +156,14 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
                 <p className="text-[16px] leading-[1.6] text-[#4A5470] sm:text-[17px]">{c.whySub}</p>
               </div>
               <ul className="flex flex-col gap-4">{c.why.map((w) => <Check key={w}>{w}</Check>)}</ul>
-              <Link href="/contact" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center self-start rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">{copy.scheduleLabel}</Link>
+              <Link href="/contact" style={{ backgroundImage: BLUE_GRADIENT }} className="inline-flex h-[54px] items-center justify-center self-start rounded-xl px-6 text-[16px] font-semibold text-white hover:brightness-95">Schedule a callback</Link>
             </Reveal>
             <Reveal variant="right" className="relative h-[360px] overflow-hidden rounded-[19px] bg-[#0156D5] sm:h-[480px] lg:h-[593px]">
               <Bleed src="/images/clients/why-v1.svg" className="left-[-10.5px] top-[-34.5px] h-[382px] w-[234px]" inset="-10.47% -17.09%" />
               <Bleed src="/images/clients/why-ellipse.svg" className="right-[-41px] top-[-31px] size-[263px]" inset="-15.21%" />
               <Bleed src="/images/clients/why-v2.svg" className="left-[1.5px] top-[310.5px] h-[356px] w-[682px]" inset="-5.62% -2.93%" />
               <div className="absolute left-[30px] top-[45px] h-[558px] w-[709px] rounded-tl-[20px] bg-white">
-                <div className="absolute bottom-[-15px] left-[17px] h-[557px] w-[692px]"><Image src={resolveCmsImage(copy.whyImage) ?? "/images/clients/why-dashboard.png"} unoptimized={copy.whyImage.startsWith("media:")} alt="The EventQRapp event dashboard" fill sizes="692px" className="max-w-none object-cover" /></div>
+                <div className="absolute bottom-[-15px] left-[17px] h-[557px] w-[692px]"><Image src="/images/clients/why-dashboard.png" alt="The EventQRapp event dashboard" fill sizes="692px" className="max-w-none object-cover" /></div>
               </div>
             </Reveal>
           </Container>
@@ -177,11 +173,11 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
         <section className="py-16 sm:py-24" style={{ backgroundImage: "linear-gradient(90deg, #1F65FF, #0B1635)" }}>
           <Container className="flex flex-col items-center gap-9 text-center">
             <div className="flex flex-col gap-4">
-              <H2 className="text-white">{copy.essentialsHeading}</H2>
-              <p className="mx-auto max-w-[680px] text-[16px] leading-[1.6] text-[#D6DDF0] sm:text-[17px]">{copy.essentialsDescription}</p>
+              <H2 className="text-white">Everything your event desk needs</H2>
+              <p className="mx-auto max-w-[680px] text-[16px] leading-[1.6] text-[#D6DDF0] sm:text-[17px]">The essentials for any {c.slug === "business-corporate" ? "business " : ""}event, in one dashboard.</p>
             </div>
             <ul className="flex flex-wrap justify-center gap-4">
-              {copy.essentials.map((e) => (
+              {ESSENTIALS.map((e) => (
                 <li key={e} className="flex items-center gap-2.5 rounded-full border border-white/25 bg-white/[0.12] py-3.5 pl-4 pr-5 text-[16px] font-semibold text-white">
                   <Image src="/images/clients/check-white.svg" alt="" width={20} height={20} />{e}
                 </li>
@@ -190,9 +186,9 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
           </Container>
         </section>
 
-        <Testimonials copy={testimonials} />
+        <Testimonials />
 
-        <section className="bg-white py-10 sm:py-14"><Container><StatsRow stats={stats} /></Container></section>
+        <section className="bg-white py-10 sm:py-14"><Container><StatsRow /></Container></section>
 
         {/* closing call to action */}
         <section className="bg-white py-12 sm:py-20">
@@ -200,18 +196,18 @@ export default function ClientPage({ category, copy, testimonials, faq, stats }:
             <div className="flex flex-col items-center gap-7 rounded-[28px] px-6 py-14 text-center sm:px-16 sm:py-[72px]" style={{ backgroundImage: "linear-gradient(90deg, #1F65FF, #0B1635)" }}>
               <h2 className={`${DM} max-w-[820px] text-[28px] leading-[1.15] tracking-[-0.8px] text-white sm:text-[44px]`}>{c.closing}</h2>
               <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-                <Link href="/contact" className="inline-flex h-[52px] items-center justify-center rounded-md bg-white px-7 text-[16px] font-semibold text-black hover:bg-[#EAF1FF]">{copy.demoLabel}</Link>
-                <Link href="/contact" className="inline-flex h-[52px] items-center justify-center rounded-md border border-white px-7 text-[16px] font-semibold text-white hover:bg-white/10">{copy.contactLabel}</Link>
+                <Link href="/contact" className="inline-flex h-[52px] items-center justify-center rounded-md bg-white px-7 text-[16px] font-semibold text-black hover:bg-[#EAF1FF]">Book a demo</Link>
+                <Link href="/contact" className="inline-flex h-[52px] items-center justify-center rounded-md border border-white px-7 text-[16px] font-semibold text-white hover:bg-white/10">Contact us</Link>
               </div>
             </div>
           </Container>
         </section>
 
-        <ClientContactForm category={c.name} eventTypes={c.types.map((t) => t.title)} heading={copy.enquiryHeading} description={copy.enquiryDescription} submitLabel={copy.enquirySubmitLabel} />
+        <ClientContactForm category={c.name} eventTypes={c.types.map((t) => t.title)} />
 
-        <FaqLanding {...faq} />
+        <FaqLanding />
       </main>
-      <Footer inner ctaVariant="clients" />
+      <Footer inner cta={{ title: "Join the organisers who never stress about the guest list", body: "Set up your event today and send your first QR invitations in minutes. You only pay for the guests you invite.", primary: "Create your first event", note: "No credit card needed to start · No subscription" }} />
     </div>
   );
 }

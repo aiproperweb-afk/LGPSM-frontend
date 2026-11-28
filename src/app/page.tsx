@@ -49,7 +49,7 @@ export default async function Home() {
       <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <main className="flex-1">
-          <PublicPageRenderer data={content} slug="home" />
+          <PublicPageRenderer data={content} />
         </main>
         <Footer />
       </div>

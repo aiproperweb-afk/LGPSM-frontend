@@ -1,5 +1,5 @@
 import { approvedLink, resolveCmsImage } from "./approvedContent";
-import { initialHomeData, initialPageData } from "./initialData";
+import { initialPageData } from "./initialData";
 import type { CmsPageData, CmsSlug } from "./types";
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -11,7 +11,7 @@ function matchesFields(value: unknown, seed: unknown, field = "", allowEmptyImag
     if (typeof value !== "string" || value.length > 4000
       || /<\s*(?:\/?\s*[a-z][^>]*>|[!?])|javascript\s*:|vbscript\s*:|data\s*:/i.test(value)) return false;
     if (field.endsWith("Href")) return approvedLink(value, "") !== "";
-    if (field === "image" || field.endsWith("Image")) return ((allowEmptyImage || seed === "") && value === "") || resolveCmsImage(value) !== null;
+    if (field === "image") return (allowEmptyImage && value === "") || resolveCmsImage(value) !== null;
     return true;
   }
 
@@ -28,15 +28,8 @@ function matchesFields(value: unknown, seed: unknown, field = "", allowEmptyImag
   if (!isObject(seed) || !isObject(value)) return false;
   return Object.keys(value).length === Object.keys(seed).length
     && Object.entries(seed).every(([key, entry]) =>
-      matchesFields(value[key], entry, field === "labels" ? "" : key, allowEmptyImage)
+      matchesFields(value[key], entry, key, allowEmptyImage)
     );
-}
-
-export function upgradePageData(value: unknown, slug: CmsSlug): unknown {
-  if (slug !== "home" || !isObject(value) || !Array.isArray(value.content)) return value;
-  const sectionIndex = initialHomeData.content.findIndex(section => section.type === "Testimonials");
-  if (value.content.length !== initialHomeData.content.length - 1 || value.content[sectionIndex]?.type !== "FaqLanding") return value;
-  return { ...value, content: [...value.content.slice(0, sectionIndex), initialHomeData.content[sectionIndex], ...value.content.slice(sectionIndex)] };
 }
 
 export function validatePageData(value: unknown, slug: CmsSlug): value is CmsPageData {
